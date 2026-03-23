@@ -122,7 +122,7 @@
 - Theming Material Design 3
 
 **Stories assignees (MVP) :**
-- SETUP-01 (KMP init — en collab avec SHARED)
+- SETUP-01b (UI init : navigation, theme, wrappers — apres SETUP-01a)
 - AUTH-01 a AUTH-05 (ecrans login/inscription, flow Firebase)
 - PROFIL-01 a PROFIL-03 (ecrans profil, questionnaire onboarding)
 - PROFIL-04 (ecran suppression compte)
@@ -155,7 +155,7 @@
 - Logique de synchronisation offline/online
 
 **Stories assignees (MVP) :**
-- SETUP-01 (structure KMP shared — en collab avec MOBILE)
+- SETUP-01a (structure KMP shared : modules, build.gradle.kts, di/, util/, DatabaseDriverFactory)
 - SETUP-05 (SQLDelight config + schema local)
 - QUOTAS-01 (algorithme de calcul des quotas — logique pure)
 - RECO-01 (algorithme de recommandation — logique pure)
@@ -398,7 +398,8 @@ Les US suivantes sont marquees **CRITIQUE** — le workflow s'arrete apres la re
 
 | US critique | Raison |
 |-------------|--------|
-| SETUP-01 | Structure fondatrice du projet — tout en depend |
+| SETUP-01a | Structure fondatrice du projet (shared) — tout en depend |
+| SETUP-01b | Structure UI/navigation — les ecrans en dependent |
 | SETUP-02 | Structure backend — tout en depend |
 | SETUP-05 | Schema SQLDelight — impacte tout le offline |
 | QUOTAS-01 | Algorithme de calcul des quotas — coeur metier |
@@ -474,7 +475,8 @@ Les agents utilisent des **mocks/placeholders** quand une action humaine est en 
 
 ```
 main (production)
-├── feature/SETUP-01-kmp-init
+├── feature/SETUP-01a-kmp-shared-init
+├── feature/SETUP-01b-ui-navigation-init
 ├── feature/AUTH-01-inscription-email
 ├── feature/JOURNAL-01-saisie-aliment
 ├── ...
@@ -499,7 +501,8 @@ Le PROJECT-MASTER maintient un fichier de suivi dans le repo :
 ```markdown
 | US-ID | Titre | Agents | Statut | Review | Merge |
 |-------|-------|--------|--------|--------|-------|
-| SETUP-01 | KMP init | SHARED, MOBILE | Done | APPROVE | Merged |
+| SETUP-01a | KMP shared init | SHARED | Done | APPROVE | Merged |
+| SETUP-01b | UI/navigation init | MOBILE | Done | APPROVE | Merged |
 | SETUP-02 | Ktor init | BACKEND | In Progress | - | - |
 | AUTH-01 | Inscription | BACKEND, MOBILE, SHARED | Todo | - | - |
 ```

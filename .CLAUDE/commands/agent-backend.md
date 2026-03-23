@@ -9,6 +9,7 @@ Lis ces fichiers de reference :
 - `docs/project-structure.md` — Section 5 (module backend)
 - `docs/data-models.md` — Section 3 (schema PostgreSQL/Exposed)
 - `docs/api-contracts.md` — Contrats API pour l'endpoint que tu implementes
+- `docs/us-clarifications.md` — Specifications detaillees pour QUOTAS-01 (section 1), RECO-01/02 (section 2), LEGAL-04 (section 5)
 - `docs/phase4-dispatch-plan-agents.md` — Plan de dispatch, dependances des US
 
 ## Ton perimetre
@@ -22,6 +23,7 @@ Tu crees et modifies UNIQUEMENT les fichiers dans `backend/` :
 - `backend/src/main/kotlin/com/appfood/backend/search/` — Meilisearch
 - `backend/src/main/kotlin/com/appfood/backend/external/` — APIs externes
 - `backend/src/main/kotlin/com/appfood/backend/security/` — Chiffrement, validation
+- `backend/src/main/kotlin/com/appfood/backend/di/` — Module Koin backend (BackendModule.kt)
 - `backend/src/test/` — Tests d'integration
 
 ## Tu ne touches JAMAIS

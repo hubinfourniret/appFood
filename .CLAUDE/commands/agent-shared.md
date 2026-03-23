@@ -9,6 +9,7 @@ Lis ces fichiers de reference :
 - `docs/project-structure.md` — Section 2 (module shared)
 - `docs/data-models.md` — Tous les modeles, schemas, regles
 - `docs/api-contracts.md` — Request/Response DTOs
+- `docs/us-clarifications.md` — Specifications detaillees pour QUOTAS-01 (section 1), SYNC-01/02 (section 4)
 - `docs/phase4-dispatch-plan-agents.md` — Plan de dispatch, dependances des US
 
 ## Ton perimetre

@@ -8,6 +8,7 @@ Lis ces fichiers de reference :
 - `CONVENTIONS.md` — Sections 9 (base de donnees), 11 (langue)
 - `docs/project-structure.md` — Section 5 (backend/external/, backend/database/)
 - `docs/data-models.md` — Section 3 (tables Exposed : AlimentsTable, PortionsTable, QuotasTable)
+- `docs/us-clarifications.md` — Section 3 (DATA-01 : mapping Ciqual, omega-3/6, regimes, Meilisearch)
 - `docs/phase4-dispatch-plan-agents.md` — Plan de dispatch, dependances des US
 
 ## Ton perimetre
@@ -60,22 +61,7 @@ Tu crees et modifies UNIQUEMENT :
 
 ## Meilisearch — Configuration
 
-```json
-{
-  "searchableAttributes": ["nom", "marque", "categorie"],
-  "filterableAttributes": ["regimes_compatibles", "categorie", "source"],
-  "sortableAttributes": ["nom"],
-  "synonyms": {
-    "tomate": ["tomates"],
-    "pomme de terre": ["patate", "patates"],
-    "brocoli": ["broccoli", "brocolis"]
-  },
-  "typoTolerance": {
-    "enabled": true,
-    "minWordSizeForTypos": { "oneTypo": 4, "twoTypos": 8 }
-  }
-}
-```
+**LIRE `docs/us-clarifications.md` section 3.7** pour la configuration complete de l'index Meilisearch (searchableAttributes, filterableAttributes, synonymes francais, stopWords). C'est la source de verite — ne pas redefinir ici.
 
 ## Checklist
 

@@ -28,24 +28,54 @@
 
 ---
 
-**SETUP-01** — Initialisation du projet KMP + Compose Multiplatform
+**SETUP-01a** — Initialisation du projet KMP (shared : structure, DI, util)
 
 En tant que developpeur,
-je veux un projet KMP configure avec Compose Multiplatform pour Android et iOS,
-afin de pouvoir developper l'app sur les deux plateformes.
+je veux un projet KMP configure avec les modules shared, androidApp et iosApp,
+afin d'avoir la base technique partagee prete pour le developpement.
 
 **Criteres d'acceptation :**
 - [ ] Projet KMP cree avec modules shared, androidApp, iosApp
-- [ ] Compose Multiplatform configure et fonctionnel sur les deux plateformes
+- [ ] `build.gradle.kts` racine + `settings.gradle.kts` + `buildSrc/` (Versions.kt, Dependencies.kt)
+- [ ] `shared/build.gradle.kts` avec les dependances KMP (Ktor Client, SQLDelight, Koin, kotlinx.serialization, kotlinx.datetime)
+- [ ] Structure de packages dans `shared/src/commonMain/kotlin/com/appfood/shared/` : model/, domain/, data/, sync/, api/, di/, util/
+- [ ] `shared/.../di/SharedModule.kt` — Module Koin vide (skeleton)
+- [ ] `shared/.../util/Result.kt` — Wrapper AppResult<T>
+- [ ] `shared/.../data/local/DatabaseDriverFactory.kt` — expect/actual pour Android et iOS
 - [ ] Build Android (APK) reussi
 - [ ] Build iOS (simulateur) reussi
-- [ ] Structure de packages definie (par feature/module)
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** Aucune
-**Agent assigne :** Phase 4
-**Notes techniques :** Utiliser le template KMP officiel JetBrains. Structure par feature : auth, journal, aliments, recettes, quotas, recommandation, profil.
+**Agent assigne :** SHARED
+**Notes techniques :** Utiliser le template KMP officiel JetBrains. Structure par feature dans chaque couche : auth, journal, aliments, recettes, quotas, recommandation, profil.
+
+---
+
+**SETUP-01b** — Initialisation UI Compose Multiplatform (navigation, theme, wrappers)
+
+En tant que developpeur,
+je veux l'UI Compose Multiplatform configuree avec la navigation et le theme,
+afin de pouvoir developper les ecrans de l'application.
+
+**Criteres d'acceptation :**
+- [ ] Compose Multiplatform configure et fonctionnel sur les deux plateformes
+- [ ] `shared/.../ui/navigation/AppNavigation.kt` — NavHost avec routes initiales (placeholder)
+- [ ] `shared/.../ui/navigation/Screen.kt` — Sealed class des ecrans
+- [ ] `shared/.../ui/navigation/BottomNavBar.kt` — Barre de navigation inferieure
+- [ ] `shared/.../ui/theme/` — Theme.kt, Color.kt, Typography.kt, Shape.kt (Material 3)
+- [ ] `shared/.../ui/Strings.kt` — Constantes UI en francais (titres, labels, messages principaux)
+- [ ] `shared/.../ui/common/` — Composants reutilisables de base (EmptyState, LoadingSkeleton, ErrorMessage)
+- [ ] `androidApp/` — MainActivity lance le ComposeApp shared, AppFoodApplication init Koin
+- [ ] `iosApp/` — ContentView lance le ComposeApp shared
+- [ ] Navigation entre 2 ecrans placeholder fonctionne sur Android et iOS
+
+**Complexite :** M
+**Priorite :** MVP
+**Dependances :** SETUP-01a
+**Agent assigne :** MOBILE
+**Notes techniques :** Utiliser `org.jetbrains.compose.*` (pas `androidx.compose.*`). Aucun import `android.*` ou `UIKit` dans le code UI partage.
 
 ---
 
@@ -123,7 +153,7 @@ afin de stocker les donnees localement pour le mode offline.
 
 **Complexite :** M
 **Priorite :** MVP
-**Dependances :** SETUP-01
+**Dependances :** SETUP-01a
 **Agent assigne :** Phase 4
 
 ---
@@ -146,7 +176,7 @@ afin de detecter les regressions rapidement.
 
 **Complexite :** M
 **Priorite :** MVP
-**Dependances :** SETUP-01, SETUP-02
+**Dependances :** SETUP-01a, SETUP-02
 **Agent assigne :** Phase 4
 
 ---
@@ -212,7 +242,7 @@ afin d'avoir une base d'aliments fiable avec leurs valeurs nutritionnelles.
 **Priorite :** MVP
 **Dependances :** SETUP-03, SETUP-04
 **Agent assigne :** Phase 4
-**Notes techniques :** La base Ciqual est telechargeable en CSV sur le site de l'ANSES. Attention aux encodages et aux unites.
+**Notes techniques :** **LIRE `docs/us-clarifications.md` section 3** avant implementation. Contient : mapping exact des colonnes Ciqual → NutrimentValues, calcul omega-3/omega-6 a partir des acides gras, gestion des valeurs manquantes ("-", "traces", "N/A" → 0.0), heuristique de detection vegan/vegetarien par categorie, configuration Meilisearch (synonymes, filtres, stop words).
 
 ---
 
@@ -283,7 +313,7 @@ afin de creer mon compte appFood.
 
 **Complexite :** M
 **Priorite :** MVP
-**Dependances :** SETUP-01, SETUP-02
+**Dependances :** SETUP-01a, SETUP-02
 **Agent assigne :** Phase 4
 
 ---
@@ -473,6 +503,7 @@ afin d'exercer mon droit a la portabilite.
 **Priorite :** V1.1
 **Dependances :** PROFIL-01
 **Agent assigne :** Phase 4
+**Notes techniques :** MVP : implementer l'endpoint backend `GET /api/users/me/export` qui genere le JSON (BACKEND agent). L'ecran UI (bouton dans les reglages, telechargement) est reporte en V1.1 (MOBILE agent).
 
 ---
 
@@ -503,7 +534,7 @@ afin de savoir exactement ce que je dois consommer chaque jour.
 **Priorite :** MVP
 **Dependances :** PROFIL-01, DATA-03
 **Agent assigne :** Phase 4
-**Notes techniques :** Formule de Harris-Benedict ou Mifflin-St Jeor pour le metabolisme de base. Coefficients d'activite standard (1.2 a 1.9).
+**Notes techniques :** **LIRE `docs/us-clarifications.md` section 1** avant implementation. Contient : formule Mifflin-St Jeor exacte, tables AJR ANSES par sexe/age, coefficients d'ajustement par regime (fer ×1.8 vegan, zinc ×1.5, etc.), pseudo-code complet, cas limites.
 
 ---
 
@@ -914,7 +945,7 @@ afin de savoir quoi manger pour atteindre mes quotas.
 **Priorite :** MVP
 **Dependances :** DASHBOARD-01, PROFIL-03, DATA-01
 **Agent assigne :** Phase 4
-**Notes techniques :** Algorithme de scoring : prioriser les aliments qui couvrent plusieurs manques a la fois. Limiter a 5-10 suggestions pour ne pas submerger.
+**Notes techniques :** **LIRE `docs/us-clarifications.md` section 2** avant implementation. Contient : seuils de declenchement (deficit FORT < 70%, MODERE 70-90%), formule de scoring exacte avec poids par nutriment, calcul de la quantite suggeree (cap 300g), filtrage allergenes, regle de diversite, gestion B12 vegan.
 
 ---
 
@@ -935,6 +966,7 @@ afin d'avoir des idees de repas concrets adaptes a mes besoins.
 **Priorite :** MVP
 **Dependances :** RECO-01, RECETTES-01
 **Agent assigne :** Phase 4
+**Notes techniques :** **LIRE `docs/us-clarifications.md` section 2.8** pour le scoring des recettes (meme logique que RECO-01 mais par portion, avec pourcentageCouvertureGlobal = moyenne des couvertures).
 
 ---
 
@@ -1091,7 +1123,7 @@ afin de pouvoir envoyer des notifications push aux utilisateurs.
 
 **Complexite :** M
 **Priorite :** MVP
-**Dependances :** SETUP-01, SETUP-02
+**Dependances :** SETUP-01a, SETUP-02
 **Agent assigne :** Phase 4
 
 ---
@@ -1180,6 +1212,7 @@ afin de ne jamais etre bloque dans mon suivi.
 **Priorite :** MVP
 **Dependances :** SETUP-05, JOURNAL-01
 **Agent assigne :** Phase 4
+**Notes techniques :** **LIRE `docs/us-clarifications.md` section 4** avant implementation. Contient : entites synchronisees (journal, poids, hydratation), strategie d'ID (UUID cote client), structure sync_queue, workflow push/pull, declencheurs, ConnectivityMonitor expect/actual.
 
 ---
 
@@ -1200,6 +1233,7 @@ afin de ne perdre aucune donnee.
 **Priorite :** MVP
 **Dependances :** SYNC-01
 **Agent assigne :** Phase 4
+**Notes techniques :** **LIRE `docs/us-clarifications.md` section 4** (meme section que SYNC-01). Contient : workflow push detaille (regroupement par entity_type, traitement des conflits SERVER_WINS, retry avec max 5 tentatives), workflow pull, resolution de conflits, indicateurs UI.
 
 ---
 
@@ -1247,7 +1281,7 @@ afin de trouver rapidement ce que je cherche.
 
 **Complexite :** M
 **Priorite :** MVP
-**Dependances :** SETUP-01
+**Dependances :** SETUP-01b
 **Agent assigne :** Phase 4
 
 ---
@@ -1869,14 +1903,15 @@ Avec 2 developpeurs travaillant en parallele (en tenant compte des dependances e
 ### Chemin critique (dependances bloquantes)
 
 ```
-SETUP-01 (KMP) ──┐
-                  ├──→ AUTH-01 ──→ PROFIL-01 ──→ QUOTAS-01 ──→ DASHBOARD-01 ──→ RECO-01 ──→ RECO-02
-SETUP-02 (Ktor) ─┤
-                  ├──→ SETUP-03 (DB) ──→ DATA-01 (Ciqual) ──→ DATA-02 (OFF) ──→ JOURNAL-01
-                  │                                                               ↑
-SETUP-04 (Meili) ─────────────────────────────────────────────────────────────────┘
-                  │
-SETUP-05 (SQLDelight) ──→ SYNC-01 ──→ SYNC-02
+SETUP-01a (KMP shared) ──→ SETUP-01b (UI/navigation) ──→ UX-01
+                     │
+                     ├──→ AUTH-01 ──→ PROFIL-01 ──→ QUOTAS-01 ──→ DASHBOARD-01 ──→ RECO-01 ──→ RECO-02
+SETUP-02 (Ktor) ────┤
+                     ├──→ SETUP-03 (DB) ──→ DATA-01 (Ciqual) ──→ DATA-02 (OFF) ──→ JOURNAL-01
+                     │                                                               ↑
+SETUP-04 (Meili) ───────────────────────────────────────────────────────────────────┘
+                     │
+SETUP-01a ──→ SETUP-05 (SQLDelight) ──→ SYNC-01 ──→ SYNC-02
 ```
 
 ---

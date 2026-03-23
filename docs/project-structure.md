@@ -531,7 +531,7 @@ appFood/
 │       └── deploy-prod.yml    # Deploy prod (declenchement manuel)
 ├── .gitignore
 ├── CONVENTIONS.md
-├── CLAUDE.md
+├── CLAUDE.md                  # Instructions pour Claude Code (pointers vers tous les docs)
 └── docs/
     ├── phase1-vision-rapport.md
     ├── phase2-architecture-rapport.md
@@ -540,6 +540,7 @@ appFood/
     ├── project-structure.md         # Ce fichier
     ├── data-models.md
     ├── api-contracts.md
+    ├── us-clarifications.md         # Specs detaillees : QUOTAS-01, RECO-01/02, DATA-01, SYNC-01/02, LEGAL-04
     ├── sprint-tracker.md
     ├── TODO-HUMAIN.md
     └── WAITING-REVIEW.md
@@ -576,10 +577,10 @@ Ce tableau indique quel agent est responsable de quels fichiers. **Un agent ne d
 
 | Agent | Fichiers/Dossiers | Lecture seule |
 |-------|-------------------|---------------|
-| **SHARED** | `shared/` (model, domain, data, sync, api, di, util) | `docs/api-contracts.md`, `docs/data-models.md`, `CONVENTIONS.md` |
+| **SHARED** | `shared/` (model, domain, data, sync, api, di, util) | `docs/api-contracts.md`, `docs/data-models.md`, `docs/us-clarifications.md`, `CONVENTIONS.md` |
 | **MOBILE** | `shared/ui/` (ecrans, ViewModels, composants, theme, navigation) | `shared/model/`, `shared/domain/`, `docs/api-contracts.md`, `CONVENTIONS.md` |
-| **BACKEND** | `backend/` | `shared/model/`, `shared/api/`, `docs/api-contracts.md`, `CONVENTIONS.md` |
-| **DATA** | `backend/src/main/kotlin/.../external/CiqualImporter.kt`, `backend/src/main/resources/db/migration/V002__seed_ajr.sql`, `backend/src/main/resources/db/migration/V003__seed_portions.sql`, `backend/docker/meilisearch/` | `shared/model/`, `backend/database/tables/` |
+| **BACKEND** | `backend/` | `shared/model/`, `shared/api/`, `docs/api-contracts.md`, `docs/us-clarifications.md`, `CONVENTIONS.md` |
+| **DATA** | `backend/src/main/kotlin/.../external/CiqualImporter.kt`, `backend/src/main/resources/db/migration/V002__seed_ajr.sql`, `backend/src/main/resources/db/migration/V003__seed_portions.sql`, `backend/docker/meilisearch/` | `shared/model/`, `backend/database/tables/`, `docs/us-clarifications.md` |
 | **INFRA** | `.github/`, `docker-compose*.yml`, `Dockerfile`, `backend/src/main/resources/application*.conf` | Tout le reste |
 | **REVIEW** | Aucun (lecture seule) | Tout |
 | **PROJECT-MASTER** | `docs/sprint-tracker.md`, `docs/TODO-HUMAIN.md`, `docs/WAITING-REVIEW.md` | Tout |

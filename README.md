@@ -7,6 +7,7 @@ Application mobile de suivi nutritionnel personnalise pour vegans/vegetariens sp
 - `docs/sprint-tracker.md` — Sprint 0 pre-rempli avec les US du setup
 - `docs/TODO-HUMAIN.md` — 14 actions humaines identifiees (cles API, comptes, contenu)
 - `docs/WAITING-REVIEW.md` — US critiques en attente de validation utilisateur
+- `docs/us-clarifications.md` — Specifications detaillees pour QUOTAS-01, RECO-01, DATA-01, SYNC-01/02
 
 ## Lancer le projet
 
