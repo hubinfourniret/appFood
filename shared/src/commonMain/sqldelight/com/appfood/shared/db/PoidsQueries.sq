@@ -1,0 +1,12 @@
+findByUser:
+SELECT * FROM local_poids WHERE user_id = ? ORDER BY date DESC;
+
+insertOrReplace:
+INSERT OR REPLACE INTO local_poids(id, user_id, poids_kg, date, sync_status, created_at)
+VALUES (?, ?, ?, ?, ?, ?);
+
+findPending:
+SELECT * FROM local_poids WHERE sync_status = 'PENDING' ORDER BY created_at ASC;
+
+updateSyncStatus:
+UPDATE local_poids SET sync_status = ? WHERE id = ?;

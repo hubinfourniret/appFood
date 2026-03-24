@@ -1,0 +1,18 @@
+findAll:
+SELECT * FROM sync_queue ORDER BY created_at ASC;
+
+findByEntityType:
+SELECT * FROM sync_queue WHERE entity_type = ? ORDER BY created_at ASC;
+
+insert:
+INSERT INTO sync_queue(id, entity_type, entity_id, action, payload_json, created_at, retry_count, last_error)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteById:
+DELETE FROM sync_queue WHERE id = ?;
+
+incrementRetry:
+UPDATE sync_queue SET retry_count = retry_count + 1, last_error = ? WHERE id = ?;
+
+findByRetryCountLessThan:
+SELECT * FROM sync_queue WHERE retry_count < ? ORDER BY created_at ASC;

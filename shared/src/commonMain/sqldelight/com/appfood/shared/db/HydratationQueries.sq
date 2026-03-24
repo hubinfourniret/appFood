@@ -1,0 +1,12 @@
+findByUserAndDate:
+SELECT * FROM local_hydratation WHERE user_id = ? AND date = ?;
+
+insertOrReplace:
+INSERT OR REPLACE INTO local_hydratation(id, user_id, date, objectif_ml, total_ml, sync_status, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+findPending:
+SELECT * FROM local_hydratation WHERE sync_status = 'PENDING' ORDER BY updated_at ASC;
+
+updateSyncStatus:
+UPDATE local_hydratation SET sync_status = ? WHERE id = ?;

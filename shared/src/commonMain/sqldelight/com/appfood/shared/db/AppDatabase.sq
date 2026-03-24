@@ -1,0 +1,118 @@
+-- Journal local
+CREATE TABLE local_journal_entry (
+    id TEXT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    aliment_id TEXT,
+    recette_id TEXT,
+    meal_type TEXT NOT NULL,
+    quantite_grammes REAL NOT NULL,
+    date TEXT NOT NULL,
+    sync_status TEXT NOT NULL DEFAULT 'SYNCED',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- Aliments cache
+CREATE TABLE local_aliment (
+    id TEXT NOT NULL PRIMARY KEY,
+    nom TEXT NOT NULL,
+    marque TEXT,
+    categorie TEXT NOT NULL,
+    source TEXT NOT NULL,
+    source_id TEXT,
+    calories REAL NOT NULL DEFAULT 0.0,
+    proteines REAL NOT NULL DEFAULT 0.0,
+    glucides REAL NOT NULL DEFAULT 0.0,
+    lipides REAL NOT NULL DEFAULT 0.0,
+    fibres REAL NOT NULL DEFAULT 0.0,
+    sel REAL NOT NULL DEFAULT 0.0,
+    sucres REAL NOT NULL DEFAULT 0.0,
+    fer REAL NOT NULL DEFAULT 0.0,
+    calcium REAL NOT NULL DEFAULT 0.0,
+    zinc REAL NOT NULL DEFAULT 0.0,
+    magnesium REAL NOT NULL DEFAULT 0.0,
+    vitamine_b12 REAL NOT NULL DEFAULT 0.0,
+    vitamine_d REAL NOT NULL DEFAULT 0.0,
+    vitamine_c REAL NOT NULL DEFAULT 0.0,
+    omega_3 REAL NOT NULL DEFAULT 0.0,
+    omega_6 REAL NOT NULL DEFAULT 0.0,
+    regimes_compatibles TEXT NOT NULL
+);
+
+-- Portions standard
+CREATE TABLE local_portion (
+    id TEXT NOT NULL PRIMARY KEY,
+    aliment_id TEXT NOT NULL,
+    nom TEXT NOT NULL,
+    quantite_grammes REAL NOT NULL,
+    FOREIGN KEY (aliment_id) REFERENCES local_aliment(id)
+);
+
+-- Profil utilisateur cache
+CREATE TABLE local_user (
+    id TEXT NOT NULL PRIMARY KEY,
+    email TEXT NOT NULL,
+    nom TEXT,
+    prenom TEXT,
+    sexe TEXT,
+    date_naissance TEXT,
+    taille_cm REAL,
+    poids_kg REAL,
+    niveau_activite TEXT,
+    regime_alimentaire TEXT,
+    role TEXT NOT NULL DEFAULT 'USER'
+);
+
+-- Quotas journaliers cache
+CREATE TABLE local_quota (
+    id TEXT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    nutriment_type TEXT NOT NULL,
+    valeur_cible REAL NOT NULL,
+    unite TEXT NOT NULL,
+    est_personnalise INTEGER NOT NULL DEFAULT 0
+);
+
+-- Historique poids
+CREATE TABLE local_poids (
+    id TEXT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    poids_kg REAL NOT NULL,
+    date TEXT NOT NULL,
+    sync_status TEXT NOT NULL DEFAULT 'SYNCED',
+    created_at INTEGER NOT NULL
+);
+
+-- Hydratation journaliere
+CREATE TABLE local_hydratation (
+    id TEXT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    objectif_ml REAL NOT NULL,
+    total_ml REAL NOT NULL DEFAULT 0.0,
+    sync_status TEXT NOT NULL DEFAULT 'SYNCED',
+    updated_at INTEGER NOT NULL
+);
+
+-- Preferences utilisateur
+CREATE TABLE local_preferences (
+    user_id TEXT NOT NULL PRIMARY KEY,
+    allergies TEXT NOT NULL DEFAULT '[]',
+    aliments_exclus TEXT NOT NULL DEFAULT '[]',
+    notifications_actives INTEGER NOT NULL DEFAULT 1,
+    rappel_hydratation INTEGER NOT NULL DEFAULT 1,
+    heure_rappel_matin TEXT NOT NULL DEFAULT '08:00',
+    heure_rappel_soir TEXT NOT NULL DEFAULT '20:00'
+);
+
+-- Queue de synchronisation
+CREATE TABLE sync_queue (
+    id TEXT NOT NULL PRIMARY KEY,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT
+);

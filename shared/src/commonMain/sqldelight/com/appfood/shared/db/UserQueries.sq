@@ -1,0 +1,6 @@
+findById:
+SELECT * FROM local_user WHERE id = ?;
+
+insertOrReplace:
+INSERT OR REPLACE INTO local_user(id, email, nom, prenom, sexe, date_naissance, taille_cm, poids_kg, niveau_activite, regime_alimentaire, role)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

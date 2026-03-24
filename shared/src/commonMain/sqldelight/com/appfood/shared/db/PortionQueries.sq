@@ -1,0 +1,6 @@
+findByAlimentId:
+SELECT * FROM local_portion WHERE aliment_id = ?;
+
+insertOrReplace:
+INSERT OR REPLACE INTO local_portion(id, aliment_id, nom, quantite_grammes)
+VALUES (?, ?, ?, ?);

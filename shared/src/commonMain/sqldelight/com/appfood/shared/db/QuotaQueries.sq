@@ -1,0 +1,9 @@
+findByUser:
+SELECT * FROM local_quota WHERE user_id = ?;
+
+insertOrReplace:
+INSERT OR REPLACE INTO local_quota(id, user_id, nutriment_type, valeur_cible, unite, est_personnalise)
+VALUES (?, ?, ?, ?, ?, ?);
+
+deleteByUser:
+DELETE FROM local_quota WHERE user_id = ?;

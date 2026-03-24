@@ -1,0 +1,18 @@
+findByUserAndDate:
+SELECT * FROM local_journal_entry WHERE user_id = ? AND date = ? ORDER BY created_at ASC;
+
+findById:
+SELECT * FROM local_journal_entry WHERE id = ?;
+
+insertOrReplace:
+INSERT OR REPLACE INTO local_journal_entry(id, user_id, aliment_id, recette_id, meal_type, quantite_grammes, date, sync_status, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteById:
+DELETE FROM local_journal_entry WHERE id = ?;
+
+findPending:
+SELECT * FROM local_journal_entry WHERE sync_status = 'PENDING' ORDER BY created_at ASC;
+
+updateSyncStatus:
+UPDATE local_journal_entry SET sync_status = ? WHERE id = ?;

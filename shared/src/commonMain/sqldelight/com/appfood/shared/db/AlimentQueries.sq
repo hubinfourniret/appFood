@@ -1,0 +1,12 @@
+findById:
+SELECT * FROM local_aliment WHERE id = ?;
+
+search:
+SELECT * FROM local_aliment WHERE nom LIKE ? ORDER BY nom ASC;
+
+insertOrReplace:
+INSERT OR REPLACE INTO local_aliment(id, nom, marque, categorie, source, source_id, calories, proteines, glucides, lipides, fibres, sel, sucres, fer, calcium, zinc, magnesium, vitamine_b12, vitamine_d, vitamine_c, omega_3, omega_6, regimes_compatibles)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+findByCategorie:
+SELECT * FROM local_aliment WHERE categorie = ? ORDER BY nom ASC;
