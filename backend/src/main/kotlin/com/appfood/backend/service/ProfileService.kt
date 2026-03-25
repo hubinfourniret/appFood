@@ -227,18 +227,14 @@ class ProfileService(
     }
 
     companion object {
-        fun serializeList(list: List<String>): String =
-            kotlinx.serialization.json.Json.encodeToString(
-                kotlinx.serialization.builtins.ListSerializer(kotlinx.serialization.builtins.serializer<String>()),
-                list,
-            )
+        private val json = kotlinx.serialization.json.Json
 
-        fun deserializeList(json: String): List<String> =
+        fun serializeList(list: List<String>): String =
+            json.encodeToString(list)
+
+        fun deserializeList(jsonStr: String): List<String> =
             try {
-                kotlinx.serialization.json.Json.decodeFromString(
-                    kotlinx.serialization.builtins.ListSerializer(kotlinx.serialization.builtins.serializer<String>()),
-                    json,
-                )
+                json.decodeFromString<List<String>>(jsonStr)
             } catch (e: Exception) {
                 emptyList()
             }
