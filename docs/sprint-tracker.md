@@ -31,7 +31,7 @@
 | DATA-02 | Integration Open Food Facts | DATA | Done | ✅ (corrections appliquees) | - |
 | DATA-03 | Tables AJR/ANC | SHARED, DATA | Done | ✅ | - |
 | PORTIONS-01 | Portions standard (donnees) | DATA | Done | ✅ | - |
-| INFRA-02 | Deploiement Railway | INFRA | Blocked | - | Action humaine: compte Railway |
+| INFRA-02 | Deploiement Railway | INFRA (utilisateur) | Done | ✅ | - |
 | INFRA-03 | Monitoring Sentry/UptimeRobot | INFRA | Blocked | - | INFRA-02, action humaine |
 
 ### Notes Sprint 1

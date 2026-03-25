@@ -8,7 +8,7 @@ Les agents ne peuvent PAS faire ces actions. Elles necessitent une intervention 
 | 🟡 Important | iOS : verifier dans Xcode que `GoogleService-Info.plist` est dans Build Phases → Copy Bundle Resources (necessite un Mac) | AUTH-01 a AUTH-05 (iOS) | Todo |
 | 🔴 Bloquant | Configurer Google Sign-In dans la console Firebase (SHA-1 Android + activer le provider) | AUTH-03 | Done |
 | 🔴 Bloquant | Configurer Apple Sign-In (Apple Developer Account + Firebase) | AUTH-05 | Todo |
-| 🔴 Bloquant | Creer un compte Railway + provisionner les services | INFRA-02 | Todo |
+| 🔴 Bloquant | Creer un compte Railway + provisionner les services | INFRA-02 | Done (PostgreSQL + Meilisearch + backend deploye, connecte a PG) |
 | 🟡 Important | Telecharger la base Ciqual (CSV) depuis le site ANSES | DATA-01 | Todo |
 | 🟡 Important | Creer un compte Sentry + obtenir le DSN | INFRA-03 | Todo |
 | 🟡 Important | Creer un compte UptimeRobot | INFRA-03 | Todo |

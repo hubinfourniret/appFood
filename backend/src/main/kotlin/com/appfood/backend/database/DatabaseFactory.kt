@@ -36,6 +36,7 @@ fun Application.configureDatabase() {
     val flyway = Flyway.configure()
         .dataSource(dbUrl, dbUser, dbPassword)
         .locations("classpath:db/migration")
+        .validateMigrationNaming(true)
         .load()
     flyway.migrate()
 
