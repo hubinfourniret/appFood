@@ -24,8 +24,10 @@ fun Application.module() {
     val config = environment.config
     val meilisearchUrl = config.property("appfood.meilisearch.url").getString()
     val meilisearchApiKey = config.property("appfood.meilisearch.apiKey").getString()
+    environment.log.info("=== CONFIG DEBUG ===")
     environment.log.info("Meilisearch URL configuree: $meilisearchUrl")
     environment.log.info("Meilisearch API Key presente: ${meilisearchApiKey.isNotBlank()}")
+    environment.log.info("=== FIN CONFIG DEBUG ===")
 
     install(Koin) {
         modules(backendModule(meilisearchUrl, meilisearchApiKey))
