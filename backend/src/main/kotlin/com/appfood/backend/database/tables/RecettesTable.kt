@@ -12,7 +12,7 @@ object RecettesTable : Table("recettes") {
     val tempsCuissonMin = integer("temps_cuisson_min")
     val nbPortions = integer("nb_portions")
     val regimesCompatibles = text("regimes_compatibles")
-    val source = enumerationByName<SourceRecette>("source", 20)
+    val sourceRecette = enumerationByName<SourceRecette>("source", 20)
     val typeRepas = text("type_repas")
     val etapes = text("etapes")
     // Nutriments totaux (calcules)

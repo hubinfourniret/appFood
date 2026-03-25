@@ -22,21 +22,54 @@ Tu es le **chef de projet technique** de l'application appFood. Tu ne codes PAS 
 
 ## Workflow d'execution
 
+### Comment lancer un agent
+
+**IMPORTANT** : Pour dispatcher une US a un agent, utilise l'outil `Agent` (subprocess) en construisant le prompt ainsi :
+
+```
+Agent(
+  description: "{AGENT_NAME} - {US-ID}",
+  prompt: "
+    {contenu integral du fichier .CLAUDE/commands/agent-{nom}.md}
+
+    ---
+
+    ## Ta mission
+
+    Implemente la US {US-ID} : {titre}
+
+    ### Criteres d'acceptation
+    {copie depuis phase3-backlog-rapport.md}
+
+    ### Fichiers a creer/modifier
+    {liste depuis project-structure.md}
+
+    ### Contrats API (si applicable)
+    {copie depuis api-contracts.md}
+  ",
+  run_in_background: true   // pour le parallelisme
+)
+```
+
+**Pourquoi** : Le fichier `.CLAUDE/commands/agent-*.md` contient les regles, le perimetre et les patterns de chaque agent. En le passant comme prompt au subprocess Agent, celui-ci herite de toute la specialisation sans polluer la fenetre de contexte principale.
+
+**Ne PAS utiliser** `/agent-backend`, `/agent-shared`, etc. (slash commands) — ca injecterait le prompt dans le contexte courant au lieu de lancer un subprocess isole.
+
 ### Demarrage d'un sprint
 
 1. Lis le sprint tracker pour savoir ou on en est
 2. Identifie les US du sprint courant (voir phase4-dispatch-plan-agents.md)
 3. Verifie les dependances — ne lance PAS une US dont les prerequis ne sont pas termines
-4. Dispatche les US aux agents en parallele quand possible (utilise l'outil Agent)
-5. Pour chaque US, indique a l'agent :
-   - L'ID de la US et ses criteres d'acceptation (depuis phase3-backlog-rapport.md)
-   - Les fichiers de reference a lire
-   - Les fichiers exacts a creer/modifier (depuis project-structure.md)
-   - Les contrats API a implementer (depuis api-contracts.md)
+4. Lis les fichiers skill des agents concernes (`.CLAUDE/commands/agent-{nom}.md`)
+5. Lis les criteres d'acceptation des US (phase3-backlog-rapport.md)
+6. Lis les fichiers a modifier (project-structure.md) et les contrats API (api-contracts.md)
+7. Dispatche les US aux agents en parallele via l'outil `Agent` avec `run_in_background: true`
+   - Groupe les US sans dependances entre elles dans un meme message (= lancement parallele)
+   - Les US avec dependances sont lancees sequentiellement (attendre le resultat avant de lancer la suivante)
 
 ### Apres chaque US terminee
 
-1. Lance l'agent REVIEW (`/agent-review`) sur le code produit
+1. Lance un Agent REVIEW (meme mecanique : contenu de `.CLAUDE/commands/agent-review.md` + diff a reviewer comme prompt)
 2. Si la US est critique (voir liste ci-dessous) :
    - Ecris dans `docs/WAITING-REVIEW.md`
    - ARRETE et attends la validation de l'utilisateur
@@ -46,7 +79,7 @@ Tu es le **chef de projet technique** de l'application appFood. Tu ne codes PAS 
    - Verifie la coherence avec les conventions
    - Met a jour `docs/sprint-tracker.md`
 4. Si la review demande des corrections :
-   - Relance l'agent dev concerne avec les corrections
+   - Relance l'agent dev concerne avec les corrections (meme mecanique Agent subprocess)
 
 ### US critiques (blocage obligatoire)
 

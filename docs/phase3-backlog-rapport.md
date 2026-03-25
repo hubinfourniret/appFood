@@ -107,10 +107,10 @@ je veux une base PostgreSQL configuree avec le schema initial et les migrations,
 afin d'avoir une base de donnees prete pour le developpement.
 
 **Criteres d'acceptation :**
-- [ ] Schema initial cree (tables User, Aliment, Recette, JournalEntree, QuotaJournalier, Notification)
-- [ ] Systeme de migrations en place (Flyway ou Exposed migrations)
-- [ ] Script de seed avec des donnees de test
-- [ ] Base accessible en local via Docker Compose
+- [x] Schema initial cree (tables User, Aliment, Recette, JournalEntree, QuotaJournalier, Notification)
+- [x] Systeme de migrations en place (Flyway ou Exposed migrations)
+- [x] Script de seed avec des donnees de test
+- [x] Base accessible en local via Docker Compose
 
 **Complexite :** M
 **Priorite :** MVP
@@ -126,11 +126,11 @@ je veux un serveur Meilisearch configure et indexe avec les aliments,
 afin de pouvoir proposer une recherche rapide et tolerante aux fautes.
 
 **Criteres d'acceptation :**
-- [ ] Instance Meilisearch dans le Docker Compose
-- [ ] Index "aliments" cree avec les champs searchable (nom, marque, categorie)
-- [ ] Filtres configures (regime_compatible, categorie, source)
-- [ ] Synonymes francais configures (ex: "tomate" = "tomates")
-- [ ] Endpoint de recherche fonctionnel cote Ktor
+- [x] Instance Meilisearch dans le Docker Compose
+- [x] Index "aliments" cree avec les champs searchable (nom, marque, categorie)
+- [x] Filtres configures (regime_compatible, categorie, source)
+- [x] Synonymes francais configures (ex: "tomate" = "tomates")
+- [x] Endpoint de recherche fonctionnel cote Ktor
 
 **Complexite :** M
 **Priorite :** MVP

@@ -5,8 +5,13 @@ findById:
 SELECT * FROM local_journal_entry WHERE id = ?;
 
 insertOrReplace:
-INSERT OR REPLACE INTO local_journal_entry(id, user_id, aliment_id, recette_id, meal_type, quantite_grammes, date, sync_status, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO local_journal_entry(
+    id, user_id, aliment_id, recette_id, nom, meal_type, quantite_grammes, nb_portions, date,
+    calories, proteines, glucides, lipides, fibres, sel, sucres,
+    fer, calcium, zinc, magnesium, vitamine_b12, vitamine_d, vitamine_c, omega_3, omega_6,
+    sync_status, created_at, updated_at
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deleteById:
 DELETE FROM local_journal_entry WHERE id = ?;

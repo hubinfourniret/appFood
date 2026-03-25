@@ -1,6 +1,9 @@
 findByAlimentId:
-SELECT * FROM local_portion WHERE aliment_id = ?;
+SELECT * FROM local_portion WHERE aliment_id = ? OR est_generique = 1;
+
+findGeneriques:
+SELECT * FROM local_portion WHERE est_generique = 1;
 
 insertOrReplace:
-INSERT OR REPLACE INTO local_portion(id, aliment_id, nom, quantite_grammes)
-VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO local_portion(id, aliment_id, nom, quantite_grammes, est_generique)
+VALUES (?, ?, ?, ?, ?);

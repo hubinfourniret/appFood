@@ -11,12 +11,17 @@ class LocalPortionDataSource(private val database: AppDatabase) {
         return queries.findByAlimentId(alimentId).executeAsList()
     }
 
+    fun findGeneriques(): List<Local_portion> {
+        return queries.findGeneriques().executeAsList()
+    }
+
     fun insertOrReplace(portion: Local_portion) {
         queries.insertOrReplace(
             id = portion.id,
             aliment_id = portion.aliment_id,
             nom = portion.nom,
             quantite_grammes = portion.quantite_grammes,
+            est_generique = portion.est_generique,
         )
     }
 }

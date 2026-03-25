@@ -4,9 +4,28 @@ CREATE TABLE local_journal_entry (
     user_id TEXT NOT NULL,
     aliment_id TEXT,
     recette_id TEXT,
+    nom TEXT NOT NULL DEFAULT '',
     meal_type TEXT NOT NULL,
     quantite_grammes REAL NOT NULL,
+    nb_portions REAL,
     date TEXT NOT NULL,
+    -- Nutriments calcules (snapshot)
+    calories REAL NOT NULL DEFAULT 0.0,
+    proteines REAL NOT NULL DEFAULT 0.0,
+    glucides REAL NOT NULL DEFAULT 0.0,
+    lipides REAL NOT NULL DEFAULT 0.0,
+    fibres REAL NOT NULL DEFAULT 0.0,
+    sel REAL NOT NULL DEFAULT 0.0,
+    sucres REAL NOT NULL DEFAULT 0.0,
+    fer REAL NOT NULL DEFAULT 0.0,
+    calcium REAL NOT NULL DEFAULT 0.0,
+    zinc REAL NOT NULL DEFAULT 0.0,
+    magnesium REAL NOT NULL DEFAULT 0.0,
+    vitamine_b12 REAL NOT NULL DEFAULT 0.0,
+    vitamine_d REAL NOT NULL DEFAULT 0.0,
+    vitamine_c REAL NOT NULL DEFAULT 0.0,
+    omega_3 REAL NOT NULL DEFAULT 0.0,
+    omega_6 REAL NOT NULL DEFAULT 0.0,
     sync_status TEXT NOT NULL DEFAULT 'SYNCED',
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
@@ -39,13 +58,13 @@ CREATE TABLE local_aliment (
     regimes_compatibles TEXT NOT NULL
 );
 
--- Portions standard
+-- Portions standard (aliment_id NULL = portion generique)
 CREATE TABLE local_portion (
     id TEXT NOT NULL PRIMARY KEY,
-    aliment_id TEXT NOT NULL,
+    aliment_id TEXT,
     nom TEXT NOT NULL,
     quantite_grammes REAL NOT NULL,
-    FOREIGN KEY (aliment_id) REFERENCES local_aliment(id)
+    est_generique INTEGER NOT NULL DEFAULT 0
 );
 
 -- Profil utilisateur cache

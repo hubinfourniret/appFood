@@ -6,7 +6,7 @@ object AlimentsTable : Table("aliments") {
     val id = varchar("id", 36)
     val nom = varchar("nom", 255)
     val marque = varchar("marque", 255).nullable()
-    val source = enumerationByName<SourceAliment>("source", 20)
+    val sourceAliment = enumerationByName<SourceAliment>("source", 20)
     val sourceId = varchar("source_id", 100).nullable()
     val codeBarres = varchar("code_barres", 50).nullable().index()
     val categorie = varchar("categorie", 100)

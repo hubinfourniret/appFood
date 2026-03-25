@@ -7,8 +7,8 @@
 | SETUP-01a | KMP init (shared) | SHARED | Done | ✅ | - |
 | SETUP-01b | UI init (navigation, theme) | MOBILE | Done | ✅ | SETUP-01a |
 | SETUP-02 | Ktor init | BACKEND | Done | ✅ | - |
-| SETUP-03 | PostgreSQL schema | BACKEND | Todo | - | SETUP-02 |
-| SETUP-04 | Meilisearch config | BACKEND | Todo | - | SETUP-02 |
+| SETUP-03 | PostgreSQL schema | BACKEND | Done | ✅ | SETUP-02 |
+| SETUP-04 | Meilisearch config | BACKEND | Done | ✅ | SETUP-02 |
 | SETUP-05 | SQLDelight config | SHARED | Done | ✅ | SETUP-01a |
 | INFRA-01 | CI/CD GitHub Actions | INFRA | Todo | - | SETUP-01a, SETUP-02 |
 | DATA-01a | Import Ciqual (prep CSV parser) | DATA | Todo | - | - |
