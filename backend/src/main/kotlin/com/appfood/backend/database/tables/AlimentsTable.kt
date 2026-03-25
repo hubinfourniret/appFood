@@ -29,4 +29,8 @@ object AlimentsTable : Table("aliments") {
     val omega3 = double("omega_3")
     val omega6 = double("omega_6")
     override val primaryKey = PrimaryKey(id)
+
+    init {
+        uniqueIndex("idx_aliments_source_source_id", sourceAliment, sourceId)
+    }
 }

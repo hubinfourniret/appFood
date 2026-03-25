@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.batchUpsert
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -136,6 +137,54 @@ class AlimentDao {
             this[AlimentsTable.omega3] = row.omega3
             this[AlimentsTable.omega6] = row.omega6
         }
+    }
+
+    /**
+     * Upsert a batch of aliments using (source, source_id) as conflict keys.
+     * On conflict, updates nutritional values but preserves the existing UUID.
+     */
+    suspend fun upsertBatch(rows: List<AlimentRow>) = dbQuery {
+        AlimentsTable.batchUpsert(
+            rows,
+            AlimentsTable.sourceAliment,
+            AlimentsTable.sourceId,
+            shouldReturnGeneratedValues = false,
+        ) { row ->
+            this[AlimentsTable.id] = row.id
+            this[AlimentsTable.nom] = row.nom
+            this[AlimentsTable.marque] = row.marque
+            this[AlimentsTable.sourceAliment] = row.source
+            this[AlimentsTable.sourceId] = row.sourceId
+            this[AlimentsTable.codeBarres] = row.codeBarres
+            this[AlimentsTable.categorie] = row.categorie
+            this[AlimentsTable.regimesCompatibles] = row.regimesCompatibles
+            this[AlimentsTable.calories] = row.calories
+            this[AlimentsTable.proteines] = row.proteines
+            this[AlimentsTable.glucides] = row.glucides
+            this[AlimentsTable.lipides] = row.lipides
+            this[AlimentsTable.fibres] = row.fibres
+            this[AlimentsTable.sel] = row.sel
+            this[AlimentsTable.sucres] = row.sucres
+            this[AlimentsTable.fer] = row.fer
+            this[AlimentsTable.calcium] = row.calcium
+            this[AlimentsTable.zinc] = row.zinc
+            this[AlimentsTable.magnesium] = row.magnesium
+            this[AlimentsTable.vitamineB12] = row.vitamineB12
+            this[AlimentsTable.vitamineD] = row.vitamineD
+            this[AlimentsTable.vitamineC] = row.vitamineC
+            this[AlimentsTable.omega3] = row.omega3
+            this[AlimentsTable.omega6] = row.omega6
+        }
+    }
+
+    /**
+     * Count how many of the given sourceIds already exist in the database for the given source.
+     */
+    suspend fun countExisting(source: SourceAliment, sourceIds: List<String>): Int = dbQuery {
+        AlimentsTable.selectAll()
+            .where { (AlimentsTable.sourceAliment eq source) and (AlimentsTable.sourceId inList sourceIds) }
+            .count()
+            .toInt()
     }
 
     suspend fun delete(id: String): Boolean = dbQuery {
