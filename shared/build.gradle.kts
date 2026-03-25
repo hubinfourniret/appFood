@@ -54,6 +54,10 @@ kotlin {
             implementation(libs.ktor.client.contentNegotiation)
             implementation(libs.ktor.serialization.json)
 
+            // Firebase (GitLive KMP SDK)
+            implementation(libs.firebase.auth)
+            implementation(libs.firebase.common)
+
             // Koin
             implementation(libs.koin.core)
             implementation(libs.koin.compose)

@@ -6,6 +6,16 @@ import org.slf4j.LoggerFactory
  * Firebase token verification.
  * In dev mode (FIREBASE_MOCK=true), accepts all tokens and extracts userId from the token string.
  * In production, should verify tokens via Firebase Admin SDK.
+ *
+ * --- Migration vers la verification reelle en production ---
+ * Pour activer la verification reelle des tokens Firebase :
+ * 1. Ajouter la dependance Firebase Admin SDK Java dans backend/build.gradle.kts :
+ *    implementation("com.google.firebase:firebase-admin:9.4.3")
+ * 2. Placer le fichier de credentials (service account JSON) sur le serveur
+ * 3. Configurer la variable d'environnement GOOGLE_APPLICATION_CREDENTIALS
+ *    pointant vers le chemin du fichier JSON
+ * 4. Passer FIREBASE_MOCK=false dans les variables d'environnement de production
+ * 5. Decommenter le code de verification reelle dans verifyToken() et deleteUser()
  */
 data class FirebaseTokenInfo(
     val uid: String,
