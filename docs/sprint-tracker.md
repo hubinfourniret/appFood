@@ -14,23 +14,29 @@
 | DATA-01a | Import Ciqual (prep CSV parser) | DATA | Done | ✅ | - |
 | UX-01 | Navigation principale | MOBILE | Done | ✅ (mineurs) | SETUP-01b |
 
-## Sprint en cours : Sprint 1 (Auth & Profil + Data)
+## Sprint 1 (Auth & Profil + Data) — TERMINE
 
 | US-ID | Titre | Agents | Statut | Review | Bloquant |
 |-------|-------|--------|--------|--------|----------|
-| AUTH-01 | Inscription email/password | SHARED, BACKEND, MOBILE | In Progress | - | SETUP-01a, SETUP-02 |
-| AUTH-02 | Connexion / Deconnexion | SHARED, BACKEND, MOBILE | In Progress | - | AUTH-01 |
-| AUTH-03 | Connexion Google Sign-In | MOBILE | In Progress | - | AUTH-01 |
-| AUTH-04 | Reset mot de passe | MOBILE | In Progress | - | AUTH-01 |
-| AUTH-05 | Connexion Apple Sign-In | MOBILE | In Progress | - | AUTH-03 |
-| PROFIL-01 | Questionnaire profil (onboarding) | SHARED, BACKEND, MOBILE | In Progress | - | AUTH-01, SETUP-05 |
-| PROFIL-02 | Edition du profil | SHARED, BACKEND, MOBILE | In Progress | - | PROFIL-01 |
-| PROFIL-03 | Preferences alimentaires | SHARED, BACKEND, MOBILE | In Progress | - | PROFIL-01, SETUP-04 |
-| PROFIL-04 | Suppression de compte (RGPD) | BACKEND, MOBILE | In Progress | - | PROFIL-01 |
-| DATA-01b | Import Ciqual (insert DB + index) | DATA | In Progress | - | SETUP-03, SETUP-04, DATA-01a |
-| DATA-02 | Integration Open Food Facts | DATA | In Progress | - | SETUP-04, DATA-01 |
-| DATA-03 | Tables AJR/ANC | SHARED, DATA | In Progress | - | SETUP-03 |
+| AUTH-01 | Inscription email/password | SHARED, BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
+| AUTH-02 | Connexion / Deconnexion | SHARED, BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
+| AUTH-03 | Connexion Google Sign-In | MOBILE | Done | ✅ (corrections appliquees) | - |
+| AUTH-04 | Reset mot de passe | MOBILE | Done | ✅ (corrections appliquees) | - |
+| AUTH-05 | Connexion Apple Sign-In | MOBILE | Done | ✅ (corrections appliquees) | - |
+| PROFIL-01 | Questionnaire profil (onboarding) | SHARED, BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
+| PROFIL-02 | Edition du profil | SHARED, BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
+| PROFIL-03 | Preferences alimentaires | SHARED, BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
+| PROFIL-04 | Suppression de compte (RGPD) | BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
+| DATA-01b | Import Ciqual (insert DB + index) | DATA | Done | ✅ (corrections appliquees) | - |
+| DATA-02 | Integration Open Food Facts | DATA | Done | ✅ (corrections appliquees) | - |
+| DATA-03 | Tables AJR/ANC | SHARED, DATA | Done | ✅ | - |
+| PORTIONS-01 | Portions standard (donnees) | DATA | Done | ✅ | - |
 | INFRA-02 | Deploiement Railway | INFRA | Blocked | - | Action humaine: compte Railway |
 | INFRA-03 | Monitoring Sentry/UptimeRobot | INFRA | Blocked | - | INFRA-02, action humaine |
+
+### Notes Sprint 1
+- Firebase non configure → mock mode utilise (FIREBASE_MOCK=true)
+- Backend ne peut pas dependre de :shared directement (pas de JVM target) → DTOs dans backend/routes/dto/
+- 3 erreurs de compilation mineures pre-existantes dans AppNavigation.kt et OnboardingScreen.kt (a corriger)
 
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked
