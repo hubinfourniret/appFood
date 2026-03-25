@@ -44,5 +44,9 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.android)
 
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.android)
+
     debugImplementation(libs.compose.uiTooling)
 }

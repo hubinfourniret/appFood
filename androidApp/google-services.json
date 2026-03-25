@@ -12,7 +12,20 @@
           "package_name": "com.appfood"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "529216350515-5rf2l00fo6uh9oufajjklttepdcirdl0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.appfood",
+            "certificate_hash": "e52699407b663d35de47e647fffd0ebd061e6833"
+          }
+        },
+        {
+          "client_id": "529216350515-8nc3hhc05smlovv23m8a6vo9bddiip89.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAI3-YEmSgN5cH8msvrF1DWfK7KHBo7BaA"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "529216350515-8nc3hhc05smlovv23m8a6vo9bddiip89.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "529216350515-mga9kkhbpbfjna6m5squa5e2rt2aqs7t.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.appfood"
+              }
+            }
+          ]
         }
       }
     }

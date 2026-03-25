@@ -6,7 +6,7 @@ Les agents ne peuvent PAS faire ces actions. Elles necessitent une intervention 
 |----------|--------|-------------------|--------|
 | 🔴 Bloquant | Creer un projet Firebase + obtenir `google-services.json` (Android) et `GoogleService-Info.plist` (iOS) | AUTH-01 a AUTH-05, NOTIF-01 | Done |
 | 🟡 Important | iOS : verifier dans Xcode que `GoogleService-Info.plist` est dans Build Phases → Copy Bundle Resources (necessite un Mac) | AUTH-01 a AUTH-05 (iOS) | Todo |
-| 🔴 Bloquant | Configurer Google Sign-In dans la console Firebase (SHA-1 Android + activer le provider) | AUTH-03 | Todo |
+| 🔴 Bloquant | Configurer Google Sign-In dans la console Firebase (SHA-1 Android + activer le provider) | AUTH-03 | Done |
 | 🔴 Bloquant | Configurer Apple Sign-In (Apple Developer Account + Firebase) | AUTH-05 | Todo |
 | 🔴 Bloquant | Creer un compte Railway + provisionner les services | INFRA-02 | Todo |
 | 🟡 Important | Telecharger la base Ciqual (CSV) depuis le site ANSES | DATA-01 | Todo |
