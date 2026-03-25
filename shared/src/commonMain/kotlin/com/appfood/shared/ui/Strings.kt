@@ -2,8 +2,15 @@ package com.appfood.shared.ui
 
 object Strings {
     const val APP_NAME = "appFood"
-    const val TAB_DASHBOARD = "Tableau de bord"
-    const val TAB_JOURNAL = "Journal"
+
+    // Navigation — barre inferieure
+    const val NAV_DASHBOARD = "Dashboard"
+    const val NAV_ADD = "Ajouter"
+    const val NAV_RECIPES = "Recettes"
+    const val NAV_PROFILE = "Profil"
+
+    // Aliases (backward compatibility)
+    const val TAB_DASHBOARD = "Dashboard"
     const val TAB_ADD = "Ajouter"
     const val TAB_RECETTES = "Recettes"
     const val TAB_PROFIL = "Profil"

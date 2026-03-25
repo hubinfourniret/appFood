@@ -1,0 +1,135 @@
+name: CI — Lint, Tests & Build
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true'
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1 : Lint (ktlint)
+  # ─────────────────────────────────────────────
+  lint:
+    name: Lint (ktlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run ktlint
+        run: ./gradlew ktlintCheck --continue
+
+  # ─────────────────────────────────────────────
+  # Job 2 : Tests unitaires (shared — Kotest)
+  # ─────────────────────────────────────────────
+  test-shared:
+    name: Tests shared (Kotest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run shared unit tests
+        run: ./gradlew :shared:allTests --continue
+
+  # ─────────────────────────────────────────────
+  # Job 3 : Tests backend (Ktor + Testcontainers)
+  # ─────────────────────────────────────────────
+  test-backend:
+    name: Tests backend (Ktor + Testcontainers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run backend tests
+        run: ./gradlew :backend:test --continue
+
+  # ─────────────────────────────────────────────
+  # Job 4 : Build Android APK (debug)
+  # ─────────────────────────────────────────────
+  build-android:
+    name: Build Android (APK debug)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [test-shared, test-backend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        run: ./gradlew :androidApp:assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: appfood-debug-apk
+          path: androidApp/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+  # ─────────────────────────────────────────────
+  # Job 5 : Build Docker image backend
+  # ─────────────────────────────────────────────
+  build-docker:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [test-shared, test-backend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -f backend/Dockerfile -t appfood-backend:ci .

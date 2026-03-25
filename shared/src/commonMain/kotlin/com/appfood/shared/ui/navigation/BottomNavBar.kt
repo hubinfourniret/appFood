@@ -36,33 +36,6 @@ private val HomeIcon: ImageVector by lazy {
         }.build()
 }
 
-// Journal icon (simple rectangle with lines)
-private val JournalIcon: ImageVector by lazy {
-    ImageVector.Builder("Journal", 24.dp, 24.dp, 24f, 24f)
-        .path(fill = SolidColor(Color.Black)) {
-            moveTo(6f, 2f)
-            horizontalLineTo(18f)
-            verticalLineTo(22f)
-            horizontalLineTo(6f)
-            close()
-            moveTo(8f, 6f)
-            horizontalLineTo(16f)
-            verticalLineTo(8f)
-            horizontalLineTo(8f)
-            close()
-            moveTo(8f, 10f)
-            horizontalLineTo(16f)
-            verticalLineTo(12f)
-            horizontalLineTo(8f)
-            close()
-            moveTo(8f, 14f)
-            horizontalLineTo(13f)
-            verticalLineTo(16f)
-            horizontalLineTo(8f)
-            close()
-        }.build()
-}
-
 // Add/Plus icon
 private val AddIcon: ImageVector by lazy {
     ImageVector.Builder("Add", 24.dp, 24.dp, 24f, 24f)
@@ -141,9 +114,11 @@ data class BottomNavItem(
     val screen: Screen,
 )
 
-val bottomNavItems = listOf(
+private val bottomNavItemsLeft = listOf(
     BottomNavItem(label = Strings.TAB_DASHBOARD, icon = HomeIcon, screen = Screen.Dashboard),
-    BottomNavItem(label = Strings.TAB_JOURNAL, icon = JournalIcon, screen = Screen.Journal),
+)
+
+private val bottomNavItemsRight = listOf(
     BottomNavItem(label = Strings.TAB_RECETTES, icon = RecettesIcon, screen = Screen.Recettes),
     BottomNavItem(label = Strings.TAB_PROFIL, icon = ProfilIcon, screen = Screen.Profil),
 )
@@ -158,7 +133,8 @@ fun BottomNavBar(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
-        bottomNavItems.take(2).forEach { item ->
+        // Left items (before central "+")
+        bottomNavItemsLeft.forEach { item ->
             NavigationBarItem(
                 selected = currentScreen == item.screen,
                 onClick = { onNavigate(item.screen) },
@@ -167,9 +143,9 @@ fun BottomNavBar(
             )
         }
 
-        // Bouton central "+" mis en evidence
+        // Central "+" button — primary action, highlighted
         NavigationBarItem(
-            selected = false,
+            selected = currentScreen is Screen.Journal,
             onClick = onAddClick,
             icon = {
                 FloatingActionButton(
@@ -185,7 +161,8 @@ fun BottomNavBar(
             label = { Text(text = Strings.TAB_ADD) },
         )
 
-        bottomNavItems.drop(2).forEach { item ->
+        // Right items (after central "+")
+        bottomNavItemsRight.forEach { item ->
             NavigationBarItem(
                 selected = currentScreen == item.screen,
                 onClick = { onNavigate(item.screen) },

@@ -18,6 +18,7 @@ sqldelight = "2.0.2"
 exposed = "0.61.0"
 postgresql = "42.7.5"
 flyway = "11.8.2"
+ktlint = "12.2.0"
 logback = "1.5.18"
 meilisearch = "0.14.4"
 
@@ -101,3 +102,4 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

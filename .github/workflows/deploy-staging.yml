@@ -1,0 +1,59 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true'
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1 : Tests rapides avant deploiement
+  # ─────────────────────────────────────────────
+  test:
+    name: Tests pre-deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run tests
+        run: ./gradlew :shared:allTests :backend:test
+
+  # ─────────────────────────────────────────────
+  # Job 2 : Build & Deploy vers Railway (staging)
+  # ─────────────────────────────────────────────
+  deploy:
+    name: Deploy to Railway (staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: test
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: railway up --service ${{ vars.RAILWAY_SERVICE_NAME || 'appfood-backend' }} --environment staging

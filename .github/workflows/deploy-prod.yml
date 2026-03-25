@@ -1,0 +1,76 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Confirmer le deploiement en production (taper "oui")'
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+env:
+  JAVA_VERSION: '21'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true'
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1 : Validation de la confirmation
+  # ─────────────────────────────────────────────
+  validate:
+    name: Validate confirmation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify confirmation input
+        if: github.event.inputs.confirm != 'oui'
+        run: |
+          echo "::error::Deploiement annule. Vous devez taper 'oui' pour confirmer."
+          exit 1
+
+  # ─────────────────────────────────────────────
+  # Job 2 : Tests complets
+  # ─────────────────────────────────────────────
+  test:
+    name: Tests pre-deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run all tests
+        run: ./gradlew :backend:test :shared:allTests
+
+  # ─────────────────────────────────────────────
+  # Job 3 : Build & Deploy vers Railway (prod)
+  # ─────────────────────────────────────────────
+  deploy:
+    name: Deploy to Railway (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: test
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
+        run: railway up --service ${{ vars.RAILWAY_SERVICE_NAME || 'appfood-backend' }} --environment production

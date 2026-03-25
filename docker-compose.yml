@@ -1,5 +1,8 @@
 version: "3.8"
 
+# Docker Compose pour le developpement local
+# Usage : docker compose up -d
+
 services:
   postgres:
     image: postgres:16
@@ -33,6 +36,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: appfood-backend
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: dev
+      KTOR_DEVELOPMENT: "true"
+      DATABASE_URL: "jdbc:postgresql://postgres:5432/appfood"
+      DATABASE_USER: appfood
+      DATABASE_PASSWORD: appfood
+      MEILISEARCH_URL: "http://meilisearch:7700"
+      MEILISEARCH_API_KEY: masterKey
+      JWT_SECRET: dev-secret-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
 
 volumes:
   postgres-data:

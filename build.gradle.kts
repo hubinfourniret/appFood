@@ -8,4 +8,9 @@ plugins {
     alias(libs.plugins.kotlinSerialization) apply false
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.ktor) apply false
+    alias(libs.plugins.ktlint) apply false
+}
+
+subprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
 }

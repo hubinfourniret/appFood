@@ -1,0 +1,39 @@
+version: "3.8"
+
+# Docker Compose pour les tests d'integration (Testcontainers-compatible)
+# Usage : docker compose -f docker-compose.test.yml up -d
+
+services:
+  postgres-test:
+    image: postgres:16
+    container_name: appfood-postgres-test
+    environment:
+      POSTGRES_DB: appfood_test
+      POSTGRES_USER: appfood_test
+      POSTGRES_PASSWORD: appfood_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appfood_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  meilisearch-test:
+    image: getmeili/meilisearch:v1.13
+    container_name: appfood-meilisearch-test
+    environment:
+      MEILI_MASTER_KEY: testMasterKey
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+    ports:
+      - "7701:7700"
+    tmpfs:
+      - /meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
