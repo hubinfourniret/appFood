@@ -14,8 +14,11 @@ import com.appfood.backend.database.dao.RecetteDao
 import com.appfood.backend.database.dao.UserDao
 import com.appfood.backend.database.dao.UserPreferencesDao
 import com.appfood.backend.database.dao.UserProfileDao
+import com.appfood.backend.external.FirebaseAdmin
 import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.search.MeilisearchClient
+import com.appfood.backend.service.AuthService
+import com.appfood.backend.service.ProfileService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -39,6 +42,13 @@ fun backendModule(meilisearchUrl: String, meilisearchApiKey: String) = module {
     // Meilisearch
     single { MeilisearchClient(get(), meilisearchUrl, meilisearchApiKey) }
     single { AlimentIndexer(get(), get()) }
+
+    // Firebase
+    single { FirebaseAdmin() }
+
+    // Services
+    single { AuthService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { ProfileService(get(), get(), get()) }
 
     // DAOs
     single { UserDao() }

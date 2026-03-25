@@ -73,6 +73,10 @@ class NotificationDao {
         } > 0
     }
 
+    suspend fun deleteByUserId(userId: String): Int = dbQuery {
+        NotificationsTable.deleteWhere { NotificationsTable.userId eq userId }
+    }
+
     private fun ResultRow.toRow() = NotificationRow(
         id = this[NotificationsTable.id],
         userId = this[NotificationsTable.userId],
