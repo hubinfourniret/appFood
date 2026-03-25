@@ -43,3 +43,4 @@ Skills agents : `.CLAUDE/commands/agent-*.md`
 - **Offline-first** : SQLDelight local + sync_queue pour journal/poids/hydratation
 - **Langue** : Code en anglais, UI/commentaires en francais
 - **Tests** : Kotest (shared), Ktor test engine + Testcontainers (backend)
+- **RTK** : Toujours prefixer les commandes Bash avec `rtk` pour reduire la consommation de tokens (ex: `rtk git status`, `rtk ./gradlew build`, `rtk docker ps`). Meme dans les chaines avec `&&`, chaque commande doit etre prefixee : `rtk git add . && rtk git commit -m "msg"`
