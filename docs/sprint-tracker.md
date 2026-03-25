@@ -12,6 +12,7 @@
 | SETUP-05 | SQLDelight config | SHARED | Done | ✅ | SETUP-01a |
 | INFRA-01 | CI/CD GitHub Actions | INFRA | Done | ✅ | SETUP-01a, SETUP-02 |
 | DATA-01a | Import Ciqual (prep CSV parser) | DATA | Done | ✅ | - |
+| DATA-01b | Import Ciqual (insert DB + index) | DATA | Done | ✅ (corrections appliquees) | SETUP-03, SETUP-04, DATA-01a |
 | UX-01 | Navigation principale | MOBILE | Done | ✅ (mineurs) | SETUP-01b |
 
 ## Sprint 1 (Auth & Profil + Data) — TERMINE
@@ -27,7 +28,6 @@
 | PROFIL-02 | Edition du profil | SHARED, BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
 | PROFIL-03 | Preferences alimentaires | SHARED, BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
 | PROFIL-04 | Suppression de compte (RGPD) | BACKEND, MOBILE | Done | ✅ (corrections appliquees) | - |
-| DATA-01b | Import Ciqual (insert DB + index) | DATA | Done | ✅ (corrections appliquees) | - |
 | DATA-02 | Integration Open Food Facts | DATA | Done | ✅ (corrections appliquees) | - |
 | DATA-03 | Tables AJR/ANC | SHARED, DATA | Done | ✅ | - |
 | PORTIONS-01 | Portions standard (donnees) | DATA | Done | ✅ | - |
