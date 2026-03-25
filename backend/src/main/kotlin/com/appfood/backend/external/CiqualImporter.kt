@@ -1,8 +1,10 @@
 package com.appfood.backend.external
 
+import com.appfood.backend.database.dao.AlimentDao
 import com.appfood.backend.database.dao.AlimentRow
 import com.appfood.backend.database.tables.RegimeAlimentaire
 import com.appfood.backend.database.tables.SourceAliment
+import com.appfood.backend.search.AlimentIndexer
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import org.slf4j.LoggerFactory
@@ -20,10 +22,13 @@ import java.util.UUID
  * gere les valeurs speciales ("-", "traces", "N/A", "<") et detecte
  * les regimes compatibles par heuristique de categorie.
  *
- * Ce fichier prepare les AlimentRow prets pour insertion en base (DATA-01b).
- * Il ne fait pas d'insertion DB ni d'indexation Meilisearch.
+ * Complete pipeline: parse CSV -> upsert PostgreSQL -> index Meilisearch.
+ * Idempotent: uses INSERT ON CONFLICT (source, source_id) DO UPDATE.
  */
-class CiqualImporter {
+class CiqualImporter(
+    private val alimentDao: AlimentDao,
+    private val alimentIndexer: AlimentIndexer,
+) {
 
     private val logger = LoggerFactory.getLogger(CiqualImporter::class.java)
 
@@ -32,6 +37,8 @@ class CiqualImporter {
         private const val DECIMAL_COMMA = ','
         private const val DECIMAL_DOT = '.'
         private const val LOW_QUALITY_THRESHOLD = 8
+        private const val UPSERT_BATCH_SIZE = 500
+        private const val MEILISEARCH_BATCH_SIZE = 500
 
         // -- Column patterns for nutriment mapping (Ciqual headers vary between versions) --
 
@@ -105,6 +112,65 @@ class CiqualImporter {
         val skippedLines: Int,
         val lowQualityCount: Int,
     )
+
+    /**
+     * Full import pipeline: parse CSV, upsert to PostgreSQL, index in Meilisearch.
+     * Idempotent — can be re-run safely without duplicating data.
+     *
+     * @param inputStream The CSV file input stream (UTF-8 or UTF-8 BOM)
+     * @return ImportResult with parsed AlimentRow list and statistics
+     */
+    suspend fun importAndIndex(inputStream: InputStream): ImportResult {
+        val result = parse(inputStream)
+
+        if (result.rows.isEmpty()) {
+            logger.warn("No aliments parsed from CSV — skipping DB insert and Meilisearch indexation")
+            return result
+        }
+
+        // Upsert to PostgreSQL in batches (idempotent via source + source_id unique constraint)
+        val batchSize = UPSERT_BATCH_SIZE
+        val batches = result.rows.chunked(batchSize)
+        var upsertedCount = 0
+
+        for ((index, batch) in batches.withIndex()) {
+            alimentDao.upsertBatch(batch)
+            upsertedCount += batch.size
+            logger.info("PostgreSQL upsert: batch ${index + 1}/${batches.size} ($upsertedCount / ${result.rows.size})")
+        }
+
+        logger.info("PostgreSQL import complete: $upsertedCount aliments upserted")
+
+        // Index in Meilisearch in batches
+        val indexBatches = result.rows.chunked(MEILISEARCH_BATCH_SIZE)
+        var indexedCount = 0
+
+        for ((index, batch) in indexBatches.withIndex()) {
+            try {
+                alimentIndexer.indexBatch(batch)
+                indexedCount += batch.size
+                logger.info(
+                    "Meilisearch index: batch ${index + 1}/${indexBatches.size} ($indexedCount / ${result.rows.size})"
+                )
+            } catch (e: Exception) {
+                logger.error(
+                    "Meilisearch indexation failed at batch ${index + 1}: ${e.message}",
+                    e,
+                )
+            }
+        }
+
+        logger.info("Meilisearch indexation complete: $indexedCount aliments indexed")
+
+        return result
+    }
+
+    /**
+     * Full import pipeline from a file path.
+     */
+    suspend fun importAndIndex(filePath: String): ImportResult {
+        return java.io.File(filePath).inputStream().use { importAndIndex(it) }
+    }
 
     /**
      * Parse a Ciqual CSV file from an InputStream.

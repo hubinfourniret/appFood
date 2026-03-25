@@ -14,6 +14,8 @@ import com.appfood.backend.database.dao.RecetteDao
 import com.appfood.backend.database.dao.UserDao
 import com.appfood.backend.database.dao.UserPreferencesDao
 import com.appfood.backend.database.dao.UserProfileDao
+import com.appfood.backend.external.CiqualImporter
+import com.appfood.backend.external.OpenFoodFactsClient
 import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.search.MeilisearchClient
 import io.ktor.client.HttpClient
@@ -39,6 +41,10 @@ fun backendModule(meilisearchUrl: String, meilisearchApiKey: String) = module {
     // Meilisearch
     single { MeilisearchClient(get(), meilisearchUrl, meilisearchApiKey) }
     single { AlimentIndexer(get(), get()) }
+
+    // External data sources
+    single { CiqualImporter(get(), get()) }
+    single { OpenFoodFactsClient(get(), get(), get()) }
 
     // DAOs
     single { UserDao() }
