@@ -97,6 +97,23 @@ class HydratationDao {
         HydratationEntriesTable.deleteWhere { HydratationEntriesTable.id eq id } > 0
     }
 
+    suspend fun findByUserId(userId: String): List<HydratationRow> = dbQuery {
+        HydratationTable.selectAll()
+            .where { HydratationTable.userId eq userId }
+            .map { it.toRow() }
+    }
+
+    suspend fun deleteByUserId(userId: String): Int = dbQuery {
+        // Delete entries first (they reference hydratation via hydratationId)
+        val hydratationIds = HydratationTable.selectAll()
+            .where { HydratationTable.userId eq userId }
+            .map { it[HydratationTable.id] }
+        hydratationIds.forEach { hId ->
+            HydratationEntriesTable.deleteWhere { HydratationEntriesTable.hydratationId eq hId }
+        }
+        HydratationTable.deleteWhere { HydratationTable.userId eq userId }
+    }
+
     private fun ResultRow.toRow() = HydratationRow(
         id = this[HydratationTable.id],
         userId = this[HydratationTable.userId],

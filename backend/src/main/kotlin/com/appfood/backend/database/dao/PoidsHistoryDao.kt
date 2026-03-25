@@ -65,6 +65,10 @@ class PoidsHistoryDao {
         } > 0
     }
 
+    suspend fun deleteByUserId(userId: String): Int = dbQuery {
+        PoidsHistoryTable.deleteWhere { PoidsHistoryTable.userId eq userId }
+    }
+
     private fun ResultRow.toRow() = PoidsHistoryRow(
         id = this[PoidsHistoryTable.id],
         userId = this[PoidsHistoryTable.userId],

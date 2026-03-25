@@ -44,6 +44,7 @@ class UserProfileDao {
         tailleCm: Int,
         regimeAlimentaire: RegimeAlimentaire,
         niveauActivite: NiveauActivite,
+        onboardingComplete: Boolean = true,
     ): UserProfileRow = dbQuery {
         val now = Clock.System.now()
         UserProfilesTable.insert {
@@ -54,9 +55,10 @@ class UserProfileDao {
             it[UserProfilesTable.tailleCm] = tailleCm
             it[UserProfilesTable.regimeAlimentaire] = regimeAlimentaire
             it[UserProfilesTable.niveauActivite] = niveauActivite
+            it[UserProfilesTable.onboardingComplete] = onboardingComplete
             it[UserProfilesTable.updatedAt] = now
         }
-        UserProfileRow(userId, sexe, age, poidsKg, tailleCm, regimeAlimentaire, niveauActivite, false, null, now)
+        UserProfileRow(userId, sexe, age, poidsKg, tailleCm, regimeAlimentaire, niveauActivite, onboardingComplete, null, now)
     }
 
     suspend fun update(

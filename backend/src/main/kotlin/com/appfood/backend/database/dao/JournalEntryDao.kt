@@ -135,10 +135,20 @@ class JournalEntryDao {
         } > 0
     }
 
+    suspend fun findByUserAll(userId: String): List<JournalEntryRow> = dbQuery {
+        JournalEntriesTable.selectAll()
+            .where { JournalEntriesTable.userId eq userId }
+            .map { it.toRow() }
+    }
+
     suspend fun delete(id: String, userId: String): Boolean = dbQuery {
         JournalEntriesTable.deleteWhere {
             (JournalEntriesTable.id eq id) and (JournalEntriesTable.userId eq userId)
         } > 0
+    }
+
+    suspend fun deleteByUserId(userId: String): Int = dbQuery {
+        JournalEntriesTable.deleteWhere { JournalEntriesTable.userId eq userId }
     }
 
     private fun ResultRow.toRow() = JournalEntryRow(
