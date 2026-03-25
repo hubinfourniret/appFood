@@ -78,7 +78,8 @@ object Strings {
     const val ONBOARDING_CONTINUE = "Continuer"
     const val ONBOARDING_SKIP = "Passer"
     const val ONBOARDING_FINISH = "Terminer"
-    const val ONBOARDING_STEP_INDICATOR = "Etape %d sur %d"
+    // ONBOARDING_STEP_INDICATOR removed — use onboardingStepIndicator() instead
+    fun onboardingStepIndicator(current: Int, total: Int) = "Étape $current sur $total"
 
     // Onboarding — Step 1 : Body metrics
     const val ONBOARDING_STEP1_TITLE = "Vos informations"

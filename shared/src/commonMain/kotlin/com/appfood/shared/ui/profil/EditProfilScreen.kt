@@ -276,7 +276,7 @@ private fun EditProfilContent(
             if (editError != null) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = editError!!,
+                    text = editError.orEmpty(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                 )

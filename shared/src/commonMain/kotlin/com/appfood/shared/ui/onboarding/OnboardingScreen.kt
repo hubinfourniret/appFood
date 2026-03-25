@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.appfood.shared.model.NiveauActivite
 import com.appfood.shared.model.RegimeAlimentaire
@@ -155,7 +156,7 @@ private fun OnboardingContent(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = Strings.ONBOARDING_STEP_INDICATOR.format(currentStep, totalSteps),
+            text = Strings.onboardingStepIndicator(currentStep, totalSteps),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -334,7 +335,7 @@ private fun Step1BodyMetrics(
     if (error != null) {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = error!!,
+            text = error.orEmpty(),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
         )
@@ -519,7 +520,7 @@ private fun SelectableCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
         )
     }
 }

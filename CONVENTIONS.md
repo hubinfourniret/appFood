@@ -276,8 +276,8 @@ fun `should calculate correct quotas for vegan athlete`() {
 
 ### Regles generales
 
-- **Imports** : Utiliser `org.jetbrains.compose.*`, PAS `androidx.compose.*`
-- **Pas d'imports Android** : Aucun `android.*`, `androidx.activity.*`, `android.content.*` dans `shared/ui/`
+- **Imports** : Depuis Compose Multiplatform 1.6+, `androidx.compose.*` est le namespace officiel et correct (JetBrains a migre vers les artefacts AndroidX). Utiliser `androidx.compose.*` partout.
+- **Pas d'imports Android platform-specific** : Aucun `android.*`, `androidx.activity.*`, `android.content.*` dans `shared/ui/`
 - **State** : Utiliser `collectAsState()` pour observer les flows du ViewModel
 - **Preview** : Pas de `@Preview` Android — utiliser les previews CMP si disponibles
 - **Navigation** : Utiliser la navigation CMP (Voyager ou decompose, a definir au Sprint 0)
