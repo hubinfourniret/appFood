@@ -18,6 +18,7 @@ import com.appfood.shared.db.Local_user
 import com.appfood.shared.db.Local_user_profile
 import com.appfood.shared.db.Local_preferences
 import com.appfood.shared.util.AppResult
+import kotlinx.datetime.Instant
 
 /**
  * Combines remote API calls with local SQLDelight cache.
@@ -35,7 +36,7 @@ class UserRepositoryImpl(
             cacheUser(response)
             AppResult.Success(response)
         } catch (e: Exception) {
-            AppResult.Error(message = e.message ?: "Registration failed", cause = e)
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Registration failed", cause = e)
         }
     }
 
@@ -45,7 +46,7 @@ class UserRepositoryImpl(
             cacheUser(response)
             AppResult.Success(response)
         } catch (e: Exception) {
-            AppResult.Error(message = e.message ?: "Login failed", cause = e)
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Login failed", cause = e)
         }
     }
 
@@ -55,25 +56,27 @@ class UserRepositoryImpl(
             cacheFullProfile(response)
             AppResult.Success(response)
         } catch (e: Exception) {
-            AppResult.Error(message = e.message ?: "Failed to get current user", cause = e)
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Failed to get current user", cause = e)
         }
     }
 
     override suspend fun createProfile(request: CreateProfileRequest): AppResult<ProfileResponse> {
         return try {
             val response = userApi.createProfile(request)
+            cacheProfile(response)
             AppResult.Success(response)
         } catch (e: Exception) {
-            AppResult.Error(message = e.message ?: "Failed to create profile", cause = e)
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Failed to create profile", cause = e)
         }
     }
 
     override suspend fun updateProfile(request: UpdateProfileRequest): AppResult<ProfileResponse> {
         return try {
             val response = userApi.updateProfile(request)
+            cacheProfile(response)
             AppResult.Success(response)
         } catch (e: Exception) {
-            AppResult.Error(message = e.message ?: "Failed to update profile", cause = e)
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Failed to update profile", cause = e)
         }
     }
 
@@ -82,17 +85,20 @@ class UserRepositoryImpl(
             val response = userApi.updatePreferences(request)
             AppResult.Success(response)
         } catch (e: Exception) {
-            AppResult.Error(message = e.message ?: "Failed to update preferences", cause = e)
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Failed to update preferences", cause = e)
         }
     }
 
     override suspend fun deleteAccount(): AppResult<Unit> {
         return try {
             authApi.deleteAccount()
+            // Supprimer toutes les donnees locales : user, profil et preferences
+            localUserDataSource.deleteAllPreferences()
+            localUserDataSource.deleteAllProfiles()
             localUserDataSource.deleteAll()
             AppResult.Success(Unit)
         } catch (e: Exception) {
-            AppResult.Error(message = e.message ?: "Failed to delete account", cause = e)
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Failed to delete account", cause = e)
         }
     }
 
@@ -101,7 +107,19 @@ class UserRepositoryImpl(
             val response = userApi.exportData()
             AppResult.Success(response)
         } catch (e: Exception) {
-            AppResult.Error(message = e.message ?: "Failed to export data", cause = e)
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Failed to export data", cause = e)
+        }
+    }
+
+    /**
+     * Parse une date ISO-8601 en epoch millisecondes.
+     * Retourne 0L si le parsing echoue.
+     */
+    private fun parseIsoDate(isoString: String): Long {
+        return try {
+            Instant.parse(isoString).toEpochMilliseconds()
+        } catch (e: Exception) {
+            0L
         }
     }
 
@@ -114,8 +132,32 @@ class UserRepositoryImpl(
                 nom = user.nom,
                 prenom = user.prenom,
                 role = "USER",
-                created_at = 0L,
-                updated_at = 0L,
+                created_at = parseIsoDate(user.createdAt),
+                updated_at = parseIsoDate(user.createdAt),
+            )
+        )
+    }
+
+    /**
+     * Cache un ProfileResponse dans la base locale.
+     * Necessite qu'un user soit deja en cache pour obtenir le user_id.
+     */
+    private fun cacheProfile(profile: ProfileResponse) {
+        // Recuperer le user en cache pour obtenir le user_id
+        val cachedUsers = localUserDataSource.findAll()
+        val userId = cachedUsers.firstOrNull()?.id ?: return
+        localUserDataSource.insertOrReplaceProfile(
+            Local_user_profile(
+                user_id = userId,
+                sexe = profile.sexe,
+                age = profile.age.toLong(),
+                poids_kg = profile.poidsKg,
+                taille_cm = profile.tailleCm.toLong(),
+                regime_alimentaire = profile.regimeAlimentaire,
+                niveau_activite = profile.niveauActivite,
+                onboarding_complete = if (profile.onboardingComplete) 1L else 0L,
+                objectif_poids = profile.objectifPoids,
+                updated_at = parseIsoDate(profile.updatedAt),
             )
         )
     }
@@ -129,8 +171,8 @@ class UserRepositoryImpl(
                 nom = user.nom,
                 prenom = user.prenom,
                 role = "USER",
-                created_at = 0L,
-                updated_at = 0L,
+                created_at = parseIsoDate(user.createdAt),
+                updated_at = parseIsoDate(user.createdAt),
             )
         )
 
@@ -146,7 +188,7 @@ class UserRepositoryImpl(
                     niveau_activite = profile.niveauActivite,
                     onboarding_complete = if (profile.onboardingComplete) 1L else 0L,
                     objectif_poids = profile.objectifPoids,
-                    updated_at = 0L,
+                    updated_at = parseIsoDate(profile.updatedAt),
                 )
             )
         }
@@ -162,7 +204,7 @@ class UserRepositoryImpl(
                     rappel_hydratation = 1L,
                     heure_rappel_matin = "08:00",
                     heure_rappel_soir = "20:00",
-                    updated_at = 0L,
+                    updated_at = parseIsoDate(prefs.updatedAt),
                 )
             )
         }

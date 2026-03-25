@@ -1,13 +1,21 @@
 package com.appfood.backend.routes
 
-import com.appfood.backend.database.dao.ConsentDao
-import com.appfood.backend.database.dao.HydratationDao
-import com.appfood.backend.database.dao.JournalEntryDao
-import com.appfood.backend.database.dao.PoidsHistoryDao
-import com.appfood.backend.database.dao.QuotaDao
 import com.appfood.backend.database.dao.UserPreferencesRow
 import com.appfood.backend.database.dao.UserProfileRow
 import com.appfood.backend.plugins.userId
+import com.appfood.backend.routes.dto.ConsentExportResponse
+import com.appfood.backend.routes.dto.CreateProfileRequest
+import com.appfood.backend.routes.dto.HydratationExportResponse
+import com.appfood.backend.routes.dto.JournalEntryExportResponse
+import com.appfood.backend.routes.dto.NutrimentValuesResponse
+import com.appfood.backend.routes.dto.PoidsExportResponse
+import com.appfood.backend.routes.dto.PreferencesResponse
+import com.appfood.backend.routes.dto.ProfileResponse
+import com.appfood.backend.routes.dto.QuotaExportResponse
+import com.appfood.backend.routes.dto.UpdatePreferencesRequest
+import com.appfood.backend.routes.dto.UpdateProfileRequest
+import com.appfood.backend.routes.dto.UserExportResponse
+import com.appfood.backend.routes.dto.UserProfileResponse
 import com.appfood.backend.service.ProfileService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
@@ -19,126 +27,10 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import kotlinx.datetime.Clock
-import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
-
-// --- Request DTOs ---
-
-@Serializable
-data class CreateProfileRequest(
-    val sexe: String,
-    val age: Int,
-    val poidsKg: Double,
-    val tailleCm: Int,
-    val regimeAlimentaire: String,
-    val niveauActivite: String,
-)
-
-@Serializable
-data class UpdateProfileRequest(
-    val sexe: String? = null,
-    val age: Int? = null,
-    val poidsKg: Double? = null,
-    val tailleCm: Int? = null,
-    val regimeAlimentaire: String? = null,
-    val niveauActivite: String? = null,
-    val objectifPoids: String? = null,
-)
-
-@Serializable
-data class UpdatePreferencesRequest(
-    val alimentsExclus: List<String>? = null,
-    val allergies: List<String>? = null,
-    val alimentsFavoris: List<String>? = null,
-)
-
-// --- Response DTOs ---
-
-@Serializable
-data class UserProfileResponse(
-    val user: UserResponse,
-    val profile: ProfileResponse?,
-    val preferences: PreferencesResponse?,
-)
-
-@Serializable
-data class ProfileResponse(
-    val sexe: String,
-    val age: Int,
-    val poidsKg: Double,
-    val tailleCm: Int,
-    val regimeAlimentaire: String,
-    val niveauActivite: String,
-    val onboardingComplete: Boolean,
-    val objectifPoids: String?,
-    val updatedAt: String,
-)
-
-@Serializable
-data class PreferencesResponse(
-    val alimentsExclus: List<String>,
-    val allergies: List<String>,
-    val alimentsFavoris: List<String>,
-    val updatedAt: String,
-)
-
-@Serializable
-data class UserExportResponse(
-    val user: UserResponse,
-    val profile: ProfileResponse?,
-    val preferences: PreferencesResponse?,
-    val journalEntries: List<JournalEntryExportItem>,
-    val quotas: List<QuotaExportItem>,
-    val poidsHistory: List<PoidsExportItem>,
-    val hydratation: List<HydratationExportItem>,
-    val consentements: List<ConsentExportItem>,
-    val exportedAt: String,
-)
-
-@Serializable
-data class JournalEntryExportItem(
-    val id: String,
-    val date: String,
-    val mealType: String,
-    val nom: String,
-    val quantiteGrammes: Double,
-    val calories: Double,
-)
-
-@Serializable
-data class QuotaExportItem(
-    val nutriment: String,
-    val valeurCible: Double,
-    val estPersonnalise: Boolean,
-)
-
-@Serializable
-data class PoidsExportItem(
-    val date: String,
-    val poidsKg: Double,
-)
-
-@Serializable
-data class HydratationExportItem(
-    val date: String,
-    val quantiteMl: Int,
-    val objectifMl: Int,
-)
-
-@Serializable
-data class ConsentExportItem(
-    val type: String,
-    val accepte: Boolean,
-    val dateConsentement: String,
-)
 
 fun Route.userRoutes() {
     val profileService by inject<ProfileService>()
-    val journalEntryDao by inject<JournalEntryDao>()
-    val quotaDao by inject<QuotaDao>()
-    val poidsHistoryDao by inject<PoidsHistoryDao>()
-    val hydratationDao by inject<HydratationDao>()
-    val consentDao by inject<ConsentDao>()
 
     authenticate("auth-jwt") {
         route("/api/v1/users") {
@@ -213,12 +105,8 @@ fun Route.userRoutes() {
 
             get("/me/export") {
                 val userId = call.userId()
-                val data = profileService.getUserProfile(userId)
-                val journalEntries = journalEntryDao.findByUserAll(userId)
-                val quotas = quotaDao.findByUserId(userId)
-                val poidsHistory = poidsHistoryDao.findByUserId(userId)
-                val hydratation = hydratationDao.findByUserId(userId)
-                val consentements = consentDao.findByUserId(userId)
+                val exportData = profileService.exportUserData(userId)
+                val data = exportData.userProfileData
 
                 val export = UserExportResponse(
                     user = data.user.toUserResponse(
@@ -226,41 +114,72 @@ fun Route.userRoutes() {
                     ),
                     profile = data.profile?.toProfileResponse(),
                     preferences = data.preferences?.toPreferencesResponse(),
-                    journalEntries = journalEntries.map { entry ->
-                        JournalEntryExportItem(
+                    journalEntries = exportData.journalEntries.map { entry ->
+                        JournalEntryExportResponse(
                             id = entry.id,
                             date = entry.date.toString(),
                             mealType = entry.mealType.name,
+                            alimentId = entry.alimentId,
+                            recetteId = entry.recetteId,
                             nom = entry.nom,
                             quantiteGrammes = entry.quantiteGrammes,
-                            calories = entry.calories,
+                            nbPortions = entry.nbPortions,
+                            nutrimentsCalcules = NutrimentValuesResponse(
+                                calories = entry.calories,
+                                proteines = entry.proteines,
+                                glucides = entry.glucides,
+                                lipides = entry.lipides,
+                                fibres = entry.fibres,
+                                sel = entry.sel,
+                                sucres = entry.sucres,
+                                fer = entry.fer,
+                                calcium = entry.calcium,
+                                zinc = entry.zinc,
+                                magnesium = entry.magnesium,
+                                vitamineB12 = entry.vitamineB12,
+                                vitamineD = entry.vitamineD,
+                                vitamineC = entry.vitamineC,
+                                omega3 = entry.omega3,
+                                omega6 = entry.omega6,
+                            ),
+                            createdAt = entry.createdAt.toString(),
+                            updatedAt = entry.updatedAt.toString(),
                         )
                     },
-                    quotas = quotas.map { quota ->
-                        QuotaExportItem(
+                    quotas = exportData.quotas.map { quota ->
+                        QuotaExportResponse(
                             nutriment = quota.nutriment.name,
                             valeurCible = quota.valeurCible,
                             estPersonnalise = quota.estPersonnalise,
+                            valeurCalculee = quota.valeurCalculee,
+                            unite = quota.unite,
                         )
                     },
-                    poidsHistory = poidsHistory.map { poids ->
-                        PoidsExportItem(
+                    poidsHistory = exportData.poidsHistory.map { poids ->
+                        PoidsExportResponse(
+                            id = poids.id,
                             date = poids.date.toString(),
                             poidsKg = poids.poidsKg,
+                            estReference = poids.estReference,
+                            createdAt = poids.createdAt.toString(),
                         )
                     },
-                    hydratation = hydratation.map { h ->
-                        HydratationExportItem(
+                    hydratation = exportData.hydratation.map { h ->
+                        HydratationExportResponse(
+                            id = h.id,
                             date = h.date.toString(),
                             quantiteMl = h.quantiteMl,
                             objectifMl = h.objectifMl,
+                            estObjectifPersonnalise = h.estObjectifPersonnalise,
+                            pourcentage = if (h.objectifMl > 0) h.quantiteMl.toDouble() / h.objectifMl * 100.0 else 0.0,
                         )
                     },
-                    consentements = consentements.map { c ->
-                        ConsentExportItem(
+                    consentements = exportData.consentements.map { c ->
+                        ConsentExportResponse(
                             type = c.type.name,
                             accepte = c.accepte,
                             dateConsentement = c.dateConsentement.toString(),
+                            versionPolitique = c.versionPolitique,
                         )
                     },
                     exportedAt = Clock.System.now().toString(),

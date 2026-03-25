@@ -1,7 +1,10 @@
 package com.appfood.backend.routes
 
-import com.appfood.backend.database.dao.UserProfileDao
 import com.appfood.backend.plugins.userId
+import com.appfood.backend.routes.dto.AuthResponse
+import com.appfood.backend.routes.dto.LoginRequest
+import com.appfood.backend.routes.dto.RegisterRequest
+import com.appfood.backend.routes.dto.UserResponse
 import com.appfood.backend.service.AuthService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
@@ -11,49 +14,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
-import kotlinx.serialization.Serializable
 import org.koin.ktor.ext.inject
-
-// --- Request DTOs ---
-
-@Serializable
-data class RegisterRequest(
-    val firebaseToken: String,
-    val email: String,
-    val nom: String? = null,
-    val prenom: String? = null,
-)
-
-@Serializable
-data class LoginRequest(
-    val firebaseToken: String,
-)
-
-// --- Response DTOs ---
-
-@Serializable
-data class AuthResponse(
-    val user: UserResponse,
-)
-
-@Serializable
-data class UserResponse(
-    val id: String,
-    val email: String,
-    val nom: String?,
-    val prenom: String?,
-    val onboardingComplete: Boolean,
-    val createdAt: String,
-)
-
-@Serializable
-data class ApiResponse<T>(
-    val data: T,
-)
 
 fun Route.authRoutes() {
     val authService by inject<AuthService>()
-    val userProfileDao by inject<UserProfileDao>()
 
     route("/api/v1/auth") {
         post("/register") {
@@ -76,14 +40,13 @@ fun Route.authRoutes() {
 
         post("/login") {
             val request = call.receive<LoginRequest>()
-            val user = authService.login(firebaseToken = request.firebaseToken)
-            val profile = userProfileDao.findByUserId(user.id)
+            val loginResult = authService.login(firebaseToken = request.firebaseToken)
             call.respond(
                 HttpStatusCode.OK,
                 ApiResponse(
                     data = AuthResponse(
-                        user = user.toUserResponse(
-                            onboardingComplete = profile?.onboardingComplete ?: false,
+                        user = loginResult.user.toUserResponse(
+                            onboardingComplete = loginResult.onboardingComplete,
                         ),
                     ),
                 ),

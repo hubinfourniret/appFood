@@ -10,6 +10,7 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlin.concurrent.Volatile
 
 /**
  * API client wrapper around Ktor HttpClient.
@@ -20,6 +21,7 @@ class ApiClient(
     private val baseUrl: String,
 ) {
 
+    @Volatile
     private var authToken: String? = null
 
     fun setAuthToken(token: String?) {

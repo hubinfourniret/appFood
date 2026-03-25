@@ -31,6 +31,10 @@ class LocalUserDataSource(private val database: AppDatabase) {
         queries.deleteById(id)
     }
 
+    fun findAll(): List<Local_user> {
+        return queries.findAll().executeAsList()
+    }
+
     fun deleteAll() {
         queries.deleteAll()
     }
@@ -60,6 +64,10 @@ class LocalUserDataSource(private val database: AppDatabase) {
         queries.deleteProfileByUserId(userId)
     }
 
+    fun deleteAllProfiles() {
+        queries.deleteAllProfiles()
+    }
+
     // ===== Preferences =====
 
     fun findPreferencesByUserId(userId: String): Local_preferences? {
@@ -82,5 +90,9 @@ class LocalUserDataSource(private val database: AppDatabase) {
 
     fun deletePreferencesByUserId(userId: String) {
         queries.deletePreferencesByUserId(userId)
+    }
+
+    fun deleteAllPreferences() {
+        queries.deleteAllPreferences()
     }
 }

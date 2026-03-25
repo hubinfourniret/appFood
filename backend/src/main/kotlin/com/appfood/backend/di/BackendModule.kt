@@ -53,8 +53,8 @@ fun backendModule(meilisearchUrl: String, meilisearchApiKey: String) = module {
     single { OpenFoodFactsClient(get(), get(), get()) }
 
     // Services
-    single { AuthService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single { ProfileService(get(), get(), get()) }
+    single { AuthService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { ProfileService(get(), get(), get(), get(), get(), get(), get(), get()) }
 
     // DAOs
     single { UserDao() }

@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -49,13 +50,12 @@ fun RegisterScreen(
     val passwordError by viewModel.registerPasswordError.collectAsState()
     val confirmPasswordError by viewModel.registerConfirmPasswordError.collectAsState()
 
-    // Handle navigation on success — registration always goes to onboarding
-    when (state) {
-        is AuthState.Success -> {
+    // Handle navigation on success via LaunchedEffect to avoid recomposition loops
+    LaunchedEffect(state) {
+        if (state is AuthState.Success) {
             onRegisterSuccess()
             viewModel.resetState()
         }
-        else -> { /* No-op */ }
     }
 
     RegisterContent(

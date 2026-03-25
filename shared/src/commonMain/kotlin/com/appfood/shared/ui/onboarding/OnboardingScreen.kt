@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,12 +52,28 @@ fun OnboardingScreen(
     val state by viewModel.state.collectAsState()
     val currentStep by viewModel.currentStep.collectAsState()
 
-    // Handle completion
-    when (state) {
-        is OnboardingState.Complete -> {
+    // Step 1 fields
+    val sexe by viewModel.sexe.collectAsState()
+    val ageText by viewModel.ageText.collectAsState()
+    val poidsText by viewModel.poidsText.collectAsState()
+    val tailleText by viewModel.tailleText.collectAsState()
+    val step1Error by viewModel.step1Error.collectAsState()
+
+    // Step 2
+    val regimeAlimentaire by viewModel.regimeAlimentaire.collectAsState()
+
+    // Step 3
+    val niveauActivite by viewModel.niveauActivite.collectAsState()
+
+    // Step 4
+    val selectedAllergies by viewModel.selectedAllergies.collectAsState()
+    val excludedAliments by viewModel.excludedAliments.collectAsState()
+
+    // Handle completion via LaunchedEffect to avoid recomposition loops
+    LaunchedEffect(state) {
+        if (state is OnboardingState.Complete) {
             onOnboardingComplete()
         }
-        else -> { /* No-op */ }
     }
 
     OnboardingContent(
@@ -64,7 +81,28 @@ fun OnboardingScreen(
         totalSteps = OnboardingViewModel.TOTAL_STEPS,
         isSaving = state is OnboardingState.Saving,
         errorMessage = (state as? OnboardingState.Error)?.message,
-        viewModel = viewModel,
+        // Step 1 state
+        sexe = sexe,
+        ageText = ageText,
+        poidsText = poidsText,
+        tailleText = tailleText,
+        step1Error = step1Error,
+        onSexeChanged = viewModel::onSexeChanged,
+        onAgeChanged = viewModel::onAgeChanged,
+        onPoidsChanged = viewModel::onPoidsChanged,
+        onTailleChanged = viewModel::onTailleChanged,
+        // Step 2 state
+        regimeAlimentaire = regimeAlimentaire,
+        onRegimeChanged = viewModel::onRegimeChanged,
+        // Step 3 state
+        niveauActivite = niveauActivite,
+        onActiviteChanged = viewModel::onActiviteChanged,
+        // Step 4 state
+        selectedAllergies = selectedAllergies,
+        excludedAliments = excludedAliments,
+        onAllergieToggled = viewModel::onAllergieToggled,
+        onExcludedAlimentRemoved = viewModel::onExcludedAlimentRemoved,
+        // Navigation
         onContinue = viewModel::onContinue,
         onBack = viewModel::onBack,
         onSkip = viewModel::onSkip,
@@ -77,7 +115,28 @@ private fun OnboardingContent(
     totalSteps: Int,
     isSaving: Boolean,
     errorMessage: String?,
-    viewModel: OnboardingViewModel,
+    // Step 1 state
+    sexe: Sexe?,
+    ageText: String,
+    poidsText: String,
+    tailleText: String,
+    step1Error: String?,
+    onSexeChanged: (Sexe) -> Unit,
+    onAgeChanged: (String) -> Unit,
+    onPoidsChanged: (String) -> Unit,
+    onTailleChanged: (String) -> Unit,
+    // Step 2 state
+    regimeAlimentaire: RegimeAlimentaire?,
+    onRegimeChanged: (RegimeAlimentaire) -> Unit,
+    // Step 3 state
+    niveauActivite: NiveauActivite?,
+    onActiviteChanged: (NiveauActivite) -> Unit,
+    // Step 4 state
+    selectedAllergies: Set<String>,
+    excludedAliments: List<String>,
+    onAllergieToggled: (String) -> Unit,
+    onExcludedAlimentRemoved: (String) -> Unit,
+    // Navigation
     onContinue: () -> Unit,
     onBack: () -> Unit,
     onSkip: () -> Unit,
@@ -96,7 +155,7 @@ private fun OnboardingContent(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Etape $currentStep sur $totalSteps",
+            text = Strings.ONBOARDING_STEP_INDICATOR.format(currentStep, totalSteps),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -116,10 +175,31 @@ private fun OnboardingContent(
                 .verticalScroll(rememberScrollState()),
         ) {
             when (currentStep) {
-                1 -> Step1BodyMetrics(viewModel)
-                2 -> Step2DietType(viewModel)
-                3 -> Step3ActivityLevel(viewModel)
-                4 -> Step4Exclusions(viewModel)
+                1 -> Step1BodyMetrics(
+                    sexe = sexe,
+                    ageText = ageText,
+                    poidsText = poidsText,
+                    tailleText = tailleText,
+                    error = step1Error,
+                    onSexeChanged = onSexeChanged,
+                    onAgeChanged = onAgeChanged,
+                    onPoidsChanged = onPoidsChanged,
+                    onTailleChanged = onTailleChanged,
+                )
+                2 -> Step2DietType(
+                    selected = regimeAlimentaire,
+                    onRegimeChanged = onRegimeChanged,
+                )
+                3 -> Step3ActivityLevel(
+                    selected = niveauActivite,
+                    onActiviteChanged = onActiviteChanged,
+                )
+                4 -> Step4Exclusions(
+                    selectedAllergies = selectedAllergies,
+                    excludedAliments = excludedAliments,
+                    onAllergieToggled = onAllergieToggled,
+                    onExcludedAlimentRemoved = onExcludedAlimentRemoved,
+                )
             }
         }
 
@@ -160,13 +240,17 @@ private fun OnboardingContent(
 // --- Step 1: Body metrics ---
 
 @Composable
-private fun Step1BodyMetrics(viewModel: OnboardingViewModel) {
-    val sexe by viewModel.sexe.collectAsState()
-    val ageText by viewModel.ageText.collectAsState()
-    val poidsText by viewModel.poidsText.collectAsState()
-    val tailleText by viewModel.tailleText.collectAsState()
-    val error by viewModel.step1Error.collectAsState()
-
+private fun Step1BodyMetrics(
+    sexe: Sexe?,
+    ageText: String,
+    poidsText: String,
+    tailleText: String,
+    error: String?,
+    onSexeChanged: (Sexe) -> Unit,
+    onAgeChanged: (String) -> Unit,
+    onPoidsChanged: (String) -> Unit,
+    onTailleChanged: (String) -> Unit,
+) {
     Text(
         text = Strings.ONBOARDING_STEP1_TITLE,
         style = MaterialTheme.typography.headlineSmall,
@@ -186,13 +270,13 @@ private fun Step1BodyMetrics(viewModel: OnboardingViewModel) {
         SelectableCard(
             label = Strings.ONBOARDING_SEXE_HOMME,
             selected = sexe == Sexe.HOMME,
-            onClick = { viewModel.onSexeChanged(Sexe.HOMME) },
+            onClick = { onSexeChanged(Sexe.HOMME) },
             modifier = Modifier.weight(1f),
         )
         SelectableCard(
             label = Strings.ONBOARDING_SEXE_FEMME,
             selected = sexe == Sexe.FEMME,
-            onClick = { viewModel.onSexeChanged(Sexe.FEMME) },
+            onClick = { onSexeChanged(Sexe.FEMME) },
             modifier = Modifier.weight(1f),
         )
     }
@@ -202,7 +286,7 @@ private fun Step1BodyMetrics(viewModel: OnboardingViewModel) {
     // Age
     OutlinedTextField(
         value = ageText,
-        onValueChange = viewModel::onAgeChanged,
+        onValueChange = onAgeChanged,
         label = { Text(Strings.ONBOARDING_AGE_LABEL) },
         suffix = { Text(Strings.ONBOARDING_AGE_UNIT) },
         singleLine = true,
@@ -222,7 +306,7 @@ private fun Step1BodyMetrics(viewModel: OnboardingViewModel) {
     ) {
         OutlinedTextField(
             value = poidsText,
-            onValueChange = viewModel::onPoidsChanged,
+            onValueChange = onPoidsChanged,
             label = { Text(Strings.ONBOARDING_POIDS_LABEL) },
             suffix = { Text(Strings.ONBOARDING_POIDS_UNIT) },
             singleLine = true,
@@ -234,7 +318,7 @@ private fun Step1BodyMetrics(viewModel: OnboardingViewModel) {
         )
         OutlinedTextField(
             value = tailleText,
-            onValueChange = viewModel::onTailleChanged,
+            onValueChange = onTailleChanged,
             label = { Text(Strings.ONBOARDING_TAILLE_LABEL) },
             suffix = { Text(Strings.ONBOARDING_TAILLE_UNIT) },
             singleLine = true,
@@ -260,9 +344,10 @@ private fun Step1BodyMetrics(viewModel: OnboardingViewModel) {
 // --- Step 2: Diet type ---
 
 @Composable
-private fun Step2DietType(viewModel: OnboardingViewModel) {
-    val selected by viewModel.regimeAlimentaire.collectAsState()
-
+private fun Step2DietType(
+    selected: RegimeAlimentaire?,
+    onRegimeChanged: (RegimeAlimentaire) -> Unit,
+) {
     Text(
         text = Strings.ONBOARDING_STEP2_TITLE,
         style = MaterialTheme.typography.headlineSmall,
@@ -281,7 +366,7 @@ private fun Step2DietType(viewModel: OnboardingViewModel) {
             label = labelAndDesc.first,
             description = labelAndDesc.second,
             selected = selected == regime,
-            onClick = { viewModel.onRegimeChanged(regime) },
+            onClick = { onRegimeChanged(regime) },
         )
         Spacer(modifier = Modifier.height(12.dp))
     }
@@ -290,9 +375,10 @@ private fun Step2DietType(viewModel: OnboardingViewModel) {
 // --- Step 3: Activity level ---
 
 @Composable
-private fun Step3ActivityLevel(viewModel: OnboardingViewModel) {
-    val selected by viewModel.niveauActivite.collectAsState()
-
+private fun Step3ActivityLevel(
+    selected: NiveauActivite?,
+    onActiviteChanged: (NiveauActivite) -> Unit,
+) {
     Text(
         text = Strings.ONBOARDING_STEP3_TITLE,
         style = MaterialTheme.typography.headlineSmall,
@@ -312,7 +398,7 @@ private fun Step3ActivityLevel(viewModel: OnboardingViewModel) {
             label = labelAndDesc.first,
             description = labelAndDesc.second,
             selected = selected == niveau,
-            onClick = { viewModel.onActiviteChanged(niveau) },
+            onClick = { onActiviteChanged(niveau) },
         )
         Spacer(modifier = Modifier.height(12.dp))
     }
@@ -322,10 +408,12 @@ private fun Step3ActivityLevel(viewModel: OnboardingViewModel) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Step4Exclusions(viewModel: OnboardingViewModel) {
-    val selectedAllergies by viewModel.selectedAllergies.collectAsState()
-    val excludedAliments by viewModel.excludedAliments.collectAsState()
-
+private fun Step4Exclusions(
+    selectedAllergies: Set<String>,
+    excludedAliments: List<String>,
+    onAllergieToggled: (String) -> Unit,
+    onExcludedAlimentRemoved: (String) -> Unit,
+) {
     Text(
         text = Strings.ONBOARDING_STEP4_TITLE,
         style = MaterialTheme.typography.headlineSmall,
@@ -353,7 +441,7 @@ private fun Step4Exclusions(viewModel: OnboardingViewModel) {
         PredefinedAllergies.LIST.forEach { allergie ->
             FilterChip(
                 selected = allergie in selectedAllergies,
-                onClick = { viewModel.onAllergieToggled(allergie) },
+                onClick = { onAllergieToggled(allergie) },
                 label = { Text(allergie) },
             )
         }
@@ -386,7 +474,7 @@ private fun Step4Exclusions(viewModel: OnboardingViewModel) {
                     text = Strings.PREFERENCES_REMOVE,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.clickable { viewModel.onExcludedAlimentRemoved(aliment) },
+                    modifier = Modifier.clickable { onExcludedAlimentRemoved(aliment) },
                 )
             }
         }

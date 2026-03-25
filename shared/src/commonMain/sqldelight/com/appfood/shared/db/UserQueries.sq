@@ -10,6 +10,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?);
 deleteById:
 DELETE FROM local_user WHERE id = ?;
 
+findAll:
+SELECT * FROM local_user;
+
 deleteAll:
 DELETE FROM local_user;
 
@@ -25,6 +28,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 deleteProfileByUserId:
 DELETE FROM local_user_profile WHERE user_id = ?;
 
+deleteAllProfiles:
+DELETE FROM local_user_profile;
+
 -- ===== local_preferences =====
 
 findPreferencesByUserId:
@@ -36,3 +42,6 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deletePreferencesByUserId:
 DELETE FROM local_preferences WHERE user_id = ?;
+
+deleteAllPreferences:
+DELETE FROM local_preferences;

@@ -163,13 +163,13 @@ class OpenFoodFactsClient(
             fibres = nutriments.fiber100g ?: 0.0,
             sel = nutriments.salt100g ?: 0.0,
             sucres = nutriments.sugars100g ?: 0.0,
-            fer = (nutriments.iron100g ?: 0.0) * 1000, // OFF gives iron in g, we need mg
-            calcium = (nutriments.calcium100g ?: 0.0) * 1000, // g -> mg
-            zinc = (nutriments.zinc100g ?: 0.0) * 1000, // g -> mg
-            magnesium = (nutriments.magnesium100g ?: 0.0) * 1000, // g -> mg
-            vitamineB12 = (nutriments.vitaminB12100g ?: 0.0) * 1_000_000, // g -> µg
-            vitamineD = (nutriments.vitaminD100g ?: 0.0) * 1_000_000, // g -> µg
-            vitamineC = (nutriments.vitaminC100g ?: 0.0) * 1000, // g -> mg
+            fer = nutriments.iron100g ?: 0.0, // OFF returns mg directly
+            calcium = nutriments.calcium100g ?: 0.0, // OFF returns mg directly
+            zinc = nutriments.zinc100g ?: 0.0, // OFF returns mg directly
+            magnesium = nutriments.magnesium100g ?: 0.0, // OFF returns mg directly
+            vitamineB12 = nutriments.vitaminB12100g ?: 0.0, // OFF returns µg directly
+            vitamineD = nutriments.vitaminD100g ?: 0.0, // OFF returns µg directly
+            vitamineC = nutriments.vitaminC100g ?: 0.0, // OFF returns mg directly
             omega3 = nutriments.omega3Fat100g ?: 0.0,
             omega6 = nutriments.omega6Fat100g ?: 0.0,
         )
@@ -205,12 +205,10 @@ class OpenFoodFactsClient(
                 RegimeAlimentaire.OMNIVORE,
             )
             else -> {
-                // Fallback: assume all regimes compatible when tags are missing
+                // Fallback conservateur : sans tags, on ne peut pas garantir vegan/vegetarien
                 listOf(
-                    RegimeAlimentaire.VEGAN,
-                    RegimeAlimentaire.VEGETARIEN,
-                    RegimeAlimentaire.FLEXITARIEN,
                     RegimeAlimentaire.OMNIVORE,
+                    RegimeAlimentaire.FLEXITARIEN,
                 )
             }
         }

@@ -68,6 +68,10 @@ class PortionDao {
         PortionsTable.deleteWhere { PortionsTable.id eq id } > 0
     }
 
+    suspend fun deleteByUserId(userId: String): Int = dbQuery {
+        PortionsTable.deleteWhere { PortionsTable.userId eq userId }
+    }
+
     private fun ResultRow.toRow() = PortionRow(
         id = this[PortionsTable.id],
         alimentId = this[PortionsTable.alimentId],

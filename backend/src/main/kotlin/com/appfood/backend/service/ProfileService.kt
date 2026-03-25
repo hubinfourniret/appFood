@@ -1,5 +1,15 @@
 package com.appfood.backend.service
 
+import com.appfood.backend.database.dao.ConsentDao
+import com.appfood.backend.database.dao.ConsentRow
+import com.appfood.backend.database.dao.HydratationDao
+import com.appfood.backend.database.dao.HydratationRow
+import com.appfood.backend.database.dao.JournalEntryDao
+import com.appfood.backend.database.dao.JournalEntryRow
+import com.appfood.backend.database.dao.PoidsHistoryDao
+import com.appfood.backend.database.dao.PoidsHistoryRow
+import com.appfood.backend.database.dao.QuotaDao
+import com.appfood.backend.database.dao.QuotaRow
 import com.appfood.backend.database.dao.UserDao
 import com.appfood.backend.database.dao.UserPreferencesDao
 import com.appfood.backend.database.dao.UserPreferencesRow
@@ -22,10 +32,24 @@ data class UserProfileData(
     val preferences: UserPreferencesRow?,
 )
 
+data class ExportData(
+    val userProfileData: UserProfileData,
+    val journalEntries: List<JournalEntryRow>,
+    val quotas: List<QuotaRow>,
+    val poidsHistory: List<PoidsHistoryRow>,
+    val hydratation: List<HydratationRow>,
+    val consentements: List<ConsentRow>,
+)
+
 class ProfileService(
     private val userDao: UserDao,
     private val userProfileDao: UserProfileDao,
     private val userPreferencesDao: UserPreferencesDao,
+    private val journalEntryDao: JournalEntryDao,
+    private val quotaDao: QuotaDao,
+    private val poidsHistoryDao: PoidsHistoryDao,
+    private val hydratationDao: HydratationDao,
+    private val consentDao: ConsentDao,
 ) {
     private val logger = LoggerFactory.getLogger("ProfileService")
 
@@ -164,6 +188,24 @@ class ProfileService(
             logger.info("UpdatePreferences: preferences updated for userId=$userId")
             return userPreferencesDao.findByUserId(userId)!!
         }
+    }
+
+    suspend fun exportUserData(userId: String): ExportData {
+        val userProfileData = getUserProfile(userId)
+        val journalEntries = journalEntryDao.findByUserAll(userId)
+        val quotas = quotaDao.findByUserId(userId)
+        val poidsHistory = poidsHistoryDao.findByUserId(userId)
+        val hydratation = hydratationDao.findByUserId(userId)
+        val consentements = consentDao.findByUserId(userId)
+
+        return ExportData(
+            userProfileData = userProfileData,
+            journalEntries = journalEntries,
+            quotas = quotas,
+            poidsHistory = poidsHistory,
+            hydratation = hydratation,
+            consentements = consentements,
+        )
     }
 
     private fun validateAge(age: Int) {

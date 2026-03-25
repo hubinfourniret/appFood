@@ -76,10 +76,31 @@ fun EditProfilScreen(
             )
         }
         is ProfilState.Loaded -> {
+            val sexe by viewModel.sexe.collectAsState()
+            val ageText by viewModel.ageText.collectAsState()
+            val poidsText by viewModel.poidsText.collectAsState()
+            val tailleText by viewModel.tailleText.collectAsState()
+            val regime by viewModel.regimeAlimentaire.collectAsState()
+            val activite by viewModel.niveauActivite.collectAsState()
+            val editError by viewModel.editError.collectAsState()
+
             EditProfilContent(
-                viewModel = viewModel,
+                sexe = sexe,
+                ageText = ageText,
+                poidsText = poidsText,
+                tailleText = tailleText,
+                regime = regime,
+                activite = activite,
+                editError = editError,
                 isSaving = saveState is SaveState.Saving,
                 snackbarHostState = snackbarHostState,
+                onSexeChanged = viewModel::onSexeChanged,
+                onAgeChanged = viewModel::onAgeChanged,
+                onPoidsChanged = viewModel::onPoidsChanged,
+                onTailleChanged = viewModel::onTailleChanged,
+                onRegimeChanged = viewModel::onRegimeChanged,
+                onActiviteChanged = viewModel::onActiviteChanged,
+                onSaveProfile = viewModel::onSaveProfile,
             )
         }
     }
@@ -87,18 +108,23 @@ fun EditProfilScreen(
 
 @Composable
 private fun EditProfilContent(
-    viewModel: ProfilViewModel,
+    sexe: Sexe?,
+    ageText: String,
+    poidsText: String,
+    tailleText: String,
+    regime: RegimeAlimentaire?,
+    activite: NiveauActivite?,
+    editError: String?,
     isSaving: Boolean,
     snackbarHostState: SnackbarHostState,
+    onSexeChanged: (Sexe) -> Unit,
+    onAgeChanged: (String) -> Unit,
+    onPoidsChanged: (String) -> Unit,
+    onTailleChanged: (String) -> Unit,
+    onRegimeChanged: (RegimeAlimentaire) -> Unit,
+    onActiviteChanged: (NiveauActivite) -> Unit,
+    onSaveProfile: () -> Unit,
 ) {
-    val sexe by viewModel.sexe.collectAsState()
-    val ageText by viewModel.ageText.collectAsState()
-    val poidsText by viewModel.poidsText.collectAsState()
-    val tailleText by viewModel.tailleText.collectAsState()
-    val regime by viewModel.regimeAlimentaire.collectAsState()
-    val activite by viewModel.niveauActivite.collectAsState()
-    val editError by viewModel.editError.collectAsState()
-
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -136,13 +162,13 @@ private fun EditProfilContent(
                 SelectableChip(
                     label = Strings.ONBOARDING_SEXE_HOMME,
                     selected = sexe == Sexe.HOMME,
-                    onClick = { viewModel.onSexeChanged(Sexe.HOMME) },
+                    onClick = { onSexeChanged(Sexe.HOMME) },
                     modifier = Modifier.weight(1f),
                 )
                 SelectableChip(
                     label = Strings.ONBOARDING_SEXE_FEMME,
                     selected = sexe == Sexe.FEMME,
-                    onClick = { viewModel.onSexeChanged(Sexe.FEMME) },
+                    onClick = { onSexeChanged(Sexe.FEMME) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -152,7 +178,7 @@ private fun EditProfilContent(
             // Age
             OutlinedTextField(
                 value = ageText,
-                onValueChange = viewModel::onAgeChanged,
+                onValueChange = onAgeChanged,
                 label = { Text(Strings.ONBOARDING_AGE_LABEL) },
                 suffix = { Text(Strings.ONBOARDING_AGE_UNIT) },
                 singleLine = true,
@@ -171,7 +197,7 @@ private fun EditProfilContent(
             ) {
                 OutlinedTextField(
                     value = poidsText,
-                    onValueChange = viewModel::onPoidsChanged,
+                    onValueChange = onPoidsChanged,
                     label = { Text(Strings.ONBOARDING_POIDS_LABEL) },
                     suffix = { Text(Strings.ONBOARDING_POIDS_UNIT) },
                     singleLine = true,
@@ -183,7 +209,7 @@ private fun EditProfilContent(
                 )
                 OutlinedTextField(
                     value = tailleText,
-                    onValueChange = viewModel::onTailleChanged,
+                    onValueChange = onTailleChanged,
                     label = { Text(Strings.ONBOARDING_TAILLE_LABEL) },
                     suffix = { Text(Strings.ONBOARDING_TAILLE_UNIT) },
                     singleLine = true,
@@ -215,7 +241,7 @@ private fun EditProfilContent(
                 SelectableChip(
                     label = label,
                     selected = regime == r,
-                    onClick = { viewModel.onRegimeChanged(r) },
+                    onClick = { onRegimeChanged(r) },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 )
             }
@@ -241,7 +267,7 @@ private fun EditProfilContent(
                 SelectableChip(
                     label = label,
                     selected = activite == n,
-                    onClick = { viewModel.onActiviteChanged(n) },
+                    onClick = { onActiviteChanged(n) },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 )
             }
@@ -261,7 +287,7 @@ private fun EditProfilContent(
 
         // Save button fixed at bottom
         Button(
-            onClick = viewModel::onSaveProfile,
+            onClick = onSaveProfile,
             enabled = !isSaving,
             modifier = Modifier
                 .fillMaxWidth()

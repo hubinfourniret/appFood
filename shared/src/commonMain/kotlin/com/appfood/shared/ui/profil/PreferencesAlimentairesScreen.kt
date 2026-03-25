@@ -58,24 +58,41 @@ fun PreferencesAlimentairesScreen(
         }
     }
 
+    val selectedAllergies by viewModel.selectedAllergies.collectAsState()
+    val excludedAliments by viewModel.excludedAliments.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
+
     PreferencesContent(
-        viewModel = viewModel,
+        selectedAllergies = selectedAllergies,
+        excludedAliments = excludedAliments,
+        searchQuery = searchQuery,
+        searchResults = searchResults,
         isSaving = saveState is SaveState.Saving,
         snackbarHostState = snackbarHostState,
+        onAllergieToggled = viewModel::onAllergieToggled,
+        onSearchQueryChanged = viewModel::onSearchQueryChanged,
+        onExcludedAlimentAdded = viewModel::onExcludedAlimentAdded,
+        onExcludedAlimentRemoved = viewModel::onExcludedAlimentRemoved,
+        onSavePreferences = viewModel::onSavePreferences,
     )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PreferencesContent(
-    viewModel: ProfilViewModel,
+    selectedAllergies: Set<String>,
+    excludedAliments: List<String>,
+    searchQuery: String,
+    searchResults: List<String>,
     isSaving: Boolean,
     snackbarHostState: SnackbarHostState,
+    onAllergieToggled: (String) -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
+    onExcludedAlimentAdded: (String) -> Unit,
+    onExcludedAlimentRemoved: (String) -> Unit,
+    onSavePreferences: () -> Unit,
 ) {
-    val selectedAllergies by viewModel.selectedAllergies.collectAsState()
-    val excludedAliments by viewModel.excludedAliments.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val searchResults by viewModel.searchResults.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -109,7 +126,7 @@ private fun PreferencesContent(
                 PredefinedAllergies.LIST.forEach { allergie ->
                     FilterChip(
                         selected = allergie in selectedAllergies,
-                        onClick = { viewModel.onAllergieToggled(allergie) },
+                        onClick = { onAllergieToggled(allergie) },
                         label = { Text(allergie) },
                     )
                 }
@@ -128,7 +145,7 @@ private fun PreferencesContent(
             // Search field
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = viewModel::onSearchQueryChanged,
+                onValueChange = onSearchQueryChanged,
                 label = { Text(Strings.PREFERENCES_SEARCH_PLACEHOLDER) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -152,7 +169,7 @@ private fun PreferencesContent(
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { viewModel.onExcludedAlimentAdded(result) }
+                                    .clickable { onExcludedAlimentAdded(result) }
                                     .padding(vertical = 8.dp, horizontal = 8.dp),
                             )
                         }
@@ -187,7 +204,7 @@ private fun PreferencesContent(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier
-                                .clickable { viewModel.onExcludedAlimentRemoved(aliment) }
+                                .clickable { onExcludedAlimentRemoved(aliment) }
                                 .padding(horizontal = 8.dp),
                         )
                     }
@@ -200,7 +217,7 @@ private fun PreferencesContent(
 
         // Save button
         Button(
-            onClick = viewModel::onSavePreferences,
+            onClick = onSavePreferences,
             enabled = !isSaving,
             modifier = Modifier
                 .fillMaxWidth()

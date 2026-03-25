@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -48,13 +49,13 @@ fun LoginScreen(
     val emailError by viewModel.loginEmailError.collectAsState()
     val passwordError by viewModel.loginPasswordError.collectAsState()
 
-    // Handle navigation on success
-    when (val currentState = state) {
-        is AuthState.Success -> {
+    // Handle navigation on success via LaunchedEffect to avoid recomposition loops
+    LaunchedEffect(state) {
+        val currentState = state
+        if (currentState is AuthState.Success) {
             onLoginSuccess(currentState.needsOnboarding)
             viewModel.resetState()
         }
-        else -> { /* No-op */ }
     }
 
     LoginContent(

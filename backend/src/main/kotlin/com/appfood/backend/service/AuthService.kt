@@ -6,6 +6,7 @@ import com.appfood.backend.database.dao.HydratationDao
 import com.appfood.backend.database.dao.JournalEntryDao
 import com.appfood.backend.database.dao.NotificationDao
 import com.appfood.backend.database.dao.PoidsHistoryDao
+import com.appfood.backend.database.dao.PortionDao
 import com.appfood.backend.database.dao.QuotaDao
 import com.appfood.backend.database.dao.UserDao
 import com.appfood.backend.database.dao.UserPreferencesDao
@@ -15,6 +16,11 @@ import com.appfood.backend.external.FirebaseAdmin
 import com.appfood.backend.plugins.ConflictException
 import com.appfood.backend.plugins.UnauthorizedException
 import org.slf4j.LoggerFactory
+
+data class LoginResult(
+    val user: UserRow,
+    val onboardingComplete: Boolean,
+)
 
 class AuthService(
     private val firebaseAdmin: FirebaseAdmin,
@@ -28,6 +34,7 @@ class AuthService(
     private val consentDao: ConsentDao,
     private val fcmTokenDao: FcmTokenDao,
     private val notificationDao: NotificationDao,
+    private val portionDao: PortionDao,
 ) {
     private val logger = LoggerFactory.getLogger("AuthService")
 
@@ -64,7 +71,7 @@ class AuthService(
         return user
     }
 
-    suspend fun login(firebaseToken: String): UserRow {
+    suspend fun login(firebaseToken: String): LoginResult {
         // Verify Firebase token
         val tokenInfo = firebaseAdmin.verifyToken(firebaseToken)
         logger.info("Login: verified Firebase token for uid=${tokenInfo.uid}")
@@ -73,8 +80,14 @@ class AuthService(
         val user = userDao.findById(tokenInfo.uid)
             ?: throw UnauthorizedException("Utilisateur non trouve. Veuillez vous inscrire.")
 
+        // Recuperer le profil pour onboardingComplete
+        val profile = userProfileDao.findByUserId(user.id)
+
         logger.info("Login: user found id=${user.id}")
-        return user
+        return LoginResult(
+            user = user,
+            onboardingComplete = profile?.onboardingComplete ?: false,
+        )
     }
 
     /**
@@ -94,6 +107,7 @@ class AuthService(
         consentDao.deleteByUserId(userId)
         hydratationDao.deleteByUserId(userId)
         poidsHistoryDao.deleteByUserId(userId)
+        portionDao.deleteByUserId(userId)
         quotaDao.deleteByUserId(userId)
         journalEntryDao.deleteByUserId(userId)
         userPreferencesDao.delete(userId)
