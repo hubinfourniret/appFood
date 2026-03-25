@@ -14,7 +14,9 @@ import com.appfood.backend.database.dao.RecetteDao
 import com.appfood.backend.database.dao.UserDao
 import com.appfood.backend.database.dao.UserPreferencesDao
 import com.appfood.backend.database.dao.UserProfileDao
+import com.appfood.backend.external.CiqualImporter
 import com.appfood.backend.external.FirebaseAdmin
+import com.appfood.backend.external.OpenFoodFactsClient
 import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.search.MeilisearchClient
 import com.appfood.backend.service.AuthService
@@ -45,6 +47,10 @@ fun backendModule(meilisearchUrl: String, meilisearchApiKey: String) = module {
 
     // Firebase
     single { FirebaseAdmin() }
+
+    // External data sources
+    single { CiqualImporter(get(), get()) }
+    single { OpenFoodFactsClient(get(), get(), get()) }
 
     // Services
     single { AuthService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
