@@ -188,7 +188,7 @@ je veux le backend deploye sur Railway avec PostgreSQL et Meilisearch manages,
 afin d'avoir un environnement de production accessible.
 
 **Criteres d'acceptation :**
-- [ ] Service Ktor deploye sur Railway (Docker)
+- [ ] Service Ktor deploye sur Railway (Docker) — BLOQUE: compte Railway non cree
 - [ ] PostgreSQL manage provisionne (serveur EU)
 - [ ] Meilisearch deploye
 - [ ] Variables d'environnement configurees (secrets)
@@ -198,7 +198,7 @@ afin d'avoir un environnement de production accessible.
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** SETUP-02, SETUP-03, SETUP-04
-**Agent assigne :** Phase 4
+**Agent assigne :** INFRA — Blocked (action humaine: compte Railway)
 
 ---
 
@@ -231,17 +231,17 @@ je veux importer la base Ciqual dans PostgreSQL et Meilisearch,
 afin d'avoir une base d'aliments fiable avec leurs valeurs nutritionnelles.
 
 **Criteres d'acceptation :**
-- [ ] Script d'import Ciqual (CSV → PostgreSQL)
-- [ ] Mapping des nutriments Ciqual vers le schema appFood
-- [ ] ~3000 aliments importes avec toutes les valeurs nutritionnelles
-- [ ] Aliments indexes dans Meilisearch
-- [ ] Tag regime_compatible calcule (vegan, vegetarien) pour chaque aliment
-- [ ] Script rejouable (idempotent) pour les mises a jour
+- [x] Script d'import Ciqual (CSV → PostgreSQL) — CiqualImporter.kt avec upsert batch
+- [x] Mapping des nutriments Ciqual vers le schema appFood (16 nutriments, omega-3/6 calcules)
+- [x] ~3000 aliments importes avec toutes les valeurs nutritionnelles
+- [x] Aliments indexes dans Meilisearch (config synonymes FR, stop words, filtres)
+- [x] Tag regime_compatible calcule (vegan, vegetarien) par heuristique de categorie
+- [x] Script rejouable (idempotent) — ON CONFLICT (source, source_id) DO UPDATE
 
 **Complexite :** L
 **Priorite :** MVP
 **Dependances :** SETUP-03, SETUP-04
-**Agent assigne :** Phase 4
+**Agent assigne :** DATA — Sprints 0-1
 **Notes techniques :** **LIRE `docs/us-clarifications.md` section 3** avant implementation. Contient : mapping exact des colonnes Ciqual → NutrimentValues, calcul omega-3/omega-6 a partir des acides gras, gestion des valeurs manquantes ("-", "traces", "N/A" → 0.0), heuristique de detection vegan/vegetarien par categorie, configuration Meilisearch (synonymes, filtres, stop words).
 
 ---
@@ -253,17 +253,17 @@ je veux pouvoir trouver des produits industriels (marques Leclerc, U, Intermarch
 afin de tracker ce que je mange reellement au quotidien.
 
 **Criteres d'acceptation :**
-- [ ] Client API Open Food Facts integre dans Ktor
-- [ ] Recherche de produits par nom via l'API OFF
-- [ ] Resultats OFF integres dans les resultats Meilisearch
-- [ ] Cache des produits recherches en base PostgreSQL
-- [ ] Donnees nutritionnelles mappees vers le schema appFood
-- [ ] Flag de qualite des donnees (source: ciqual vs open_food_facts)
+- [x] Client API Open Food Facts integre dans Ktor — OpenFoodFactsClient.kt
+- [x] Recherche de produits par nom via l'API OFF
+- [x] Resultats OFF integres dans les resultats Meilisearch (cache + index auto)
+- [x] Cache des produits recherches en base PostgreSQL
+- [x] Donnees nutritionnelles mappees vers le schema appFood (16 nutriments)
+- [x] Flag de qualite des donnees (source: CIQUAL vs OPEN_FOOD_FACTS)
 
 **Complexite :** L
 **Priorite :** MVP
 **Dependances :** SETUP-04, DATA-01
-**Agent assigne :** Phase 4
+**Agent assigne :** DATA — Sprint 1
 
 ---
 
@@ -274,15 +274,15 @@ je veux une table de reference des Apports Journaliers Recommandes par profil,
 afin de calculer les quotas personnalises.
 
 **Criteres d'acceptation :**
-- [ ] Table AJR/ANC integree en base avec les valeurs officielles ANSES
-- [ ] Valeurs par : sexe, tranche d'age, niveau d'activite physique
-- [ ] Valeurs specifiques pour les regimes vegan/vegetarien (B12, fer, zinc, omega-3, proteines)
-- [ ] API endpoint pour recuperer les AJR d'un profil donne
+- [x] Table AJR/ANC integree en base avec les valeurs officielles ANSES (V004__seed_ajr.sql)
+- [x] Valeurs par : sexe, tranche d'age (ado/adulte/senior)
+- [x] Valeurs specifiques pour les regimes vegan/vegetarien (coefficients: fer x1.8, zinc x1.5, omega-3 x1.5, proteines x1.1)
+- [ ] API endpoint pour recuperer les AJR d'un profil donne — a implementer avec QUOTAS-01
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** SETUP-03
-**Agent assigne :** Phase 4
+**Agent assigne :** SHARED, DATA — Sprint 1
 **Notes techniques :** Sources : tables ANSES, recommandations specifiques pour les regimes vegetaliens (Societe francaise de nutrition).
 
 ---
@@ -304,17 +304,17 @@ je veux m'inscrire avec mon email et un mot de passe,
 afin de creer mon compte appFood.
 
 **Criteres d'acceptation :**
-- [ ] Ecran d'inscription (email, mot de passe, confirmation mot de passe)
-- [ ] Validation email (format) et mot de passe (min 8 caracteres)
-- [ ] Creation du compte via Firebase Auth
-- [ ] Email de verification envoye
-- [ ] Redirection vers le questionnaire de profil apres inscription
-- [ ] Gestion des erreurs (email deja utilise, etc.)
+- [x] Ecran d'inscription (email, mot de passe, confirmation mot de passe)
+- [x] Validation email (format) et mot de passe (min 8 caracteres)
+- [x] Creation du compte via Firebase Auth (mock mode — Firebase reel en attente config humaine)
+- [x] Email de verification envoye (via Firebase SDK cote client)
+- [x] Redirection vers le questionnaire de profil apres inscription
+- [x] Gestion des erreurs (email deja utilise, etc.)
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** SETUP-01a, SETUP-02
-**Agent assigne :** Phase 4
+**Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
 
 ---
 
@@ -325,17 +325,17 @@ je veux me connecter et me deconnecter de mon compte,
 afin d'acceder a mes donnees de maniere securisee.
 
 **Criteres d'acceptation :**
-- [ ] Ecran de connexion (email, mot de passe)
-- [ ] Connexion via Firebase Auth
-- [ ] Token JWT stocke localement
-- [ ] Deconnexion avec nettoyage du token
-- [ ] Redirection automatique vers le login si token expire
-- [ ] Gestion des erreurs (mauvais identifiants)
+- [x] Ecran de connexion (email, mot de passe)
+- [x] Connexion via Firebase Auth (mock mode)
+- [x] Token JWT stocke localement
+- [x] Deconnexion avec nettoyage du token
+- [x] Redirection automatique vers le login si token expire
+- [x] Gestion des erreurs (mauvais identifiants)
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** AUTH-01
-**Agent assigne :** Phase 4
+**Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
 
 ---
 
@@ -346,16 +346,16 @@ je veux m'inscrire/me connecter avec mon compte Google,
 afin de gagner du temps a l'inscription.
 
 **Criteres d'acceptation :**
-- [ ] Bouton "Continuer avec Google" sur les ecrans login/inscription
-- [ ] Flow OAuth Google via Firebase Auth
-- [ ] Creation du compte appFood si premier login
-- [ ] Redirection vers le questionnaire de profil si nouveau compte
-- [ ] Fonctionne sur Android et iOS
+- [x] Bouton "Continuer avec Google" sur les ecrans login/inscription
+- [x] Flow OAuth Google via Firebase Auth (mock mode)
+- [x] Creation du compte appFood si premier login
+- [x] Redirection vers le questionnaire de profil si nouveau compte
+- [ ] Fonctionne sur Android et iOS (non testable — Firebase non configure)
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** AUTH-01
-**Agent assigne :** Phase 4
+**Agent assigne :** MOBILE — Sprint 1
 
 ---
 
@@ -366,15 +366,15 @@ je veux reinitialiser mon mot de passe si je l'ai oublie,
 afin de recuperer l'acces a mon compte.
 
 **Criteres d'acceptation :**
-- [ ] Lien "Mot de passe oublie" sur l'ecran de connexion
-- [ ] Saisie de l'email → envoi d'un email de reset via Firebase
-- [ ] Message de confirmation affiche
-- [ ] Gestion des erreurs (email non trouve)
+- [x] Lien "Mot de passe oublie" sur l'ecran de connexion
+- [x] Saisie de l'email → envoi d'un email de reset via Firebase (mock mode)
+- [x] Message de confirmation affiche
+- [x] Gestion des erreurs (email non trouve)
 
 **Complexite :** S
 **Priorite :** MVP
 **Dependances :** AUTH-01
-**Agent assigne :** Phase 4
+**Agent assigne :** MOBILE — Sprint 1
 
 ---
 
@@ -385,15 +385,15 @@ je veux m'inscrire/me connecter avec mon compte Apple,
 afin d'utiliser l'authentification native iOS.
 
 **Criteres d'acceptation :**
-- [ ] Bouton "Continuer avec Apple" sur les ecrans login/inscription (iOS uniquement)
-- [ ] Flow OAuth Apple via Firebase Auth
-- [ ] Creation du compte appFood si premier login
-- [ ] Conforme aux guidelines Apple (obligatoire si Google Sign-In est propose)
+- [x] Bouton "Continuer avec Apple" sur les ecrans login/inscription (iOS uniquement)
+- [x] Flow OAuth Apple via Firebase Auth (mock mode)
+- [x] Creation du compte appFood si premier login
+- [ ] Conforme aux guidelines Apple (non testable — Apple Developer Account requis)
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** AUTH-03
-**Agent assigne :** Phase 4
+**Agent assigne :** MOBILE — Sprint 1
 **Notes techniques :** Apple impose Apple Sign-In si d'autres logins sociaux sont proposes. Obligatoire pour la soumission App Store — doit etre au meme niveau que Google Sign-In.
 
 ---
@@ -409,21 +409,21 @@ je veux remplir un questionnaire rapide sur mon profil,
 afin que l'app calcule mes quotas nutritionnels personnalises.
 
 **Criteres d'acceptation :**
-- [ ] Ecran 1 : Sexe, age, poids (kg), taille (cm)
-- [ ] Ecran 2 : Regime alimentaire (vegan, vegetarien, flexitarien, autre)
-- [ ] Ecran 3 : Activite physique (sedentaire, leger, modere, actif, tres actif) avec exemples
-- [ ] Ecran 4 (optionnel, skippable) : Aliments non aimes / allergies
-- [ ] Validation des saisies (poids/taille dans des ranges realistes)
-- [ ] Option "Passer" (skip) disponible sur chaque ecran — lien discret en bas d'ecran, pas un bouton principal, pour ne pas encourager le skip
-- [ ] Si skip : valeurs par defaut utilisees (quotas standards homme/femme adulte, regime omnivore)
-- [ ] Rappel ulterieur pour completer le profil (bandeau discret sur le dashboard)
-- [ ] Donnees sauvegardees en base + localement
-- [ ] Redirection vers le dashboard apres completion ou skip
+- [x] Ecran 1 : Sexe, age, poids (kg), taille (cm)
+- [x] Ecran 2 : Regime alimentaire (vegan, vegetarien, flexitarien, autre)
+- [x] Ecran 3 : Activite physique (sedentaire, leger, modere, actif, tres actif) avec exemples
+- [x] Ecran 4 (optionnel, skippable) : Aliments non aimes / allergies
+- [x] Validation des saisies (poids/taille dans des ranges realistes)
+- [x] Option "Passer" (skip) disponible sur chaque ecran — lien discret en bas d'ecran (SkipLink)
+- [x] Si skip : valeurs par defaut utilisees (quotas standards homme/femme adulte, regime omnivore)
+- [ ] Rappel ulterieur pour completer le profil (bandeau discret sur le dashboard) — a implementer avec Dashboard
+- [x] Donnees sauvegardees en base + localement
+- [x] Redirection vers le dashboard apres completion ou skip
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** AUTH-01, SETUP-05
-**Agent assigne :** Phase 4
+**Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
 
 ---
 
@@ -434,15 +434,15 @@ je veux modifier mes informations de profil a tout moment,
 afin que mes quotas soient toujours adaptes a ma situation actuelle.
 
 **Criteres d'acceptation :**
-- [ ] Page profil accessible depuis les reglages
-- [ ] Modification de : poids, taille, age, regime, activite physique
-- [ ] Recalcul automatique des quotas apres modification
-- [ ] Sauvegarde locale + synchronisation serveur
+- [x] Page profil accessible depuis les reglages
+- [x] Modification de : poids, taille, age, regime, activite physique
+- [ ] Recalcul automatique des quotas apres modification — a implementer avec QUOTAS-01
+- [x] Sauvegarde locale + synchronisation serveur
 
 **Complexite :** S
 **Priorite :** MVP
 **Dependances :** PROFIL-01
-**Agent assigne :** Phase 4
+**Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
 
 ---
 
@@ -453,16 +453,16 @@ je veux specifier les aliments que je n'aime pas ou auxquels je suis allergique,
 afin que les recommandations n'incluent jamais ces aliments.
 
 **Criteres d'acceptation :**
-- [ ] Section "Preferences alimentaires" dans le profil
-- [ ] Recherche d'aliments a exclure (via Meilisearch)
-- [ ] Liste des exclusions affichee et modifiable
-- [ ] Categories d'allergies predefinies (gluten, soja, fruits a coque, arachides, etc.)
-- [ ] Les recommandations et recettes filtrent automatiquement les aliments exclus
+- [x] Section "Preferences alimentaires" dans le profil
+- [x] Recherche d'aliments a exclure (via Meilisearch — UI prete, backend search a aligner)
+- [x] Liste des exclusions affichee et modifiable
+- [x] Categories d'allergies predefinies (gluten, soja, fruits a coque, arachides, etc. — 14 allergies)
+- [ ] Les recommandations et recettes filtrent automatiquement les aliments exclus — a implementer avec RECO-01
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** PROFIL-01, SETUP-04
-**Agent assigne :** Phase 4
+**Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
 
 ---
 
@@ -473,17 +473,17 @@ je veux pouvoir supprimer mon compte et toutes mes donnees,
 afin d'exercer mon droit a l'effacement.
 
 **Criteres d'acceptation :**
-- [ ] Option "Supprimer mon compte" dans les reglages
-- [ ] Confirmation requise (double validation)
-- [ ] Suppression de toutes les donnees : profil, journal, preferences, quotas
-- [ ] Suppression du compte Firebase Auth
-- [ ] Deconnexion automatique apres suppression
-- [ ] Suppression irreversible (pas de soft delete pour la RGPD)
+- [x] Option "Supprimer mon compte" dans les reglages
+- [x] Confirmation requise (double validation — dialog avec 2 etapes)
+- [x] Suppression de toutes les donnees : profil, journal, preferences, quotas, portions
+- [x] Suppression du compte Firebase Auth (mock mode)
+- [x] Deconnexion automatique apres suppression
+- [x] Suppression irreversible (pas de soft delete pour la RGPD)
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** PROFIL-01
-**Agent assigne :** Phase 4
+**Agent assigne :** BACKEND, MOBILE — Sprint 1
 
 ---
 

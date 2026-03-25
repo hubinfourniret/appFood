@@ -659,21 +659,28 @@ object FaqTable : Table("faq") {
 ```sql
 -- shared/src/commonMain/sqldelight/com/appfood/shared/AppDatabase.sq
 
--- Cache du profil utilisateur
+-- Cache du profil utilisateur (separe en 3 tables pour meilleure separation des concerns)
 CREATE TABLE local_user (
     id TEXT NOT NULL PRIMARY KEY,
     email TEXT NOT NULL,
     nom TEXT,
     prenom TEXT,
+    role TEXT NOT NULL DEFAULT 'USER',
+    onboarding_complete INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE local_user_profile (
+    user_id TEXT NOT NULL PRIMARY KEY,
     sexe TEXT NOT NULL,
     age INTEGER NOT NULL,
     poids_kg REAL NOT NULL,
     taille_cm INTEGER NOT NULL,
     regime_alimentaire TEXT NOT NULL,
     niveau_activite TEXT NOT NULL,
-    onboarding_complete INTEGER NOT NULL DEFAULT 0,
     objectif_poids TEXT,           -- nullable, V1.1 (ObjectifPoids enum as string)
-    updated_at INTEGER NOT NULL
+    updated_at INTEGER NOT NULL DEFAULT 0
 );
 
 -- Cache des aliments (favoris + recents + recherches)
