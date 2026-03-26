@@ -22,7 +22,7 @@ fun Route.authRoutes() {
     route("/api/v1/auth") {
         post("/register") {
             val request = call.receive<RegisterRequest>()
-            val user = authService.register(
+            val result = authService.register(
                 firebaseToken = request.firebaseToken,
                 email = request.email,
                 nom = request.nom,
@@ -32,7 +32,8 @@ fun Route.authRoutes() {
                 HttpStatusCode.Created,
                 ApiResponse(
                     data = AuthResponse(
-                        user = user.toUserResponse(onboardingComplete = false),
+                        token = result.token,
+                        user = result.user.toUserResponse(onboardingComplete = false),
                     ),
                 ),
             )
@@ -45,6 +46,7 @@ fun Route.authRoutes() {
                 HttpStatusCode.OK,
                 ApiResponse(
                     data = AuthResponse(
+                        token = loginResult.token,
                         user = loginResult.user.toUserResponse(
                             onboardingComplete = loginResult.onboardingComplete,
                         ),

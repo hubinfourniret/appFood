@@ -15,11 +15,20 @@ import com.appfood.backend.database.dao.UserRow
 import com.appfood.backend.external.FirebaseAdmin
 import com.appfood.backend.plugins.ConflictException
 import com.appfood.backend.plugins.UnauthorizedException
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 data class LoginResult(
     val user: UserRow,
+    val token: String,
     val onboardingComplete: Boolean,
+)
+
+data class RegisterResult(
+    val user: UserRow,
+    val token: String,
 )
 
 class AuthService(
@@ -35,15 +44,35 @@ class AuthService(
     private val fcmTokenDao: FcmTokenDao,
     private val notificationDao: NotificationDao,
     private val portionDao: PortionDao,
+    private val jwtSecret: String,
+    private val jwtIssuer: String,
+    private val jwtAudience: String,
 ) {
     private val logger = LoggerFactory.getLogger("AuthService")
+
+    companion object {
+        private const val JWT_EXPIRATION_MS = 7 * 24 * 60 * 60 * 1000L // 7 days
+    }
+
+    /**
+     * Generates a custom HMAC256 JWT token with subject = userId.
+     * This token is verified by Auth.kt middleware on protected routes.
+     */
+    fun generateJwt(userId: String): String {
+        return JWT.create()
+            .withSubject(userId)
+            .withIssuer(jwtIssuer)
+            .withAudience(jwtAudience)
+            .withExpiresAt(Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
+            .sign(Algorithm.HMAC256(jwtSecret))
+    }
 
     suspend fun register(
         firebaseToken: String,
         email: String,
         nom: String?,
         prenom: String?,
-    ): UserRow {
+    ): RegisterResult {
         // Verify Firebase token
         val tokenInfo = firebaseAdmin.verifyToken(firebaseToken)
         logger.info("Register: verified Firebase token for uid=${tokenInfo.uid}")
@@ -68,7 +97,9 @@ class AuthService(
             prenom = prenom,
         )
         logger.info("Register: created user id=${user.id}, email=${user.email}")
-        return user
+
+        val token = generateJwt(user.id)
+        return RegisterResult(user = user, token = token)
     }
 
     suspend fun login(firebaseToken: String): LoginResult {
@@ -84,8 +115,11 @@ class AuthService(
         val profile = userProfileDao.findByUserId(user.id)
 
         logger.info("Login: user found id=${user.id}")
+
+        val token = generateJwt(user.id)
         return LoginResult(
             user = user,
+            token = token,
             onboardingComplete = profile?.onboardingComplete ?: false,
         )
     }

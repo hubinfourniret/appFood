@@ -9,3 +9,8 @@ data class ConsentResponse(
     val dateConsentement: String,
     val versionPolitique: String,
 )
+
+@Serializable
+data class ConsentListResponse(
+    val data: List<ConsentResponse>,
+)

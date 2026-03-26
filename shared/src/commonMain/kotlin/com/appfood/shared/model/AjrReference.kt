@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * Values are based on ANSES RNP (References Nutritionnelles pour la Population)
  * and AS (Apports Satisfaisants).
  *
- * These references are seeded in PostgreSQL by the DATA agent (V002__seed_ajr.sql).
+ * These references are seeded in PostgreSQL by the DATA agent (V004__seed_ajr.sql).
  * The lookup logic by profile (sexe, age, regime) is in CalculerQuotasUseCase (Sprint 2).
  */
 @Serializable

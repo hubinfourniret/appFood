@@ -38,11 +38,12 @@ class FirebaseAdmin(
             return parseMockToken(idToken)
         }
 
-        // TODO: Implement real Firebase Admin SDK verification
-        // val decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken)
-        // return FirebaseTokenInfo(uid = decodedToken.uid, email = decodedToken.email)
-        logger.warn("Firebase verification not implemented, falling back to mock")
-        return parseMockToken(idToken)
+        // Real Firebase Admin SDK verification not yet configured.
+        // To enable: add firebase-admin dependency, set GOOGLE_APPLICATION_CREDENTIALS,
+        // and implement: FirebaseAuth.getInstance().verifyIdToken(idToken)
+        throw IllegalStateException(
+            "Firebase Admin SDK not configured — set FIREBASE_MOCK=true for development or configure Firebase credentials"
+        )
     }
 
     /**
@@ -55,9 +56,10 @@ class FirebaseAdmin(
             return
         }
 
-        // TODO: Implement real Firebase Admin SDK user deletion
-        // FirebaseAuth.getInstance().deleteUser(uid)
-        logger.warn("Firebase user deletion not implemented (mock mode)")
+        // Real Firebase Admin SDK user deletion not yet configured.
+        throw IllegalStateException(
+            "Firebase Admin SDK not configured — set FIREBASE_MOCK=true for development or configure Firebase credentials"
+        )
     }
 
     private fun parseMockToken(token: String): FirebaseTokenInfo {

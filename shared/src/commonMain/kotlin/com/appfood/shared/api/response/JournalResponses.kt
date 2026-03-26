@@ -36,3 +36,26 @@ data class JournalEntryResponse(
     val createdAt: String,
     val updatedAt: String,
 )
+
+@Serializable
+data class JournalListResponse(
+    val data: List<JournalEntryResponse>,
+    val total: Int,
+)
+
+@Serializable
+data class DailySummaryResponse(
+    val date: String,
+    val totalNutriments: NutrimentValuesResponse,
+    val parRepas: Map<String, NutrimentValuesResponse>,
+    val nbEntrees: Int,
+)
+
+@Serializable
+data class WeeklySummaryResponse(
+    val dateFrom: String,
+    val dateTo: String,
+    val moyenneJournaliere: NutrimentValuesResponse,
+    val parJour: Map<String, NutrimentValuesResponse>,
+    val joursAvecSaisie: Int,
+)

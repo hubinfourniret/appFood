@@ -29,8 +29,20 @@ fun Application.module() {
     environment.log.info("Meilisearch API Key presente: ${meilisearchApiKey.isNotBlank()}")
     environment.log.info("=== FIN CONFIG DEBUG ===")
 
+    val jwtSecret = config.property("appfood.jwt.secret").getString()
+    val jwtIssuer = config.property("appfood.jwt.issuer").getString()
+    val jwtAudience = config.property("appfood.jwt.audience").getString()
+
     install(Koin) {
-        modules(backendModule(meilisearchUrl, meilisearchApiKey))
+        modules(
+            backendModule(
+                meilisearchUrl = meilisearchUrl,
+                meilisearchApiKey = meilisearchApiKey,
+                jwtSecret = jwtSecret,
+                jwtIssuer = jwtIssuer,
+                jwtAudience = jwtAudience,
+            ),
+        )
     }
 
     configureSerialization()

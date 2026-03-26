@@ -61,15 +61,17 @@ class AlimentIndexer(
         put("glucides", glucides)
         put("lipides", lipides)
         put("fibres", fibres)
+        put("sel", sel)
+        put("sucres", sucres)
         put("fer", fer)
         put("calcium", calcium)
         put("zinc", zinc)
         put("magnesium", magnesium)
-        put("vitamine_b12", vitamineB12)
-        put("vitamine_d", vitamineD)
-        put("vitamine_c", vitamineC)
-        put("omega_3", omega3)
-        put("omega_6", omega6)
+        put("vitamineB12", vitamineB12)
+        put("vitamineD", vitamineD)
+        put("vitamineC", vitamineC)
+        put("omega3", omega3)
+        put("omega6", omega6)
     }
 
     private fun parseJsonArray(jsonString: String): JsonArray {

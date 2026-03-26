@@ -19,3 +19,19 @@ data class HydratationEntryResponse(
     val heure: String,
     val quantiteMl: Int,
 )
+
+@Serializable
+data class HydratationWeeklyResponse(
+    val dateFrom: String,
+    val dateTo: String,
+    val moyenneJournaliereMl: Int,
+    val objectifMl: Int,
+    val parJour: Map<String, HydratationDaySummary>,
+)
+
+@Serializable
+data class HydratationDaySummary(
+    val quantiteMl: Int,
+    val objectifMl: Int,
+    val pourcentage: Double,
+)

@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 
 data class PortionRow(
     val id: String,
@@ -36,8 +37,13 @@ class PortionDao {
                 val base = (PortionsTable.alimentId eq alimentId) or
                     (PortionsTable.estGenerique eq true)
                 // + portions personnalisees de l'utilisateur pour cet aliment
+                // + portions personnalisees generiques de l'utilisateur (alimentId = NULL)
                 if (userId != null) {
-                    base or ((PortionsTable.userId eq userId) and (PortionsTable.alimentId eq alimentId))
+                    base or (
+                        (PortionsTable.userId eq userId) and (PortionsTable.alimentId eq alimentId)
+                    ) or (
+                        (PortionsTable.userId eq userId) and (PortionsTable.alimentId.isNull())
+                    )
                 } else {
                     base
                 }
@@ -48,6 +54,12 @@ class PortionDao {
     suspend fun findGeneriques(): List<PortionRow> = dbQuery {
         PortionsTable.selectAll()
             .where { PortionsTable.estGenerique eq true }
+            .map { it.toRow() }
+    }
+
+    suspend fun findByUserId(userId: String): List<PortionRow> = dbQuery {
+        PortionsTable.selectAll()
+            .where { (PortionsTable.userId eq userId) and (PortionsTable.estPersonnalise eq true) }
             .map { it.toRow() }
     }
 
@@ -62,6 +74,17 @@ class PortionDao {
             it[userId] = row.userId
         }
         row
+    }
+
+    suspend fun update(id: String, nom: String?, quantiteGrammes: Double?): PortionRow? = dbQuery {
+        PortionsTable.update({ PortionsTable.id eq id }) {
+            if (nom != null) it[PortionsTable.nom] = nom
+            if (quantiteGrammes != null) it[PortionsTable.quantiteGrammes] = quantiteGrammes
+        }
+        PortionsTable.selectAll()
+            .where { PortionsTable.id eq id }
+            .map { it.toRow() }
+            .singleOrNull()
     }
 
     suspend fun delete(id: String): Boolean = dbQuery {

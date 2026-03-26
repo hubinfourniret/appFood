@@ -1,5 +1,3 @@
-version: "3.8"
-
 # Docker Compose pour les tests d'integration (Testcontainers-compatible)
 # Usage : docker compose -f docker-compose.test.yml up -d
 

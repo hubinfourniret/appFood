@@ -10,3 +10,23 @@ data class QuotaResponse(
     val valeurCalculee: Double,
     val unite: String,
 )
+
+@Serializable
+data class QuotaListResponse(
+    val data: List<QuotaResponse>,
+)
+
+@Serializable
+data class QuotaStatusResponse(
+    val nutriment: String,
+    val valeurCible: Double,
+    val valeurConsommee: Double,
+    val pourcentage: Double,
+    val unite: String,
+)
+
+@Serializable
+data class QuotaStatusListResponse(
+    val date: String,
+    val data: List<QuotaStatusResponse>,
+)

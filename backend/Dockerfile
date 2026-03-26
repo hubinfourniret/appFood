@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copier les fichiers de configuration Gradle en premier (meilleur cache Docker)
 COPY gradle.properties ./gradle.properties
-COPY settings.gradle.kts ./settings.gradle.kts
+COPY backend/settings-docker.gradle.kts ./settings.gradle.kts
 COPY build.gradle.kts ./build.gradle.kts
 COPY gradle/libs.versions.toml ./gradle/libs.versions.toml
 
@@ -14,7 +14,7 @@ COPY gradle/libs.versions.toml ./gradle/libs.versions.toml
 COPY backend/build.gradle.kts ./backend/build.gradle.kts
 
 # Telecharger les dependances (couche cachee si build.gradle.kts ne change pas)
-RUN gradle :backend:dependencies --no-daemon || true
+RUN gradle :backend:dependencies --no-daemon
 
 # Copier le code source
 COPY backend/src ./backend/src

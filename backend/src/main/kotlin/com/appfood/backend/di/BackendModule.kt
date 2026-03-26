@@ -19,7 +19,9 @@ import com.appfood.backend.external.FirebaseAdmin
 import com.appfood.backend.external.OpenFoodFactsClient
 import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.search.MeilisearchClient
+import com.appfood.backend.service.AlimentService
 import com.appfood.backend.service.AuthService
+import com.appfood.backend.service.PortionService
 import com.appfood.backend.service.ProfileService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -28,7 +30,13 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
-fun backendModule(meilisearchUrl: String, meilisearchApiKey: String) = module {
+fun backendModule(
+    meilisearchUrl: String,
+    meilisearchApiKey: String,
+    jwtSecret: String = "",
+    jwtIssuer: String = "",
+    jwtAudience: String = "",
+) = module {
     // HTTP Client
     single {
         HttpClient(OkHttp) {
@@ -53,8 +61,17 @@ fun backendModule(meilisearchUrl: String, meilisearchApiKey: String) = module {
     single { OpenFoodFactsClient(get(), get(), get()) }
 
     // Services
-    single { AuthService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single {
+        AuthService(
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+            jwtSecret = jwtSecret,
+            jwtIssuer = jwtIssuer,
+            jwtAudience = jwtAudience,
+        )
+    }
     single { ProfileService(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { AlimentService(get(), get(), get(), get()) }
+    single { PortionService(get()) }
 
     // DAOs
     single { UserDao() }

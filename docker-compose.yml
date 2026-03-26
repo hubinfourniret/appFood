@@ -1,5 +1,3 @@
-version: "3.8"
-
 # Docker Compose pour le developpement local
 # Usage : docker compose up -d
 
