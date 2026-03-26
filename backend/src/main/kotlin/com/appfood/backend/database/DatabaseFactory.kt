@@ -17,28 +17,38 @@ import com.appfood.backend.database.tables.UserPreferencesTable
 import com.appfood.backend.database.tables.UserProfilesTable
 import com.appfood.backend.database.tables.UsersTable
 import io.ktor.server.application.Application
-import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
+private val ALL_TABLES = arrayOf(
+    UsersTable,
+    UserProfilesTable,
+    UserPreferencesTable,
+    AlimentsTable,
+    PortionsTable,
+    RecettesTable,
+    IngredientsTable,
+    JournalEntriesTable,
+    QuotasTable,
+    PoidsHistoryTable,
+    HydratationTable,
+    HydratationEntriesTable,
+    FcmTokensTable,
+    NotificationsTable,
+    ConsentsTable,
+    FaqTable,
+)
+
 /**
  * Configure la connexion a la base de donnees PostgreSQL.
- * Lance les migrations Flyway puis verifie le schema Exposed.
+ * Cree les tables manquantes via Exposed SchemaUtils.
  */
 fun Application.configureDatabase() {
     val config = environment.config
     val dbUrl = config.property("appfood.database.url").getString()
     val dbUser = config.property("appfood.database.user").getString()
     val dbPassword = config.property("appfood.database.password").getString()
-
-    // Migrations Flyway
-    val flyway = Flyway.configure()
-        .dataSource(dbUrl, dbUser, dbPassword)
-        .locations("classpath:db/migration")
-        .validateMigrationNaming(false)
-        .load()
-    flyway.migrate()
 
     // Connexion Exposed
     Database.connect(
@@ -48,27 +58,10 @@ fun Application.configureDatabase() {
         password = dbPassword,
     )
 
-    // Verification du schema (ne cree pas les tables — Flyway s'en charge)
+    // Creation des tables manquantes
+    val log = environment.log
     transaction {
-        SchemaUtils.statementsRequiredToActualizeScheme(
-            UsersTable,
-            UserProfilesTable,
-            UserPreferencesTable,
-            AlimentsTable,
-            PortionsTable,
-            RecettesTable,
-            IngredientsTable,
-            JournalEntriesTable,
-            QuotasTable,
-            PoidsHistoryTable,
-            HydratationTable,
-            HydratationEntriesTable,
-            FcmTokensTable,
-            NotificationsTable,
-            ConsentsTable,
-            FaqTable,
-        ).forEach { statement ->
-            this@configureDatabase.environment.log.warn("Schema drift detecte : $statement")
-        }
+        SchemaUtils.createMissingTablesAndColumns(*ALL_TABLES)
     }
+    log.info("Schema PostgreSQL verifie — tables creees/mises a jour si necessaire")
 }
