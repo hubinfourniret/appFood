@@ -13,7 +13,7 @@ import org.koin.ktor.ext.inject
 fun Routing.searchRoutes() {
     val meilisearchClient by inject<MeilisearchClient>()
 
-    authenticate {
+    authenticate("auth-jwt") {
         route("/api/v1/aliments") {
             get("/search") {
                 val q = call.request.queryParameters["q"] ?: ""
