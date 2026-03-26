@@ -169,15 +169,15 @@ je veux un pipeline CI/CD qui lint, teste et build automatiquement,
 afin de detecter les regressions rapidement.
 
 **Criteres d'acceptation :**
-- [ ] Workflow GitHub Actions sur push/PR : ktlint, tests unitaires, build
-- [ ] Workflow de deploiement staging sur merge dans main
-- [ ] Workflow de deploiement production (declenchement manuel)
-- [ ] Temps de build < 10 minutes
+- [x] Workflow GitHub Actions sur push/PR : ktlint, tests unitaires, build — ci.yml
+- [x] Workflow de deploiement staging sur merge dans main — deploy-staging.yml
+- [x] Workflow de deploiement production (declenchement manuel) — deploy-prod.yml
+- [~] Temps de build < 10 minutes — timeout configure a 10/15min, a verifier en reel
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** SETUP-01a, SETUP-02
-**Agent assigne :** Phase 4
+**Agent assigne :** INFRA — Sprint 0
 
 ---
 
@@ -188,17 +188,18 @@ je veux le backend deploye sur Railway avec PostgreSQL et Meilisearch manages,
 afin d'avoir un environnement de production accessible.
 
 **Criteres d'acceptation :**
-- [ ] Service Ktor deploye sur Railway (Docker) — BLOQUE: compte Railway non cree
-- [ ] PostgreSQL manage provisionne (serveur EU)
-- [ ] Meilisearch deploye
-- [ ] Variables d'environnement configurees (secrets)
-- [ ] HTTPS actif
+- [x] Service Ktor deploye sur Railway (Docker) — https://appfood-production.up.railway.app
+- [x] PostgreSQL manage provisionne — postgres.railway.internal:5432/railway
+- [x] Meilisearch deploye — meilisearch.railway.internal:7700
+- [x] Variables d'environnement configurees (secrets)
+- [x] HTTPS actif — domaine Railway *.up.railway.app
 - [ ] Domaine personnalise configure (optionnel)
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** SETUP-02, SETUP-03, SETUP-04
-**Agent assigne :** INFRA — Blocked (action humaine: compte Railway)
+**Agent assigne :** INFRA + utilisateur — Sprint 1
+**Notes techniques :** Dockerfile corrige (settings-docker.gradle.kts pour build backend-only). Flyway remplace par Exposed SchemaUtils.createMissingTablesAndColumns(). Meilisearch API v1.12 utilise PATCH pour updateSettings.
 
 ---
 
@@ -243,6 +244,7 @@ afin d'avoir une base d'aliments fiable avec leurs valeurs nutritionnelles.
 **Dependances :** SETUP-03, SETUP-04
 **Agent assigne :** DATA — Sprints 0-1
 **Notes techniques :** **LIRE `docs/us-clarifications.md` section 3** avant implementation. Contient : mapping exact des colonnes Ciqual → NutrimentValues, calcul omega-3/omega-6 a partir des acides gras, gestion des valeurs manquantes ("-", "traces", "N/A" → 0.0), heuristique de detection vegan/vegetarien par categorie, configuration Meilisearch (synonymes, filtres, stop words).
+**Notes audit (2026-03-26)** : CiqualImporter adapte pour Ciqual 2025 (separateur virgule, headers multi-lignes). AlimentIndexer corrige (sel/sucres ajoutes, champs renommes en camelCase). Fichier CSV Ciqual 2025 place dans backend/data/ciqual.csv. AlimentRoutes + AlimentService crees (search, by-id, barcode). SearchRoutes deprece en faveur d'AlimentRoutes.
 
 ---
 
@@ -255,7 +257,7 @@ afin de tracker ce que je mange reellement au quotidien.
 **Criteres d'acceptation :**
 - [x] Client API Open Food Facts integre dans Ktor — OpenFoodFactsClient.kt
 - [x] Recherche de produits par nom via l'API OFF
-- [x] Resultats OFF integres dans les resultats Meilisearch (cache + index auto)
+- [x] Resultats OFF integres dans les resultats Meilisearch (cache + index auto) — fallback OFF dans AlimentService
 - [x] Cache des produits recherches en base PostgreSQL
 - [x] Donnees nutritionnelles mappees vers le schema appFood (16 nutriments)
 - [x] Flag de qualite des donnees (source: CIQUAL vs OPEN_FOOD_FACTS)
@@ -307,7 +309,7 @@ afin de creer mon compte appFood.
 - [x] Ecran d'inscription (email, mot de passe, confirmation mot de passe)
 - [x] Validation email (format) et mot de passe (min 8 caracteres)
 - [x] Creation du compte via Firebase Auth (mock mode — Firebase reel en attente config humaine)
-- [x] Email de verification envoye (via Firebase SDK cote client)
+- [ ] Email de verification envoye (via Firebase SDK cote client) — non implemente, use case absent
 - [x] Redirection vers le questionnaire de profil apres inscription
 - [x] Gestion des erreurs (email deja utilise, etc.)
 
@@ -315,6 +317,7 @@ afin de creer mon compte appFood.
 **Priorite :** MVP
 **Dependances :** SETUP-01a, SETUP-02
 **Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
+**Notes audit (2026-03-26)** : Backend OK (endpoints + JWT custom). UI OK (ecrans). Use cases ABSENTS (ViewModels stubbes). Auth JWT flow corrige : backend genere un JWT HMAC256 apres verification Firebase, retourne dans AuthResponse.token. FirebaseAdmin fail-fast en prod.
 
 ---
 
@@ -327,15 +330,16 @@ afin d'acceder a mes donnees de maniere securisee.
 **Criteres d'acceptation :**
 - [x] Ecran de connexion (email, mot de passe)
 - [x] Connexion via Firebase Auth (mock mode)
-- [x] Token JWT stocke localement
-- [x] Deconnexion avec nettoyage du token
-- [x] Redirection automatique vers le login si token expire
+- [ ] Token JWT stocke localement — stockage securise non implemente (use case absent)
+- [ ] Deconnexion avec nettoyage du token — ViewModel stubbe (TODO)
+- [ ] Redirection automatique vers le login si token expire — intercepteur HTTP absent
 - [x] Gestion des erreurs (mauvais identifiants)
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** AUTH-01
 **Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
+**Notes audit (2026-03-26)** : Backend OK. UI OK. Couche intermediaire (use cases, token management, intercepteur 401) a creer au Sprint 2.
 
 ---
 
@@ -347,9 +351,9 @@ afin de gagner du temps a l'inscription.
 
 **Criteres d'acceptation :**
 - [x] Bouton "Continuer avec Google" sur les ecrans login/inscription
-- [x] Flow OAuth Google via Firebase Auth (mock mode)
-- [x] Creation du compte appFood si premier login
-- [x] Redirection vers le questionnaire de profil si nouveau compte
+- [ ] Flow OAuth Google via Firebase Auth (mock mode) — ViewModel stubbe (TODO)
+- [ ] Creation du compte appFood si premier login — use case absent
+- [x] Redirection vers le questionnaire de profil si nouveau compte (stub retourne needsOnboarding=true)
 - [ ] Fonctionne sur Android et iOS (non testable — Firebase non configure)
 
 **Complexite :** M
@@ -367,7 +371,7 @@ afin de recuperer l'acces a mon compte.
 
 **Criteres d'acceptation :**
 - [x] Lien "Mot de passe oublie" sur l'ecran de connexion
-- [x] Saisie de l'email → envoi d'un email de reset via Firebase (mock mode)
+- [ ] Saisie de l'email → envoi d'un email de reset via Firebase (mock mode) — ViewModel stubbe (TODO)
 - [x] Message de confirmation affiche
 - [x] Gestion des erreurs (email non trouve)
 
@@ -386,8 +390,8 @@ afin d'utiliser l'authentification native iOS.
 
 **Criteres d'acceptation :**
 - [x] Bouton "Continuer avec Apple" sur les ecrans login/inscription (iOS uniquement)
-- [x] Flow OAuth Apple via Firebase Auth (mock mode)
-- [x] Creation du compte appFood si premier login
+- [ ] Flow OAuth Apple via Firebase Auth (mock mode) — ViewModel stubbe (TODO)
+- [ ] Creation du compte appFood si premier login — use case absent
 - [ ] Conforme aux guidelines Apple (non testable — Apple Developer Account requis)
 
 **Complexite :** M
@@ -417,13 +421,14 @@ afin que l'app calcule mes quotas nutritionnels personnalises.
 - [x] Option "Passer" (skip) disponible sur chaque ecran — lien discret en bas d'ecran (SkipLink)
 - [x] Si skip : valeurs par defaut utilisees (quotas standards homme/femme adulte, regime omnivore)
 - [ ] Rappel ulterieur pour completer le profil (bandeau discret sur le dashboard) — a implementer avec Dashboard
-- [x] Donnees sauvegardees en base + localement
+- [ ] Donnees sauvegardees en base + localement — ViewModel stubbe (use cases absents)
 - [x] Redirection vers le dashboard apres completion ou skip
 
 **Complexite :** M
 **Priorite :** MVP
 **Dependances :** AUTH-01, SETUP-05
 **Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
+**Notes audit (2026-03-26)** : Backend endpoints CONFORMES. UI ecrans COMPLETS. Use cases ABSENTS (CreateProfileUseCase, UpdatePreferencesUseCase a creer). ViewModels stubbes.
 
 ---
 
@@ -437,12 +442,13 @@ afin que mes quotas soient toujours adaptes a ma situation actuelle.
 - [x] Page profil accessible depuis les reglages
 - [x] Modification de : poids, taille, age, regime, activite physique
 - [ ] Recalcul automatique des quotas apres modification — a implementer avec QUOTAS-01
-- [x] Sauvegarde locale + synchronisation serveur
+- [ ] Sauvegarde locale + synchronisation serveur — ViewModel stubbe (use cases absents)
 
 **Complexite :** S
 **Priorite :** MVP
 **Dependances :** PROFIL-01
 **Agent assigne :** SHARED, BACKEND, MOBILE — Sprint 1
+**Notes audit (2026-03-26)** : Backend endpoint PUT /users/me/profile CONFORME. UI ecran COMPLET. loadProfile() et onSaveProfile() stubbes.
 
 ---
 

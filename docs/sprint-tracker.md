@@ -37,6 +37,37 @@
 ### Notes Sprint 1
 - Firebase non configure → mock mode utilise (FIREBASE_MOCK=true)
 - Backend ne peut pas dependre de :shared directement (pas de JVM target) → DTOs dans backend/routes/dto/
-- 3 erreurs de compilation mineures pre-existantes dans AppNavigation.kt et OnboardingScreen.kt (a corriger)
+- ~~3 erreurs de compilation mineures pre-existantes dans AppNavigation.kt et OnboardingScreen.kt~~ → corrigees (audit 2026-03-26)
+
+### Audit Sprint 0-1 (2026-03-26)
+
+Corrections appliquees suite a l'audit des 4 epics (INFRA, DATA, AUTH, PROFIL) :
+
+**Backend :**
+- Auth JWT corrige : backend genere un JWT HMAC256 custom apres verification Firebase token
+- FirebaseAdmin : fail-fast en prod (plus de fallback mock silencieux)
+- AlimentRoutes + AlimentService crees (GET /search, /barcode/{code}, /{id})
+- PortionRoutes + PortionService crees (GET, POST, PUT, DELETE)
+- SearchRoutes deprece → remplace par AlimentRoutes
+- Meilisearch : sel/sucres ajoutes dans l'index, champs renommes en camelCase, filtres corriges
+
+**Shared :**
+- 10 modeles domain crees (Aliment, Portion, Quota, Journal, Poids, Hydratation, Recette, Notification, Consentement, Recommandation)
+- 24 DTOs request/response crees
+- @Contextual ajoute sur tous les champs Instant
+- AppNavigation.kt : popUpTo(navController.graph.id) → popUpTo(0) corrige
+
+**Infra :**
+- Dockerfile corrige (settings-docker.gradle.kts pour build backend-only)
+- .dockerignore cree
+- docker-compose : version obsolete supprimee
+
+**Constat principal :**
+- Backend endpoints : CONFORMES pour toutes les US
+- UI ecrans : COMPLETS visuellement
+- Use cases shared : ABSENTS — tous les ViewModels sont stubbes (a connecter au Sprint 2)
+- CiqualImporter : adapte pour Ciqual 2025 (separateur virgule, headers multi-lignes)
+
+**Compilation :** :backend:compileKotlin ✅ | :shared:compileCommonMainKotlinMetadata ✅
 
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked
