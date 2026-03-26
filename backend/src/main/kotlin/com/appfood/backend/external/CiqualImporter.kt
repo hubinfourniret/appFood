@@ -33,7 +33,7 @@ class CiqualImporter(
     private val logger = LoggerFactory.getLogger(CiqualImporter::class.java)
 
     companion object {
-        private const val CSV_SEPARATOR = ';'
+        private const val CSV_SEPARATOR = ','
         private const val DECIMAL_COMMA = ','
         private const val DECIMAL_DOT = '.'
         private const val LOW_QUALITY_THRESHOLD = 8
@@ -180,52 +180,57 @@ class CiqualImporter(
      */
     fun parse(inputStream: InputStream): ImportResult {
         val reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
-        val headerLine = reader.readLine()?.removeBomPrefix()
+
+        // Read first complete CSV record (header may span multiple lines due to quoted newlines)
+        val headerRecord = readCsvRecord(reader)?.removeBomPrefix()
             ?: throw IllegalArgumentException("Empty CSV file: no header line found")
 
-        val headers = parseCsvLine(headerLine)
+        val headers = parseCsvLine(headerRecord)
         val columnMap = resolveColumnIndices(headers)
         logColumnMapping(columnMap, headers)
 
         val rows = mutableListOf<AlimentRow>()
-        var lineNumber = 1
+        var recordNumber = 0
         var skippedLines = 0
         var lowQualityCount = 0
 
-        reader.forEachLine { line ->
-            lineNumber++
+        var record = readCsvRecord(reader)
+        while (record != null) {
+            recordNumber++
             try {
-                val fields = parseCsvLine(line)
+                val fields = parseCsvLine(record)
                 if (fields.size < headers.size) {
-                    logger.warn("Line $lineNumber: expected ${headers.size} fields, got ${fields.size} — skipping")
+                    logger.warn("Record $recordNumber: expected ${headers.size} fields, got ${fields.size} — skipping")
                     skippedLines++
-                    return@forEachLine
+                    record = readCsvRecord(reader)
+                    continue
                 }
 
-                val row = mapToAlimentRow(fields, columnMap, lineNumber)
+                val row = mapToAlimentRow(fields, columnMap, recordNumber)
                 val zeroCount = countZeroNutriments(row)
                 if (zeroCount > LOW_QUALITY_THRESHOLD) {
                     lowQualityCount++
                     logger.debug(
-                        "Line $lineNumber: aliment '${row.nom}' has $zeroCount/16 zero nutriments (low quality)"
+                        "Record $recordNumber: aliment '${row.nom}' has $zeroCount/16 zero nutriments (low quality)"
                     )
                 }
 
                 rows.add(row)
             } catch (e: Exception) {
-                logger.warn("Line $lineNumber: parse error — ${e.message}")
+                logger.warn("Record $recordNumber: parse error — ${e.message}")
                 skippedLines++
             }
+            record = readCsvRecord(reader)
         }
 
         logger.info(
             "Ciqual import: ${rows.size} aliments parsed, $skippedLines lines skipped, " +
-                "$lowQualityCount low-quality aliments (from ${lineNumber - 1} data lines)"
+                "$lowQualityCount low-quality aliments (from $recordNumber data records)"
         )
 
         return ImportResult(
             rows = rows,
-            totalLines = lineNumber - 1,
+            totalLines = recordNumber,
             skippedLines = skippedLines,
             lowQualityCount = lowQualityCount,
         )
@@ -463,10 +468,38 @@ class CiqualImporter(
         )
     }
 
-    // -- CSV parsing (semicolon-separated, handles quoted fields) --
+    // -- CSV parsing (handles quoted fields with newlines) --
 
     /**
-     * Parse a single CSV line with semicolon separator and optional quoting.
+     * Read a complete CSV record from the reader.
+     * A record may span multiple lines if fields contain quoted newlines.
+     * Returns null at end of stream.
+     */
+    private fun readCsvRecord(reader: BufferedReader): String? {
+        val sb = StringBuilder()
+        var firstLine = true
+        var inQuotes = false
+
+        while (true) {
+            val line = reader.readLine() ?: return if (firstLine) null else sb.toString()
+            if (firstLine) {
+                firstLine = false
+            } else {
+                sb.append('\n')
+            }
+            sb.append(line)
+
+            // Count unescaped quotes to track state
+            for (c in line) {
+                if (c == '"') inQuotes = !inQuotes
+            }
+
+            if (!inQuotes) return sb.toString()
+        }
+    }
+
+    /**
+     * Parse a single CSV record with comma separator and optional quoting.
      * Handles double-quote escaping ("" inside quoted fields).
      */
     internal fun parseCsvLine(line: String): List<String> {

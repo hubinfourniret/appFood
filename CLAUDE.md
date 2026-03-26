@@ -33,6 +33,18 @@ Stack : Kotlin Multiplatform + Compose Multiplatform (mobile) + Ktor (backend) +
 
 Skills agents : `.CLAUDE/commands/agent-*.md`
 
+## Infrastructure
+
+| Service | URL |
+|---------|-----|
+| Backend (production) | `https://appfood-production.up.railway.app` |
+| Health check | `GET /api/health` |
+| PostgreSQL (interne) | `postgres.railway.internal:5432/railway` |
+| Meilisearch (interne) | `http://meilisearch.railway.internal:7700` |
+| Firebase projet | `foodapp-5ea23` |
+
+Backend en mode `FIREBASE_MOCK=true` (pas encore de verification Firebase en prod).
+
 ## Regles cles
 
 - **Architecture** : Clean Architecture (UseCase → Repository → DataSource) cote shared, Routes → Service → DAO cote backend
