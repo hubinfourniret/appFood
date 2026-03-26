@@ -1,6 +1,7 @@
 package com.appfood.shared.model
 
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -11,6 +12,7 @@ data class QuotaJournalier(
     val estPersonnalise: Boolean,
     val valeurCalculee: Double,
     val unite: String,
+    @Contextual
     val updatedAt: Instant,
 )
 

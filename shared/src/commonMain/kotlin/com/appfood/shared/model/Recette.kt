@@ -1,6 +1,7 @@
 package com.appfood.shared.model
 
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,7 +20,9 @@ data class Recette(
     val nutrimentsTotaux: NutrimentValues,
     val imageUrl: String?,
     val publie: Boolean,
+    @Contextual
     val createdAt: Instant,
+    @Contextual
     val updatedAt: Instant,
 )
 

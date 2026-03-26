@@ -2,6 +2,7 @@ package com.appfood.shared.model
 
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -19,6 +20,8 @@ data class JournalEntry(
     val nutrimentsCalcules: NutrimentValues,
     @Transient
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
+    @Contextual
     val createdAt: Instant,
+    @Contextual
     val updatedAt: Instant,
 )

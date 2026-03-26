@@ -206,12 +206,12 @@ fun AppNavigation(
                     },
                     onLogout = {
                         navController.navigate(Screen.Login) {
-                            popUpTo(navController.graph.id) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                         }
                     },
                     onAccountDeleted = {
                         navController.navigate(Screen.Login) {
-                            popUpTo(navController.graph.id) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                         }
                     },
                 )
