@@ -1,0 +1,24 @@
+findById:
+SELECT * FROM local_recette WHERE id = ?;
+
+findAll:
+SELECT * FROM local_recette ORDER BY access_date DESC;
+
+insertOrReplace:
+INSERT OR REPLACE INTO local_recette(id, nom, description, temps_preparation_min, temps_cuisson_min, nb_portions, regimes_compatibles, source, type_repas, image_url, calories, proteines, glucides, lipides, fibres, access_date, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateAccessDate:
+UPDATE local_recette SET access_date = ? WHERE id = ?;
+
+deleteById:
+DELETE FROM local_recette WHERE id = ?;
+
+countAll:
+SELECT COUNT(*) FROM local_recette;
+
+findOldestByAccessDate:
+SELECT * FROM local_recette ORDER BY access_date ASC LIMIT ?;
+
+deleteOldest:
+DELETE FROM local_recette WHERE id IN (SELECT id FROM local_recette ORDER BY access_date ASC LIMIT ?);

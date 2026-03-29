@@ -17,6 +17,23 @@ sealed class Screen {
     @Serializable data object PreferencesAlimentaires : Screen()
     @Serializable data object Settings : Screen()
 
+    // Journal flow
+    @Serializable data object AddEntry : Screen()
+    @Serializable data object SearchAliment : Screen()
+    @Serializable data object PortionSelector : Screen()
+
+    // Quota management (QUOTAS-02)
+    @Serializable data object QuotaManagement : Screen()
+
+    // Poids (POIDS-01)
+    @Serializable data object Poids : Screen()
+
+    // Hydratation (HYDRA-01)
+    @Serializable data object Hydratation : Screen()
+
+    // Weekly dashboard (DASHBOARD-02)
+    @Serializable data object WeeklyDashboard : Screen()
+
     // Keep Auth as alias for Login (backward compatibility)
     @Serializable data object Auth : Screen()
 }

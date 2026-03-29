@@ -3,6 +3,13 @@ package com.appfood.shared.api.response
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class SearchAlimentResponse(
+    val data: List<AlimentResponse>,
+    val total: Int,
+    val query: String,
+)
+
+@Serializable
 data class AlimentResponse(
     val id: String,
     val nom: String,
@@ -16,9 +23,4 @@ data class AlimentResponse(
     val portionsStandard: List<PortionResponse>,
 )
 
-@Serializable
-data class SearchAlimentResponse(
-    val data: List<AlimentResponse>,
-    val total: Int,
-    val query: String,
-)
+// NutrimentValuesResponse is defined in JournalResponses.kt

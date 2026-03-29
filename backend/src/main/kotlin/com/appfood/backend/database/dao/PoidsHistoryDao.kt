@@ -59,6 +59,30 @@ class PoidsHistoryDao {
         PoidsHistoryRow(id, userId, date, poidsKg, estReference, now)
     }
 
+    suspend fun findReference(userId: String): PoidsHistoryRow? = dbQuery {
+        PoidsHistoryTable.selectAll()
+            .where { (PoidsHistoryTable.userId eq userId) and (PoidsHistoryTable.estReference eq true) }
+            .orderBy(PoidsHistoryTable.date, SortOrder.DESC)
+            .limit(1)
+            .map { it.toRow() }
+            .singleOrNull()
+    }
+
+    suspend fun findByUserAndDateRange(
+        userId: String,
+        from: LocalDate,
+        to: LocalDate,
+    ): List<PoidsHistoryRow> = dbQuery {
+        PoidsHistoryTable.selectAll()
+            .where {
+                (PoidsHistoryTable.userId eq userId) and
+                    (PoidsHistoryTable.date greaterEq from) and
+                    (PoidsHistoryTable.date lessEq to)
+            }
+            .orderBy(PoidsHistoryTable.date, SortOrder.DESC)
+            .map { it.toRow() }
+    }
+
     suspend fun delete(id: String, userId: String): Boolean = dbQuery {
         PoidsHistoryTable.deleteWhere {
             (PoidsHistoryTable.id eq id) and (PoidsHistoryTable.userId eq userId)

@@ -21,12 +21,30 @@ import com.appfood.shared.ui.auth.AuthViewModel
 import com.appfood.shared.ui.auth.ForgotPasswordScreen
 import com.appfood.shared.ui.auth.LoginScreen
 import com.appfood.shared.ui.auth.RegisterScreen
+import com.appfood.shared.ui.dashboard.DashboardScreen
+import com.appfood.shared.ui.dashboard.DashboardViewModel
+import com.appfood.shared.ui.dashboard.WeeklyDashboardScreen
+import com.appfood.shared.ui.dashboard.WeeklyDashboardViewModel
+import com.appfood.shared.ui.hydratation.HydratationScreen
+import com.appfood.shared.ui.hydratation.HydratationViewModel
+import com.appfood.shared.ui.journal.AddEntryScreen
+import com.appfood.shared.ui.journal.JournalViewModel
+import com.appfood.shared.ui.journal.PortionSelectorScreen
+import com.appfood.shared.ui.journal.SearchAlimentScreen
 import com.appfood.shared.ui.onboarding.OnboardingScreen
 import com.appfood.shared.ui.onboarding.OnboardingViewModel
+import com.appfood.shared.ui.poids.PoidsScreen
+import com.appfood.shared.ui.poids.PoidsViewModel
 import com.appfood.shared.ui.profil.EditProfilScreen
 import com.appfood.shared.ui.profil.PreferencesAlimentairesScreen
 import com.appfood.shared.ui.profil.ProfilScreen
 import com.appfood.shared.ui.profil.ProfilViewModel
+import com.appfood.shared.ui.quota.QuotaManagementScreen
+import com.appfood.shared.ui.quota.QuotaViewModel
+import com.appfood.shared.ui.recette.RecettesListScreen
+import com.appfood.shared.ui.recette.RecettesViewModel
+import com.appfood.shared.ui.recommandation.RecommandationsScreen
+import com.appfood.shared.ui.recommandation.RecommandationViewModel
 
 // Screens that show the bottom navigation bar
 private val screensWithBottomNav = setOf(
@@ -50,6 +68,14 @@ fun AppNavigation(
     val authViewModel = remember { AuthViewModel() }
     val onboardingViewModel = remember { OnboardingViewModel() }
     val profilViewModel = remember { ProfilViewModel() }
+    val journalViewModel = remember { JournalViewModel().also { it.init() } }
+    val dashboardViewModel = remember { DashboardViewModel() }
+    val quotaViewModel = remember { QuotaViewModel() }
+    val recommandationViewModel = remember { RecommandationViewModel() }
+    val hydratationViewModel = remember { HydratationViewModel() }
+    val poidsViewModel = remember { PoidsViewModel() }
+    val weeklyDashboardViewModel = remember { WeeklyDashboardViewModel() }
+    val recettesViewModel = remember { RecettesViewModel() }
 
     Scaffold(
         bottomBar = {
@@ -67,7 +93,7 @@ fun AppNavigation(
                         }
                     },
                     onAddClick = {
-                        navController.navigate(Screen.Journal) {
+                        navController.navigate(Screen.AddEntry) {
                             launchSingleTop = true
                         }
                     },
@@ -173,16 +199,134 @@ fun AppNavigation(
 
             // Main app screens
             composable<Screen.Dashboard> {
-                PlaceholderScreen(title = Strings.SCREEN_DASHBOARD)
+                DashboardScreen(
+                    viewModel = dashboardViewModel,
+                    hydratationViewModel = hydratationViewModel,
+                    onNavigateToAddEntry = {
+                        navController.navigate(Screen.AddEntry) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToQuotaManagement = {
+                        navController.navigate(Screen.QuotaManagement) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRecommandations = {
+                        navController.navigate(Screen.Recommandations) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToHydratation = {
+                        navController.navigate(Screen.Hydratation) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToWeeklyDashboard = {
+                        navController.navigate(Screen.WeeklyDashboard) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
             }
             composable<Screen.Journal> {
                 PlaceholderScreen(title = Strings.SCREEN_JOURNAL)
             }
+
+            // Journal flow — Add entry
+            composable<Screen.AddEntry> {
+                AddEntryScreen(
+                    viewModel = journalViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToSearch = {
+                        navController.navigate(Screen.SearchAliment) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onEntrySaved = {
+                        navController.popBackStack(Screen.Dashboard, inclusive = false)
+                    },
+                )
+            }
+
+            composable<Screen.SearchAliment> {
+                SearchAlimentScreen(
+                    viewModel = journalViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onAlimentSelected = {
+                        navController.navigate(Screen.PortionSelector) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+
+            composable<Screen.PortionSelector> {
+                PortionSelectorScreen(
+                    viewModel = journalViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onEntryValidated = {
+                        navController.popBackStack(Screen.Dashboard, inclusive = false)
+                    },
+                )
+            }
             composable<Screen.Recommandations> {
-                PlaceholderScreen(title = Strings.SCREEN_RECOMMANDATIONS)
+                RecommandationsScreen(
+                    viewModel = recommandationViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            composable<Screen.QuotaManagement> {
+                QuotaManagementScreen(
+                    viewModel = quotaViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
             }
             composable<Screen.Recettes> {
-                PlaceholderScreen(title = Strings.SCREEN_RECETTES)
+                RecettesListScreen(
+                    viewModel = recettesViewModel,
+                )
+            }
+
+            // Hydratation (HYDRA-01)
+            composable<Screen.Hydratation> {
+                HydratationScreen(
+                    viewModel = hydratationViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            // Poids (POIDS-01)
+            composable<Screen.Poids> {
+                PoidsScreen(
+                    viewModel = poidsViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            // Weekly dashboard (DASHBOARD-02)
+            composable<Screen.WeeklyDashboard> {
+                WeeklyDashboardScreen(
+                    viewModel = weeklyDashboardViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
             }
 
             // Profile screens
@@ -206,12 +350,12 @@ fun AppNavigation(
                     },
                     onLogout = {
                         navController.navigate(Screen.Login) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo<Screen.Dashboard> { inclusive = true }
                         }
                     },
                     onAccountDeleted = {
                         navController.navigate(Screen.Login) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo<Screen.Dashboard> { inclusive = true }
                         }
                     },
                 )
@@ -267,9 +411,16 @@ private fun androidx.navigation.NavBackStackEntry.toScreen(): Screen? {
         route.contains("ForgotPassword") -> Screen.ForgotPassword
         route.contains("Onboarding") -> Screen.Onboarding
         route.contains("Dashboard") -> Screen.Dashboard
+        route.contains("AddEntry") -> Screen.AddEntry
+        route.contains("SearchAliment") -> Screen.SearchAliment
+        route.contains("PortionSelector") -> Screen.PortionSelector
         route.contains("Journal") -> Screen.Journal
+        route.contains("QuotaManagement") -> Screen.QuotaManagement
         route.contains("Recommandations") -> Screen.Recommandations
         route.contains("Recettes") -> Screen.Recettes
+        route.contains("WeeklyDashboard") -> Screen.WeeklyDashboard
+        route.contains("Hydratation") -> Screen.Hydratation
+        route.contains("Poids") -> Screen.Poids
         route.contains("EditProfil") -> Screen.EditProfil
         route.contains("PreferencesAlimentaires") -> Screen.PreferencesAlimentaires
         route.contains("Profil") -> Screen.Profil

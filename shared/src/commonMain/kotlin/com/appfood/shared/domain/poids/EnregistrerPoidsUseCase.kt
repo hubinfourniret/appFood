@@ -1,0 +1,27 @@
+package com.appfood.shared.domain.poids
+
+import com.appfood.shared.data.repository.PoidsRepository
+import com.appfood.shared.model.HistoriquePoids
+import com.appfood.shared.util.AppResult
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+
+/**
+ * Enregistre une nouvelle pesee.
+ * Verifie les bornes (20-500 kg).
+ */
+class EnregistrerPoidsUseCase(
+    private val poidsRepository: PoidsRepository,
+) {
+    suspend operator fun invoke(userId: String, poidsKg: Double): AppResult<HistoriquePoids> {
+        if (poidsKg < 20.0 || poidsKg > 500.0) {
+            return AppResult.Error(
+                code = "INVALID_POIDS",
+                message = "Le poids doit etre entre 20 et 500 kg",
+            )
+        }
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
+        return poidsRepository.addEntry(userId, today, poidsKg)
+    }
+}

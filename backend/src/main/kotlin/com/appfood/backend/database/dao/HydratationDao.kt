@@ -75,6 +75,21 @@ class HydratationDao {
         } > 0
     }
 
+    suspend fun updateObjectif(
+        id: String,
+        userId: String,
+        objectifMl: Int,
+        estObjectifPersonnalise: Boolean,
+    ): Boolean = dbQuery {
+        HydratationTable.update({
+            (HydratationTable.id eq id) and (HydratationTable.userId eq userId)
+        }) {
+            it[HydratationTable.objectifMl] = objectifMl
+            it[HydratationTable.estObjectifPersonnalise] = estObjectifPersonnalise
+            it[HydratationTable.updatedAt] = Clock.System.now()
+        } > 0
+    }
+
     // --- Entries ---
 
     suspend fun findEntriesByHydratationId(hydratationId: String): List<HydratationEntryRow> = dbQuery {

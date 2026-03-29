@@ -75,6 +75,12 @@ class RecetteDao {
             .count()
     }
 
+    suspend fun findAllPublished(): List<RecetteRow> = dbQuery {
+        RecettesTable.selectAll()
+            .where { RecettesTable.publie eq true }
+            .map { it.toRow() }
+    }
+
     suspend fun insert(row: RecetteRow): RecetteRow = dbQuery {
         RecettesTable.insert {
             it[id] = row.id

@@ -6,6 +6,7 @@ import com.appfood.backend.database.tables.MealType
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
@@ -133,6 +134,37 @@ class JournalEntryDao {
             it[omega6] = row.omega6
             it[updatedAt] = Clock.System.now()
         } > 0
+    }
+
+    suspend fun findByUserAndMealType(
+        userId: String,
+        date: LocalDate,
+        mealType: MealType,
+    ): List<JournalEntryRow> = dbQuery {
+        JournalEntriesTable.selectAll()
+            .where {
+                (JournalEntriesTable.userId eq userId) and
+                    (JournalEntriesTable.date eq date) and
+                    (JournalEntriesTable.mealType eq mealType)
+            }
+            .map { it.toRow() }
+    }
+
+    /**
+     * Returns the most recent distinct aliment IDs used by the user.
+     * Used for the "recents" feature.
+     */
+    suspend fun findRecentAlimentIds(userId: String, limit: Int = 20): List<String> = dbQuery {
+        JournalEntriesTable
+            .select(JournalEntriesTable.alimentId)
+            .where {
+                (JournalEntriesTable.userId eq userId) and
+                    (JournalEntriesTable.alimentId.isNotNull())
+            }
+            .orderBy(JournalEntriesTable.createdAt, SortOrder.DESC)
+            .map { it[JournalEntriesTable.alimentId]!! }
+            .distinct()
+            .take(limit)
     }
 
     suspend fun findByUserAll(userId: String): List<JournalEntryRow> = dbQuery {

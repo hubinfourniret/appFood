@@ -33,6 +33,7 @@
 | PORTIONS-01 | Portions standard (donnees) | DATA | Done | ✅ | - |
 | INFRA-02 | Deploiement Railway | INFRA (utilisateur) | Done | ✅ | - |
 | INFRA-03 | Monitoring Sentry/UptimeRobot | INFRA | Blocked | - | INFRA-02, action humaine |
+| PROFIL-05 | Export donnees personnelles (RGPD) | BACKEND | Done | ✅ | PROFIL-01 |
 
 ### Notes Sprint 1
 - Firebase non configure → mock mode utilise (FIREBASE_MOCK=true)
@@ -69,5 +70,76 @@ Corrections appliquees suite a l'audit des 4 epics (INFRA, DATA, AUTH, PROFIL) :
 - CiqualImporter : adapte pour Ciqual 2025 (separateur virgule, headers multi-lignes)
 
 **Compilation :** :backend:compileKotlin ✅ | :shared:compileCommonMainKotlinMetadata ✅
+
+## Sprint 2 (Core: Quotas + Journal + Dashboard) — TERMINE
+
+### Batch 1 — Parallele — TERMINE
+
+| US-ID | Titre | Agents | Statut | Review | Bloquant |
+|-------|-------|--------|--------|--------|----------|
+| QUOTAS-01 | Calcul quotas personnalises (algo) | SHARED | Done | ✅ Valide utilisateur | PROFIL-01, DATA-03 |
+| RECO-01 | Recommandation aliments (algo) | SHARED | Done | ✅ Valide utilisateur | PROFIL-03, DATA-01 |
+| JOURNAL-01 | Saisie aliment (endpoints + ecrans) | BACKEND, MOBILE | Done | - | SETUP-04, DATA-01 |
+| JOURNAL-03 | Aliments favoris (endpoints + ecrans) | BACKEND, MOBILE | Done | - | JOURNAL-01 |
+| JOURNAL-04 | Repas recents (endpoints + ecrans) | BACKEND, MOBILE | Done | - | JOURNAL-01 |
+| JOURNAL-06 | Modification/suppression (endpoints + ecrans) | BACKEND, MOBILE | Done | - | JOURNAL-01 |
+| QUOTAS-01 | Calcul quotas (endpoints) | BACKEND | Done | - | - |
+| QUOTAS-02 | Modification quotas (endpoints) | BACKEND | Done | - | QUOTAS-01 |
+| PORTIONS-01 | Portions standard (endpoints + UI) | BACKEND, MOBILE | Done | - | - |
+
+### Batch 2 — TERMINE
+
+| US-ID | Titre | Agents | Statut | Review | Bloquant |
+|-------|-------|--------|--------|--------|----------|
+| DASHBOARD-01 | Dashboard journalier | BACKEND, MOBILE | Done | ✅ (compilation OK) | QUOTAS-01, JOURNAL-01 |
+| QUOTAS-02 | Gestion quotas (ecran) | MOBILE | Done | ✅ (compilation OK) | QUOTAS-01 |
+| RECO-01 | Recommandations aliments (endpoints + ecrans) | BACKEND, MOBILE | Done | ✅ (compilation OK) | RECO-01 algo |
+
+### Reporte (dependances Sprint 3)
+
+| US-ID | Titre | Raison |
+|-------|-------|--------|
+| JOURNAL-02 | Saisie recette | Depend de RECETTES-01 (Sprint 3) |
+| RECO-02 | Recommandation recettes | Depend de RECETTES-01 (Sprint 3) |
+| RECO-03 | Validation rapide plat recommande | Depend de RECO-02 + JOURNAL-02 |
+| DASHBOARD-02 | Vue hebdomadaire | Depend de DASHBOARD-01 (Batch 2) |
+
+## Sprint 3 (Recettes + Poids + Hydratation + Sync) — EN COURS
+
+### Batch 1 — TERMINE
+
+| US-ID | Titre | Agents | Statut | Review | Bloquant |
+|-------|-------|--------|--------|--------|----------|
+| RECETTES-01 | Consultation livre de recettes | BACKEND, MOBILE | Done | ✅ (compilation OK) | SETUP-03 |
+| POIDS-01 | Saisie et historique du poids | BACKEND, MOBILE | Done | ✅ (compilation OK) | PROFIL-01 |
+| HYDRA-01 | Saisie et suivi hydratation | BACKEND, MOBILE | Done | ✅ (compilation OK) | DASHBOARD-01 |
+| DASHBOARD-02 | Vue hebdomadaire | MOBILE | Done | ✅ (compilation OK) | DASHBOARD-01 |
+| SYNC-01 | Saisie offline des repas | SHARED | Waiting User | ⚠️ CRITIQUE | SETUP-05, JOURNAL-01 |
+| SYNC-03 | Cache local aliments/recettes | SHARED | Done | ✅ (data sources existants) | SETUP-05 |
+| POIDS-02 | Recalcul quotas apres poids | SHARED | Todo | - | POIDS-01, QUOTAS-01 |
+
+### Notes Sprint 3 Batch 1
+- Tous les ViewModels utilisent des stubs (TODO: injection use cases via Koin)
+- ConnectivityMonitor expect/actual crees (Android + iOS) avec stubs
+- SyncManager, SyncApi, SyncResponses, SyncRequests implementes
+- SYNC-01 est une US CRITIQUE — validation utilisateur requise avant Batch 2
+- Deprecation warnings kotlinx.datetime.Instant → kotlin.time.Instant (non-bloquants)
+
+### Batch 2 — A LANCER (apres validation SYNC-01)
+
+| US-ID | Titre | Agents | Statut | Review | Bloquant |
+|-------|-------|--------|--------|--------|----------|
+| RECETTES-02 | Detail d'une recette | BACKEND, MOBILE | Todo | - | RECETTES-01 |
+| RECETTES-03 | Ajout recette personnalisee | BACKEND, MOBILE | Todo | - | RECETTES-01 |
+| JOURNAL-02 | Saisie recette consommee | BACKEND, MOBILE | Todo | - | RECETTES-01 |
+| RECO-02 | Recommandation recettes | SHARED, BACKEND, MOBILE | Todo | - | RECO-01, RECETTES-01 |
+| SYNC-02 | Sync auto au retour en ligne | SHARED | Todo | - | SYNC-01 |
+| POIDS-02 | Recalcul quotas (ecran) | MOBILE | Todo | - | POIDS-02 logic |
+
+### Batch 3
+
+| US-ID | Titre | Agents | Statut | Review | Bloquant |
+|-------|-------|--------|--------|--------|----------|
+| RECO-03 | Validation rapide plat recommande | MOBILE | Todo | - | RECO-02, JOURNAL-02 |
 
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked

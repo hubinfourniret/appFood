@@ -145,7 +145,8 @@ fun BottomNavBar(
 
         // Central "+" button — primary action, highlighted
         NavigationBarItem(
-            selected = currentScreen is Screen.Journal,
+            selected = currentScreen is Screen.Journal || currentScreen is Screen.AddEntry
+                || currentScreen is Screen.SearchAliment || currentScreen is Screen.PortionSelector,
             onClick = onAddClick,
             icon = {
                 FloatingActionButton(

@@ -173,4 +173,161 @@ object Strings {
     const val PROFIL_PREFERENCES = "Preferences alimentaires"
     const val PROFIL_SETTINGS = "Parametres"
     const val PROFIL_LOGOUT = "Se deconnecter"
+
+    // Journal — General
+    const val JOURNAL_ADD_ENTRY_TITLE = "Ajouter un aliment"
+    const val JOURNAL_BACK = "Retour"
+    const val JOURNAL_SELECT_MEAL_TYPE = "Quel repas ?"
+
+    // Journal — Meal types
+    const val JOURNAL_MEAL_BREAKFAST = "Petit-dejeuner"
+    const val JOURNAL_MEAL_BREAKFAST_DESC = "Premier repas de la journee"
+    const val JOURNAL_MEAL_LUNCH = "Dejeuner"
+    const val JOURNAL_MEAL_LUNCH_DESC = "Repas du midi"
+    const val JOURNAL_MEAL_DINNER = "Diner"
+    const val JOURNAL_MEAL_DINNER_DESC = "Repas du soir"
+    const val JOURNAL_MEAL_SNACK = "Collation"
+    const val JOURNAL_MEAL_SNACK_DESC = "En-cas ou gouter"
+
+    // Journal — Search (JOURNAL-01)
+    const val JOURNAL_SEARCH_TITLE = "Rechercher un aliment"
+    const val JOURNAL_SEARCH_PLACEHOLDER = "Rechercher un aliment..."
+    const val JOURNAL_SEARCH_NO_RESULTS = "Aucun aliment trouve"
+    const val JOURNAL_SEARCH_HINT = "Commencez a taper pour rechercher un aliment"
+    fun journalCaloriesPer100g(calories: Double) = "${calories.toLong()} kcal / 100g"
+    fun journalCaloriesShort(calories: Double) = "${calories.toLong()} kcal"
+
+    // Journal — Favorites (JOURNAL-03)
+    const val JOURNAL_FAVORITES_TITLE = "Favoris"
+    const val JOURNAL_ADD_FAVORITE = "Ajouter aux favoris"
+    const val JOURNAL_REMOVE_FAVORITE = "Retirer des favoris"
+
+    // Journal — Recents (JOURNAL-04)
+    const val JOURNAL_RECENTS_TITLE = "Recents"
+
+    // Journal — Portion selector (PORTIONS-01)
+    const val JOURNAL_PORTION_QUANTITY_LABEL = "Quantite"
+    const val JOURNAL_PORTION_GRAMS = "Grammes"
+    const val JOURNAL_PORTION_QUICK_SUGGESTIONS = "Suggestions rapides"
+    const val JOURNAL_PORTION_STANDARD = "Portions standard"
+    const val JOURNAL_PORTION_GENERIC = "Portions generiques"
+    const val JOURNAL_PORTION_CUP = "Bol"
+    const val JOURNAL_PORTION_TABLESPOON = "Cuillere a soupe"
+    const val JOURNAL_PORTION_TEASPOON = "Cuillere a cafe"
+    const val JOURNAL_PORTION_HANDFUL = "Poignee"
+    const val JOURNAL_NUTRITION_SUMMARY = "Resume nutritionnel"
+    const val JOURNAL_VALIDATE_ENTRY = "Valider"
+    fun journalPortionSummaryFor(grams: Double) = "Pour ${grams.toLong()}g :"
+
+    // Journal — Nutriments
+    const val JOURNAL_NUTRIMENT_CALORIES = "Calories"
+    const val JOURNAL_NUTRIMENT_PROTEINES = "Proteines"
+    const val JOURNAL_NUTRIMENT_GLUCIDES = "Glucides"
+    const val JOURNAL_NUTRIMENT_LIPIDES = "Lipides"
+    const val JOURNAL_NUTRIMENT_FIBRES = "Fibres"
+    const val JOURNAL_UNIT_KCAL = "kcal"
+    const val JOURNAL_UNIT_G = "g"
+
+    // Journal — Edit/Delete (JOURNAL-06)
+    const val JOURNAL_EDIT_QUANTITY = "Modifier la quantite"
+    const val JOURNAL_DELETE_ENTRY = "Supprimer"
+    const val JOURNAL_DELETE_CONFIRM_TITLE = "Supprimer cette entree ?"
+    const val JOURNAL_DELETE_CONFIRM_MESSAGE = "Cette entree sera supprimee du journal."
+    const val JOURNAL_DELETE_CONFIRM = "Supprimer"
+    const val JOURNAL_DELETE_CANCEL = "Annuler"
+    const val JOURNAL_ENTRY_UPDATED = "Entree mise a jour"
+    const val JOURNAL_ENTRY_DELETED = "Entree supprimee"
+
+    // Journal — Navigation
+    const val SCREEN_ADD_ENTRY = "Ajouter un aliment"
+    const val SCREEN_SEARCH_ALIMENT = "Rechercher un aliment"
+    const val SCREEN_PORTION_SELECTOR = "Choisir la portion"
+
+    // Dashboard (DASHBOARD-01)
+    const val DASHBOARD_TITLE = "Tableau de bord"
+    const val DASHBOARD_CALORIES_LABEL = "Calories"
+    const val DASHBOARD_MACROS_TITLE = "Macronutriments"
+    const val DASHBOARD_VITAMINES_TITLE = "Vitamines"
+    const val DASHBOARD_MINERAUX_TITLE = "Mineraux"
+    const val DASHBOARD_ACIDES_GRAS_TITLE = "Acides gras"
+    const val DASHBOARD_REPAS_TITLE = "Repas du jour"
+    const val DASHBOARD_ADD_MEAL = "Ajouter un repas"
+    const val DASHBOARD_NO_ENTRY = "Aucune saisie"
+    const val DASHBOARD_SEE_RECOMMENDATIONS = "Voir les suggestions"
+
+    // Quotas (QUOTAS-02)
+    const val QUOTAS_TITLE = "Gestion des quotas"
+    const val QUOTAS_CALCULATED = "Calcule"
+    const val QUOTAS_CUSTOM = "Personnalise"
+    const val QUOTAS_RESET = "Revenir au calcul automatique"
+    const val QUOTAS_RESET_ALL = "Reinitialiser tous les quotas"
+    const val QUOTAS_EDIT = "Modifier"
+    const val QUOTAS_SAVE = "Enregistrer"
+
+    // Recommandations (RECO-01)
+    const val RECO_TITLE = "Suggestions"
+    const val RECO_SUBTITLE = "Aliments pour combler vos manques"
+    const val RECO_SUGGESTED_QUANTITY = "%s suggeres"
+    const val RECO_COVERS = "Couvre"
+    const val RECO_ATE_THIS = "J'ai mange ca"
+    const val RECO_NO_DEFICIT = "Tous vos quotas sont atteints, bravo !"
+
+    // Poids (POIDS-01)
+    const val SCREEN_POIDS = "Mon poids"
+    const val POIDS_SAISIE_TITLE = "Nouvelle pesee"
+    const val POIDS_LABEL = "Poids"
+    const val POIDS_UNIT = "kg"
+    const val POIDS_SAVE_BUTTON = "Enregistrer"
+    const val POIDS_NO_DATA = "Aucune pesee enregistree"
+    const val POIDS_CURRENT = "Actuel"
+    const val POIDS_MIN = "Min"
+    const val POIDS_MAX = "Max"
+    const val POIDS_PERIOD_WEEK = "Semaine"
+    const val POIDS_PERIOD_MONTH = "Mois"
+    const val POIDS_PERIOD_3MONTHS = "3 mois"
+    const val POIDS_PERIOD_6MONTHS = "6 mois"
+    const val POIDS_PERIOD_YEAR = "1 an"
+    const val POIDS_SIGNIFICANT_CHANGE = "Votre poids a change significativement. Voulez-vous recalculer vos quotas ?"
+    const val POIDS_RECALCULATE_YES = "Recalculer"
+    const val POIDS_RECALCULATE_NO = "Plus tard"
+
+    // Recettes (RECETTES-01)
+    const val RECETTE_SEARCH_PLACEHOLDER = "Rechercher une recette..."
+    const val RECETTE_EMPTY = "Aucune recette trouvee"
+    const val RECETTE_FILTER_REGIME = "Regime"
+    const val RECETTE_FILTER_TYPE_REPAS = "Type de repas"
+    const val RECETTE_CLEAR_FILTERS = "Effacer les filtres"
+    const val RECETTE_SORT_LABEL = "Trier par"
+    const val RECETTE_SORT_PERTINENCE = "Pertinence"
+    const val RECETTE_SORT_POPULARITE = "Popularite"
+    const val RECETTE_SORT_TEMPS = "Temps de preparation"
+    const val RECETTE_REGIME_VEGAN = "Vegan"
+    const val RECETTE_REGIME_VEGETARIEN = "Vegetarien"
+    const val RECETTE_REGIME_FLEXITARIEN = "Flexitarien"
+    const val RECETTE_REGIME_OMNIVORE = "Omnivore"
+    fun recetteTempsPrep(minutes: Int) = "${minutes} min"
+
+    // Hydratation (HYDRA-01)
+    const val HYDRA_TITLE = "Hydratation"
+    const val HYDRA_OBJECTIVE = "Objectif"
+    const val HYDRA_ADD_GLASS = "Verre (250 ml)"
+    const val HYDRA_ADD_BOTTLE = "Bouteille (500 ml)"
+    const val HYDRA_ADD_CUSTOM = "Autre quantite"
+    const val HYDRA_CUSTOM_LABEL = "Quantite (ml)"
+    const val HYDRA_WEEKLY_TITLE = "Cette semaine"
+    const val HYDRA_MODIFY_OBJECTIVE = "Modifier l'objectif"
+    const val HYDRA_RESET_OBJECTIVE = "Objectif automatique"
+    fun hydraProgress(current: Int, target: Int) = "${current} / ${target} ml"
+
+    // Dashboard hebdo (DASHBOARD-02)
+    const val WEEKLY_TITLE = "Vue hebdomadaire"
+    const val WEEKLY_AVERAGE = "Moyenne"
+    const val WEEKLY_CRITICAL_NUTRIENTS = "Nutriments critiques"
+    const val WEEKLY_IMPROVEMENTS = "Ameliorations"
+    const val WEEKLY_DEGRADATIONS = "En baisse"
+    const val WEEKLY_PREVIOUS = "Semaine precedente"
+    const val WEEKLY_NEXT = "Semaine suivante"
+
+    // Offline
+    const val OFFLINE_BANNER_MESSAGE = "Mode hors ligne — vos donnees seront synchronisees automatiquement"
 }

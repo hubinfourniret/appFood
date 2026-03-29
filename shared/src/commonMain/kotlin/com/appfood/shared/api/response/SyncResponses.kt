@@ -31,7 +31,7 @@ data class SyncPullResponse(
     val poidsEntries: List<PoidsResponse>,
     val hydratationEntries: List<HydratationResponse>,
     val quotas: List<QuotaResponse>,
-    val profile: ProfileResponse?,
-    val preferences: PreferencesResponse?,
+    val profile: ProfileResponse? = null,
+    val preferences: PreferencesResponse? = null,
     val timestamp: String,
 )

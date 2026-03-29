@@ -1,0 +1,53 @@
+package com.appfood.backend.routes.dto
+
+import kotlinx.serialization.Serializable
+
+// --- Request DTOs ---
+
+@Serializable
+data class AddHydratationRequest(
+    val id: String? = null,
+    val date: String,
+    val quantiteMl: Int,
+)
+
+@Serializable
+data class UpdateHydratationObjectifRequest(
+    val objectifMl: Int,
+)
+
+// --- Response DTOs ---
+
+@Serializable
+data class HydratationResponse(
+    val id: String,
+    val date: String,
+    val quantiteMl: Int,
+    val objectifMl: Int,
+    val estObjectifPersonnalise: Boolean,
+    val pourcentage: Double,
+    val entrees: List<HydratationEntryResponse>,
+)
+
+@Serializable
+data class HydratationEntryResponse(
+    val id: String,
+    val heure: String,
+    val quantiteMl: Int,
+)
+
+@Serializable
+data class HydratationWeeklyResponse(
+    val dateFrom: String,
+    val dateTo: String,
+    val moyenneJournaliereMl: Int,
+    val objectifMl: Int,
+    val parJour: Map<String, HydratationDaySummary>,
+)
+
+@Serializable
+data class HydratationDaySummary(
+    val quantiteMl: Int,
+    val objectifMl: Int,
+    val pourcentage: Double,
+)

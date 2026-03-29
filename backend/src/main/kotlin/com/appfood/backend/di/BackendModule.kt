@@ -21,8 +21,15 @@ import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.search.MeilisearchClient
 import com.appfood.backend.service.AlimentService
 import com.appfood.backend.service.AuthService
+import com.appfood.backend.service.DashboardService
+import com.appfood.backend.service.HydratationService
+import com.appfood.backend.service.JournalService
+import com.appfood.backend.service.PoidsService
 import com.appfood.backend.service.PortionService
 import com.appfood.backend.service.ProfileService
+import com.appfood.backend.service.QuotaService
+import com.appfood.backend.service.RecetteService
+import com.appfood.backend.service.RecommandationService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -71,7 +78,14 @@ fun backendModule(
     }
     single { ProfileService(get(), get(), get(), get(), get(), get(), get(), get()) }
     single { AlimentService(get(), get(), get(), get()) }
+    single { JournalService(get(), get(), get()) }
+    single { QuotaService(get(), get(), get()) }
     single { PortionService(get()) }
+    single { RecommandationService(get(), get(), get(), get(), get()) }
+    single { DashboardService(get(), get(), get(), get(), get()) }
+    single { RecetteService(get(), get(), get()) }
+    single { HydratationService(get(), get()) }
+    single { PoidsService(get()) }
 
     // DAOs
     single { UserDao() }
