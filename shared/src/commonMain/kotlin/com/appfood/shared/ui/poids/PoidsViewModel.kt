@@ -2,6 +2,7 @@ package com.appfood.shared.ui.poids
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.ui.Strings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +18,7 @@ class PoidsViewModel(
     // TODO: Inject use cases when created by SHARED agent
     // private val enregistrerPoidsUseCase: EnregistrerPoidsUseCase,
     // private val getHistoriquePoidsUseCase: GetHistoriquePoidsUseCase,
+    // private val recalculerQuotasApresPoidsUseCase: RecalculerQuotasApresPoidsUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<PoidsState>(PoidsState.Loading)
@@ -35,6 +37,13 @@ class PoidsViewModel(
     // --- Period selection ---
     private val _selectedPeriod = MutableStateFlow(PoidsPeriod.MONTH)
     val selectedPeriod: StateFlow<PoidsPeriod> = _selectedPeriod.asStateFlow()
+
+    // --- POIDS-02 : Recalcul quotas apres changement de poids significatif ---
+    private val _showRecalculDialog = MutableStateFlow(false)
+    val showRecalculDialog: StateFlow<Boolean> = _showRecalculDialog.asStateFlow()
+
+    private val _isRecalculating = MutableStateFlow(false)
+    val isRecalculating: StateFlow<Boolean> = _isRecalculating.asStateFlow()
 
     fun init() {
         loadHistorique()
@@ -65,6 +74,7 @@ class PoidsViewModel(
             //         _saveMessage.value = Strings.POIDS_SAVE_SUCCESS
             //         _inputPoids.value = ""
             //         loadHistorique()
+            //         checkRecalculQuotas()
             //     }
             //     is AppResult.Error -> {
             //         _saveMessage.value = result.message
@@ -76,6 +86,7 @@ class PoidsViewModel(
             _inputPoids.value = ""
             _isSaving.value = false
             loadHistorique()
+            checkRecalculQuotas()
         }
     }
 
@@ -85,6 +96,56 @@ class PoidsViewModel(
 
     fun retry() {
         loadHistorique()
+    }
+
+    // --- POIDS-02 : Recalcul quotas ---
+
+    /**
+     * Verifie si un recalcul des quotas est necessaire apres un enregistrement de poids.
+     */
+    private fun checkRecalculQuotas() {
+        viewModelScope.launch {
+            // TODO: Call recalculerQuotasApresPoidsUseCase when created by SHARED agent
+            // val result = recalculerQuotasApresPoidsUseCase(userId)
+            // when (result) {
+            //     is AppResult.Success -> {
+            //         if (result.data.recalculated) {
+            //             _saveMessage.value = Strings.POIDS_RECALCUL_SUCCESS
+            //         } else {
+            //             // Pas de changement significatif, proposer le recalcul via dialog
+            //         }
+            //     }
+            //     is AppResult.Error -> { /* silent fail */ }
+            // }
+
+            // Stub: simulate significant weight change detected — show dialog
+            _showRecalculDialog.value = true
+        }
+    }
+
+    fun onRecalculAccepted() {
+        _showRecalculDialog.value = false
+        _isRecalculating.value = true
+        viewModelScope.launch {
+            // TODO: Call recalculerQuotasApresPoidsUseCase.invoke(userId) when created by SHARED agent
+            // val result = recalculerQuotasApresPoidsUseCase(userId)
+            // when (result) {
+            //     is AppResult.Success -> {
+            //         _saveMessage.value = Strings.POIDS_RECALCUL_SUCCESS
+            //     }
+            //     is AppResult.Error -> {
+            //         _saveMessage.value = result.message
+            //     }
+            // }
+
+            // Stub: simulate success
+            _saveMessage.value = Strings.POIDS_RECALCUL_SUCCESS
+            _isRecalculating.value = false
+        }
+    }
+
+    fun onRecalculDismissed() {
+        _showRecalculDialog.value = false
     }
 
     private fun loadHistorique() {

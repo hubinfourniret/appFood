@@ -67,6 +67,13 @@ class JournalViewModel(
     private val _recents = MutableStateFlow<List<RecentEntry>>(emptyList())
     val recents: StateFlow<List<RecentEntry>> = _recents.asStateFlow()
 
+    // --- Recette search state (JOURNAL-02) ---
+    private val _recetteSearchQuery = MutableStateFlow("")
+    val recetteSearchQuery: StateFlow<String> = _recetteSearchQuery.asStateFlow()
+
+    private val _recetteSearchResults = MutableStateFlow<List<RecetteSearchResult>>(emptyList())
+    val recetteSearchResults: StateFlow<List<RecetteSearchResult>> = _recetteSearchResults.asStateFlow()
+
     // --- Edit/Delete state ---
     private val _editState = MutableStateFlow<EditEntryState>(EditEntryState.Idle)
     val editState: StateFlow<EditEntryState> = _editState.asStateFlow()
@@ -313,6 +320,44 @@ class JournalViewModel(
         _editState.value = EditEntryState.Idle
     }
 
+    // --- Recette search (JOURNAL-02) ---
+
+    fun onRecetteSearchQueryChanged(query: String) {
+        _recetteSearchQuery.value = query
+        if (query.length < MIN_SEARCH_LENGTH) {
+            _recetteSearchResults.value = emptyList()
+            return
+        }
+        performRecetteSearch(query)
+    }
+
+    private fun performRecetteSearch(query: String) {
+        viewModelScope.launch {
+            // TODO: Call recette search use case when created by SHARED agent
+            // val result = rechercherRecetteUseCase(query)
+            // when (result) {
+            //     is AppResult.Success -> {
+            //         _recetteSearchResults.value = result.data.map {
+            //             RecetteSearchResult(id = it.id, nom = it.nom, tempsPreparationMin = it.tempsPreparationMin)
+            //         }
+            //     }
+            //     is AppResult.Error -> {
+            //         _recetteSearchResults.value = emptyList()
+            //     }
+            // }
+
+            // Stub: empty results
+            _recetteSearchResults.value = emptyList()
+        }
+    }
+
+    fun onRecetteSelected(recetteId: String) {
+        viewModelScope.launch {
+            // TODO: Navigate to recette detail or add recette portion to journal
+            // when created by SHARED agent
+        }
+    }
+
     // --- Reset / navigation helpers ---
 
     fun resetAddEntryFlow() {
@@ -323,6 +368,8 @@ class JournalViewModel(
         _selectedPortion.value = null
         _searchQuery.value = ""
         _searchState.value = SearchState.Idle
+        _recetteSearchQuery.value = ""
+        _recetteSearchResults.value = emptyList()
     }
 
     fun goBackToSearch() {
@@ -381,4 +428,13 @@ data class RecentEntry(
     val aliment: Aliment,
     val quantiteGrammes: Double,
     val mealType: MealType,
+)
+
+/**
+ * Represents a recipe search result for JOURNAL-02 (recette mode).
+ */
+data class RecetteSearchResult(
+    val id: String,
+    val nom: String,
+    val tempsPreparationMin: Int,
 )

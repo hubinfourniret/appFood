@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +55,7 @@ fun PoidsScreen(
     val isSaving by viewModel.isSaving.collectAsState()
     val saveMessage by viewModel.saveMessage.collectAsState()
     val selectedPeriod by viewModel.selectedPeriod.collectAsState()
+    val showRecalculDialog by viewModel.showRecalculDialog.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.init()
@@ -64,10 +67,13 @@ fun PoidsScreen(
         isSaving = isSaving,
         saveMessage = saveMessage,
         selectedPeriod = selectedPeriod,
+        showRecalculDialog = showRecalculDialog,
         onPoidsInputChanged = viewModel::onPoidsInputChanged,
         onSavePoids = viewModel::onSavePoids,
         onPeriodChanged = viewModel::onPeriodChanged,
         onClearMessage = viewModel::clearSaveMessage,
+        onRecalculAccepted = viewModel::onRecalculAccepted,
+        onRecalculDismissed = viewModel::onRecalculDismissed,
         onRetry = viewModel::retry,
         onNavigateBack = onNavigateBack,
     )
@@ -81,10 +87,13 @@ private fun PoidsContent(
     isSaving: Boolean,
     saveMessage: String?,
     selectedPeriod: PoidsPeriod,
+    showRecalculDialog: Boolean,
     onPoidsInputChanged: (String) -> Unit,
     onSavePoids: () -> Unit,
     onPeriodChanged: (PoidsPeriod) -> Unit,
     onClearMessage: () -> Unit,
+    onRecalculAccepted: () -> Unit,
+    onRecalculDismissed: () -> Unit,
     onRetry: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -95,6 +104,25 @@ private fun PoidsContent(
             snackbarHostState.showSnackbar(it)
             onClearMessage()
         }
+    }
+
+    // Dialog POIDS-02 : proposition de recalcul des quotas
+    if (showRecalculDialog) {
+        AlertDialog(
+            onDismissRequest = onRecalculDismissed,
+            title = { Text(Strings.POIDS_RECALCUL_DIALOG_TITLE) },
+            text = { Text(Strings.POIDS_SIGNIFICANT_CHANGE) },
+            confirmButton = {
+                Button(onClick = onRecalculAccepted) {
+                    Text(Strings.POIDS_RECALCULATE_YES)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onRecalculDismissed) {
+                    Text(Strings.POIDS_RECALCULATE_NO)
+                }
+            },
+        )
     }
 
     Scaffold(

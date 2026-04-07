@@ -328,6 +328,67 @@ object Strings {
     const val WEEKLY_PREVIOUS = "Semaine precedente"
     const val WEEKLY_NEXT = "Semaine suivante"
 
+    // Recette detail (RECETTES-02)
+    const val RECETTE_DETAIL_TITLE = "Detail recette"
+    const val RECETTE_INGREDIENTS_TITLE = "Ingredients"
+    const val RECETTE_ETAPES_TITLE = "Preparation"
+    const val RECETTE_NUTRITION_TITLE = "Valeurs nutritionnelles (par portion)"
+    const val RECETTE_PORTIONS_LABEL = "Portions"
+    const val RECETTE_ADD_TO_JOURNAL = "Ajouter a mon journal"
+    const val RECETTE_TEMPS_PREP_LABEL = "Preparation"
+    const val RECETTE_TEMPS_CUISSON_LABEL = "Cuisson"
+    const val RECETTE_FAVORIS_ADD = "Ajouter aux favoris"
+    const val RECETTE_FAVORIS_REMOVE = "Retirer des favoris"
+    fun recetteTempsCuisson(minutes: Int) = "${minutes} min"
+    fun recettePortionCount(count: Int) = "$count portion${if (count > 1) "s" else ""}"
+    fun recetteEtapeNumber(number: Int) = "Etape $number"
+    fun recetteIngredientQuantity(nom: String, grammes: Double) = "$nom — ${grammes.toLong()}g"
+
+    // Create recette (RECETTES-03)
+    const val RECETTE_CREATE_TITLE = "Creer une recette"
+    const val RECETTE_CREATE_NOM_LABEL = "Nom de la recette"
+    const val RECETTE_CREATE_DESCRIPTION_LABEL = "Description"
+    const val RECETTE_CREATE_IMAGE_URL_LABEL = "URL de la photo (optionnel)"
+    const val RECETTE_CREATE_TEMPS_PREP_LABEL = "Temps de preparation (min)"
+    const val RECETTE_CREATE_TEMPS_CUISSON_LABEL = "Temps de cuisson (min)"
+    const val RECETTE_CREATE_NB_PORTIONS_LABEL = "Nombre de portions"
+    const val RECETTE_CREATE_REGIME_LABEL = "Regime alimentaire"
+    const val RECETTE_CREATE_ADD_INGREDIENT = "Ajouter un ingredient"
+    const val RECETTE_CREATE_INGREDIENT_SEARCH = "Rechercher un aliment"
+    const val RECETTE_CREATE_INGREDIENT_QUANTITY = "Quantite (g)"
+    const val RECETTE_CREATE_ADD_ETAPE = "Ajouter une etape"
+    const val RECETTE_CREATE_ETAPE_PLACEHOLDER = "Decrivez cette etape..."
+    const val RECETTE_CREATE_SUBMIT = "Creer la recette"
+    const val RECETTE_CREATE_SUCCESS = "Recette creee avec succes"
+    const val RECETTE_CREATE_REMOVE_INGREDIENT = "Supprimer"
+    const val RECETTE_CREATE_REMOVE_ETAPE = "Supprimer"
+    const val RECETTE_CREATE_MOVE_UP = "Monter"
+    const val RECETTE_CREATE_MOVE_DOWN = "Descendre"
+
+    // Journal — Recette integration (JOURNAL-02)
+    const val JOURNAL_MODE_ALIMENT = "Aliment"
+    const val JOURNAL_MODE_RECETTE = "Recette"
+    const val JOURNAL_SEARCH_RECETTE_PLACEHOLDER = "Rechercher une recette..."
+    const val JOURNAL_RECETTE_NO_RESULTS = "Aucune recette trouvee"
+    const val JOURNAL_RECETTE_ADD_PORTIONS = "Ajouter au journal"
+
+    // Recommandations recettes (RECO-02)
+    const val RECO_RECETTES_TITLE = "Recettes suggerees"
+    const val RECO_RECETTE_ADD_JOURNAL = "Ajouter au journal"
+    fun recoRecetteCoverage(percent: Int) = "Couvre $percent% de vos besoins"
+    fun recoRecetteNutrients(nutrients: String) = "Nutriments : $nutrients"
+
+    // Recommandations recettes — validation rapide (RECO-03)
+    const val RECO_PORTIONS_LABEL = "Portions"
+    fun recoPortionCount(count: Int) = "$count portion${if (count > 1) "s" else ""}"
+    const val RECO_ADDED_TO_JOURNAL_SUCCESS = "Recette ajoutee au journal"
+
+    // Poids — Recalcul quotas (POIDS-02)
+    const val POIDS_RECALCUL_DIALOG_TITLE = "Recalculer vos quotas ?"
+    fun poidsRecalculDialogMessage(changeKg: Double) =
+        "Votre poids a change de ${((kotlin.math.abs(changeKg) * 10).toInt() / 10.0)} kg. Voulez-vous recalculer vos quotas nutritionnels ?"
+    const val POIDS_RECALCUL_SUCCESS = "Quotas recalcules avec succes"
+
     // Offline
     const val OFFLINE_BANNER_MESSAGE = "Mode hors ligne — vos donnees seront synchronisees automatiquement"
 }

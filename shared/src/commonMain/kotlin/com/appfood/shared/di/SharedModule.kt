@@ -36,12 +36,16 @@ import com.appfood.shared.domain.hydratation.UpdateObjectifHydratationUseCase
 import com.appfood.shared.domain.poids.DetecterChangementPoidsUseCase
 import com.appfood.shared.domain.poids.EnregistrerPoidsUseCase
 import com.appfood.shared.domain.poids.GetHistoriquePoidsUseCase
+import com.appfood.shared.domain.poids.RecalculerQuotasApresPoidsUseCase
 import com.appfood.shared.domain.quota.CalculerQuotasUseCase
 import com.appfood.shared.domain.quota.RecalculerQuotasUseCase
 import com.appfood.shared.domain.recette.RechercherRecettesUseCase
 import com.appfood.shared.domain.recommandation.RecommandationAlimentUseCase
+import com.appfood.shared.domain.recommandation.RecommandationRecetteUseCase
 import com.appfood.shared.sync.ConnectivityMonitor
+import com.appfood.shared.sync.LocalSyncPreferences
 import com.appfood.shared.sync.SyncManager
+import com.appfood.shared.sync.SyncPreferences
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
@@ -73,18 +77,21 @@ val sharedModule = module {
 
     // Sync infrastructure
     // ConnectivityMonitor is registered in the platform-specific module (expect/actual)
-    single { SyncManager(get(), get(), get()) }
+    single<SyncPreferences> { LocalSyncPreferences() }
+    single { SyncManager(get(), get(), get(), get(), get(), get(), get()) }
 
     // Use cases (factory — new instance per injection)
     factory { CalculerQuotasUseCase() }
     factory { RecalculerQuotasUseCase(get(), get(), get()) }
     factory { RecommandationAlimentUseCase() }
+    factory { RecommandationRecetteUseCase() }
     factory { AjouterEauUseCase(get()) }
     factory { GetHydratationJourUseCase(get()) }
     factory { UpdateObjectifHydratationUseCase(get()) }
     factory { EnregistrerPoidsUseCase(get()) }
     factory { GetHistoriquePoidsUseCase(get()) }
     factory { DetecterChangementPoidsUseCase(get()) }
+    factory { RecalculerQuotasApresPoidsUseCase(get(), get(), get()) }
     factory { RechercherRecettesUseCase(get()) }
 
     // Repositories

@@ -34,6 +34,12 @@ sealed class Screen {
     // Weekly dashboard (DASHBOARD-02)
     @Serializable data object WeeklyDashboard : Screen()
 
+    // Recette detail (RECETTES-02)
+    @Serializable data class RecetteDetail(val recetteId: String) : Screen()
+
+    // Create recette — admin only (RECETTES-03)
+    @Serializable data object CreateRecette : Screen()
+
     // Keep Auth as alias for Login (backward compatibility)
     @Serializable data object Auth : Screen()
 }

@@ -41,6 +41,8 @@ import com.appfood.shared.ui.profil.ProfilScreen
 import com.appfood.shared.ui.profil.ProfilViewModel
 import com.appfood.shared.ui.quota.QuotaManagementScreen
 import com.appfood.shared.ui.quota.QuotaViewModel
+import com.appfood.shared.ui.recette.CreateRecetteScreen
+import com.appfood.shared.ui.recette.RecetteDetailScreen
 import com.appfood.shared.ui.recette.RecettesListScreen
 import com.appfood.shared.ui.recette.RecettesViewModel
 import com.appfood.shared.ui.recommandation.RecommandationsScreen
@@ -75,7 +77,7 @@ fun AppNavigation(
     val hydratationViewModel = remember { HydratationViewModel() }
     val poidsViewModel = remember { PoidsViewModel() }
     val weeklyDashboardViewModel = remember { WeeklyDashboardViewModel() }
-    val recettesViewModel = remember { RecettesViewModel() }
+    val recettesViewModel = remember { RecettesViewModel().also { it.init() } }
 
     Scaffold(
         bottomBar = {
@@ -296,6 +298,38 @@ fun AppNavigation(
             composable<Screen.Recettes> {
                 RecettesListScreen(
                     viewModel = recettesViewModel,
+                    onRecetteClick = { recetteId ->
+                        navController.navigate(Screen.RecetteDetail(recetteId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+
+            // Recette detail (RECETTES-02)
+            composable<Screen.RecetteDetail> { backStackEntry ->
+                val screen = backStackEntry.toRoute<Screen.RecetteDetail>()
+                RecetteDetailScreen(
+                    recetteId = screen.recetteId,
+                    viewModel = recettesViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToJournalAdd = {
+                        navController.navigate(Screen.AddEntry) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+
+            // Create recette — admin (RECETTES-03)
+            composable<Screen.CreateRecette> {
+                CreateRecetteScreen(
+                    viewModel = recettesViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
                 )
             }
 

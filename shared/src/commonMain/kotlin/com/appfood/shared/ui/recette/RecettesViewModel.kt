@@ -2,7 +2,9 @@ package com.appfood.shared.ui.recette
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.model.IngredientRecette
 import com.appfood.shared.model.MealType
+import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.Recette
 import com.appfood.shared.model.RegimeAlimentaire
 import kotlinx.coroutines.FlowPreview
@@ -14,11 +16,12 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel for the recipe book screen (RECETTES-01).
- * Manages search, filters, sorting and pagination.
+ * ViewModel for the recipe feature (RECETTES-01, RECETTES-02, RECETTES-03).
+ * Manages search, filters, sorting, pagination, detail, and admin creation.
  *
  * Use cases will be injected when created by the SHARED agent.
  */
@@ -26,7 +29,12 @@ class RecettesViewModel(
     // TODO: Inject use cases when created by SHARED agent
     // private val rechercherRecettesUseCase: RechercherRecettesUseCase,
     // private val getRecettesUseCase: GetRecettesUseCase,
+    // private val getRecetteDetailUseCase: GetRecetteDetailUseCase,
+    // private val toggleFavoriRecetteUseCase: ToggleFavoriRecetteUseCase,
+    // private val creerRecetteUseCase: CreerRecetteUseCase,
 ) : ViewModel() {
+
+    // ==================== LIST STATE (RECETTES-01) ====================
 
     private val _state = MutableStateFlow<RecettesState>(RecettesState.Loading)
     val state: StateFlow<RecettesState> = _state.asStateFlow()
@@ -53,6 +61,27 @@ class RecettesViewModel(
     private val _currentPage = MutableStateFlow(0)
     private val _hasMore = MutableStateFlow(true)
     val hasMore: StateFlow<Boolean> = _hasMore.asStateFlow()
+
+    // ==================== DETAIL STATE (RECETTES-02) ====================
+
+    private val _detailState = MutableStateFlow<RecetteDetailState>(RecetteDetailState.Loading)
+    val detailState: StateFlow<RecetteDetailState> = _detailState.asStateFlow()
+
+    private val _selectedPortions = MutableStateFlow(1)
+    val selectedPortions: StateFlow<Int> = _selectedPortions.asStateFlow()
+
+    private val _isDetailFavorite = MutableStateFlow(false)
+    val isDetailFavorite: StateFlow<Boolean> = _isDetailFavorite.asStateFlow()
+
+    // ==================== CREATE STATE (RECETTES-03) ====================
+
+    private val _createRecetteState = MutableStateFlow<CreateRecetteState>(CreateRecetteState.Idle)
+    val createRecetteState: StateFlow<CreateRecetteState> = _createRecetteState.asStateFlow()
+
+    private val _createRecetteForm = MutableStateFlow(CreateRecetteFormState())
+    val createRecetteForm: StateFlow<CreateRecetteFormState> = _createRecetteForm.asStateFlow()
+
+    // ==================== LIST ACTIONS ====================
 
     @OptIn(FlowPreview::class)
     fun init() {
@@ -130,31 +159,207 @@ class RecettesViewModel(
 
         viewModelScope.launch {
             // TODO: Call use cases when created by SHARED agent
-            // val result = rechercherRecettesUseCase(
-            //     query = _searchQuery.value,
-            //     regimes = _selectedRegimes.value.toList(),
-            //     mealTypes = _selectedMealTypes.value.toList(),
-            //     maxTempsPrepMin = _maxTempsPrepMin.value,
-            //     sort = _sortOption.value,
-            //     page = _currentPage.value,
-            //     pageSize = PAGE_SIZE,
-            // )
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         val newRecettes = result.data
-            //         _hasMore.value = newRecettes.size >= PAGE_SIZE
-            //         val allRecettes = if (resetPage) newRecettes
-            //             else (currentState as? RecettesState.Success)?.recettes.orEmpty() + newRecettes
-            //         _state.value = RecettesState.Success(recettes = allRecettes)
-            //     }
-            //     is AppResult.Error -> {
-            //         _state.value = RecettesState.Error(result.message)
-            //     }
-            // }
-
             // Stub: empty list
             _state.value = RecettesState.Success(recettes = emptyList())
             _hasMore.value = false
+        }
+    }
+
+    // ==================== DETAIL ACTIONS (RECETTES-02) ====================
+
+    fun loadRecetteDetail(id: String) {
+        _detailState.value = RecetteDetailState.Loading
+        viewModelScope.launch {
+            // TODO: Call getRecetteDetailUseCase when created by SHARED agent
+            // val result = getRecetteDetailUseCase(id)
+            // when (result) {
+            //     is AppResult.Success -> {
+            //         val r = result.data
+            //         _selectedPortions.value = r.nbPortions
+            //         _detailState.value = RecetteDetailState.Success(
+            //             id = r.id, nom = r.nom, description = r.description,
+            //             tempsPreparationMin = r.tempsPreparationMin,
+            //             tempsCuissonMin = r.tempsCuissonMin,
+            //             nbPortions = r.nbPortions,
+            //             ingredients = r.ingredients, etapes = r.etapes,
+            //             nutrimentsTotaux = r.nutrimentsTotaux,
+            //             imageUrl = r.imageUrl,
+            //         )
+            //     }
+            //     is AppResult.Error -> {
+            //         _detailState.value = RecetteDetailState.Error(result.message)
+            //     }
+            // }
+
+            // Stub: simulate not found
+            _detailState.value = RecetteDetailState.Error("Recette introuvable (stub)")
+        }
+    }
+
+    fun onDetailPortionsChanged(portions: Int) {
+        if (portions >= 1) {
+            _selectedPortions.value = portions
+        }
+    }
+
+    fun onToggleDetailFavorite() {
+        _isDetailFavorite.value = !_isDetailFavorite.value
+        viewModelScope.launch {
+            // TODO: Call toggleFavoriRecetteUseCase when created by SHARED agent
+        }
+    }
+
+    fun onAddRecetteToJournal() {
+        // TODO: Navigate to journal add with recette data
+        // This will be wired with SHARED agent use cases
+    }
+
+    // ==================== CREATE ACTIONS (RECETTES-03) ====================
+
+    fun onCreateNomChanged(value: String) {
+        _createRecetteForm.update { it.copy(nom = value) }
+    }
+
+    fun onCreateDescriptionChanged(value: String) {
+        _createRecetteForm.update { it.copy(description = value) }
+    }
+
+    fun onCreateImageUrlChanged(value: String) {
+        _createRecetteForm.update { it.copy(imageUrl = value) }
+    }
+
+    fun onCreateTempsPrepChanged(value: String) {
+        if (value.isEmpty() || value.all { it.isDigit() }) {
+            _createRecetteForm.update { it.copy(tempsPrepMin = value) }
+        }
+    }
+
+    fun onCreateTempsCuissonChanged(value: String) {
+        if (value.isEmpty() || value.all { it.isDigit() }) {
+            _createRecetteForm.update { it.copy(tempsCuissonMin = value) }
+        }
+    }
+
+    fun onCreateNbPortionsChanged(value: String) {
+        if (value.isEmpty() || value.all { it.isDigit() }) {
+            _createRecetteForm.update { it.copy(nbPortions = value) }
+        }
+    }
+
+    fun onCreateRegimeChanged(regime: RegimeAlimentaire) {
+        _createRecetteForm.update { it.copy(regime = regime) }
+    }
+
+    fun onCreateAddIngredient() {
+        _createRecetteForm.update {
+            it.copy(ingredients = it.ingredients + IngredientFormEntry())
+        }
+    }
+
+    fun onCreateRemoveIngredient(index: Int) {
+        _createRecetteForm.update {
+            it.copy(ingredients = it.ingredients.toMutableList().also { list -> list.removeAt(index) })
+        }
+    }
+
+    fun onCreateIngredientNameChanged(index: Int, name: String) {
+        _createRecetteForm.update { form ->
+            form.copy(
+                ingredients = form.ingredients.toMutableList().also { list ->
+                    list[index] = list[index].copy(alimentNom = name)
+                },
+            )
+        }
+    }
+
+    fun onCreateIngredientQuantityChanged(index: Int, quantity: String) {
+        if (quantity.isEmpty() || quantity.matches(Regex("^\\d*\\.?\\d*$"))) {
+            _createRecetteForm.update { form ->
+                form.copy(
+                    ingredients = form.ingredients.toMutableList().also { list ->
+                        list[index] = list[index].copy(quantiteGrammes = quantity)
+                    },
+                )
+            }
+        }
+    }
+
+    fun onCreateAddEtape() {
+        _createRecetteForm.update {
+            it.copy(etapes = it.etapes + "")
+        }
+    }
+
+    fun onCreateRemoveEtape(index: Int) {
+        _createRecetteForm.update {
+            it.copy(etapes = it.etapes.toMutableList().also { list -> list.removeAt(index) })
+        }
+    }
+
+    fun onCreateEtapeChanged(index: Int, text: String) {
+        _createRecetteForm.update { form ->
+            form.copy(
+                etapes = form.etapes.toMutableList().also { list -> list[index] = text },
+            )
+        }
+    }
+
+    fun onCreateMoveEtapeUp(index: Int) {
+        if (index <= 0) return
+        _createRecetteForm.update { form ->
+            form.copy(
+                etapes = form.etapes.toMutableList().also { list ->
+                    val item = list.removeAt(index)
+                    list.add(index - 1, item)
+                },
+            )
+        }
+    }
+
+    fun onCreateMoveEtapeDown(index: Int) {
+        _createRecetteForm.update { form ->
+            if (index >= form.etapes.lastIndex) return@update form
+            form.copy(
+                etapes = form.etapes.toMutableList().also { list ->
+                    val item = list.removeAt(index)
+                    list.add(index + 1, item)
+                },
+            )
+        }
+    }
+
+    fun onCreateRecetteSubmit() {
+        val form = _createRecetteForm.value
+        if (form.nom.isBlank()) return
+
+        _createRecetteState.value = CreateRecetteState.Saving
+        viewModelScope.launch {
+            // TODO: Call creerRecetteUseCase when created by SHARED agent
+            // val request = CreateRecetteRequest(
+            //     nom = form.nom,
+            //     description = form.description,
+            //     imageUrl = form.imageUrl.ifBlank { null },
+            //     tempsPreparationMin = form.tempsPrepMin.toIntOrNull() ?: 0,
+            //     tempsCuissonMin = form.tempsCuissonMin.toIntOrNull() ?: 0,
+            //     nbPortions = form.nbPortions.toIntOrNull() ?: 1,
+            //     regime = form.regime,
+            //     ingredients = form.ingredients.map { ... },
+            //     etapes = form.etapes.filter { it.isNotBlank() },
+            // )
+            // val result = creerRecetteUseCase(request)
+            // when (result) {
+            //     is AppResult.Success -> {
+            //         _createRecetteState.value = CreateRecetteState.Success
+            //         _createRecetteForm.value = CreateRecetteFormState()
+            //     }
+            //     is AppResult.Error -> {
+            //         _createRecetteState.value = CreateRecetteState.Error(result.message)
+            //     }
+            // }
+
+            // Stub: simulate success
+            _createRecetteState.value = CreateRecetteState.Success
+            _createRecetteForm.value = CreateRecetteFormState()
         }
     }
 
@@ -164,7 +369,7 @@ class RecettesViewModel(
     }
 }
 
-// --- States ---
+// ==================== LIST STATES ====================
 
 sealed interface RecettesState {
     data object Loading : RecettesState
@@ -175,3 +380,48 @@ sealed interface RecettesState {
 enum class RecetteSortOption {
     PERTINENCE, POPULARITE, TEMPS_PREPARATION
 }
+
+// ==================== DETAIL STATES (RECETTES-02) ====================
+
+sealed interface RecetteDetailState {
+    data object Loading : RecetteDetailState
+    data class Success(
+        val id: String,
+        val nom: String,
+        val description: String,
+        val tempsPreparationMin: Int,
+        val tempsCuissonMin: Int,
+        val nbPortions: Int,
+        val ingredients: List<IngredientRecette>,
+        val etapes: List<String>,
+        val nutrimentsTotaux: NutrimentValues,
+        val imageUrl: String?,
+    ) : RecetteDetailState
+    data class Error(val message: String) : RecetteDetailState
+}
+
+// ==================== CREATE STATES (RECETTES-03) ====================
+
+sealed interface CreateRecetteState {
+    data object Idle : CreateRecetteState
+    data object Saving : CreateRecetteState
+    data object Success : CreateRecetteState
+    data class Error(val message: String) : CreateRecetteState
+}
+
+data class CreateRecetteFormState(
+    val nom: String = "",
+    val description: String = "",
+    val imageUrl: String = "",
+    val tempsPrepMin: String = "",
+    val tempsCuissonMin: String = "",
+    val nbPortions: String = "4",
+    val regime: RegimeAlimentaire = RegimeAlimentaire.VEGAN,
+    val ingredients: List<IngredientFormEntry> = emptyList(),
+    val etapes: List<String> = emptyList(),
+)
+
+data class IngredientFormEntry(
+    val alimentNom: String = "",
+    val quantiteGrammes: String = "",
+)

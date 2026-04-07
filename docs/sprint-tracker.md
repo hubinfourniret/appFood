@@ -104,7 +104,7 @@ Corrections appliquees suite a l'audit des 4 epics (INFRA, DATA, AUTH, PROFIL) :
 | RECO-03 | Validation rapide plat recommande | Depend de RECO-02 + JOURNAL-02 |
 | DASHBOARD-02 | Vue hebdomadaire | Depend de DASHBOARD-01 (Batch 2) |
 
-## Sprint 3 (Recettes + Poids + Hydratation + Sync) — EN COURS
+## Sprint 3 (Recettes + Poids + Hydratation + Sync) — TERMINE
 
 ### Batch 1 — TERMINE
 
@@ -114,32 +114,49 @@ Corrections appliquees suite a l'audit des 4 epics (INFRA, DATA, AUTH, PROFIL) :
 | POIDS-01 | Saisie et historique du poids | BACKEND, MOBILE | Done | ✅ (compilation OK) | PROFIL-01 |
 | HYDRA-01 | Saisie et suivi hydratation | BACKEND, MOBILE | Done | ✅ (compilation OK) | DASHBOARD-01 |
 | DASHBOARD-02 | Vue hebdomadaire | MOBILE | Done | ✅ (compilation OK) | DASHBOARD-01 |
-| SYNC-01 | Saisie offline des repas | SHARED | Waiting User | ⚠️ CRITIQUE | SETUP-05, JOURNAL-01 |
+| SYNC-01 | Saisie offline des repas | SHARED | Done | ✅ Validé utilisateur | SETUP-05, JOURNAL-01 |
 | SYNC-03 | Cache local aliments/recettes | SHARED | Done | ✅ (data sources existants) | SETUP-05 |
-| POIDS-02 | Recalcul quotas apres poids | SHARED | Todo | - | POIDS-01, QUOTAS-01 |
+| POIDS-02 | Recalcul quotas apres poids (logique) | SHARED | Done | ✅ (compilation OK) | POIDS-01, QUOTAS-01 |
 
 ### Notes Sprint 3 Batch 1
 - Tous les ViewModels utilisent des stubs (TODO: injection use cases via Koin)
 - ConnectivityMonitor expect/actual crees (Android + iOS) avec stubs
 - SyncManager, SyncApi, SyncResponses, SyncRequests implementes
-- SYNC-01 est une US CRITIQUE — validation utilisateur requise avant Batch 2
+- SYNC-01 est une US CRITIQUE — validee par l'utilisateur
 - Deprecation warnings kotlinx.datetime.Instant → kotlin.time.Instant (non-bloquants)
 
-### Batch 2 — A LANCER (apres validation SYNC-01)
+### Batch 2 — TERMINE
 
 | US-ID | Titre | Agents | Statut | Review | Bloquant |
 |-------|-------|--------|--------|--------|----------|
-| RECETTES-02 | Detail d'une recette | BACKEND, MOBILE | Todo | - | RECETTES-01 |
-| RECETTES-03 | Ajout recette personnalisee | BACKEND, MOBILE | Todo | - | RECETTES-01 |
-| JOURNAL-02 | Saisie recette consommee | BACKEND, MOBILE | Todo | - | RECETTES-01 |
-| RECO-02 | Recommandation recettes | SHARED, BACKEND, MOBILE | Todo | - | RECO-01, RECETTES-01 |
-| SYNC-02 | Sync auto au retour en ligne | SHARED | Todo | - | SYNC-01 |
-| POIDS-02 | Recalcul quotas (ecran) | MOBILE | Todo | - | POIDS-02 logic |
+| RECETTES-02 | Detail d'une recette | BACKEND, MOBILE | Done | ✅ (compilation OK) | RECETTES-01 |
+| RECETTES-03 | Ajout recette personnalisee | BACKEND, MOBILE | Done | ✅ (compilation OK) | RECETTES-01 |
+| JOURNAL-02 | Saisie recette consommee | BACKEND, MOBILE | Done | ✅ (compilation OK) | RECETTES-01 |
+| RECO-02 | Recommandation recettes | SHARED, BACKEND, MOBILE | Done | ✅ (compilation OK) | RECO-01, RECETTES-01 |
+| SYNC-02 | Sync auto au retour en ligne | SHARED | Done | ✅ (compilation OK) | SYNC-01 |
+| POIDS-02 | Recalcul quotas (ecran) | MOBILE | Done | ✅ (compilation OK) | POIDS-02 logic |
 
-### Batch 3
+### Notes Sprint 3 Batch 2
+- Corrige imports `kotlinx.datetime.Clock` → `kotlin.time.Clock` (Kotlin 2.3.0)
+- Corrige `cubicTo` → `curveTo` dans les path builders Compose Multiplatform
+- Corrige `String.format` → calcul manuel (non disponible en KMP common)
+- Corrige types SQLDelight (String→Long pour timestamps, Long→Double pour hydratation)
+- SyncManager : auto-sync via ConnectivityMonitor, exponential backoff, SyncPreferences
+- RECO-02 : onglets Aliments/Recettes dans l'ecran recommandations
+- JOURNAL-02 : toggle Aliment/Recette dans AddEntryScreen
+- POIDS-02 : dialog recalcul quotas apres changement de poids significatif
+- ViewModels avec stubs TODO (meme pattern que Batch 1)
+
+### Batch 3 — TERMINE
 
 | US-ID | Titre | Agents | Statut | Review | Bloquant |
 |-------|-------|--------|--------|--------|----------|
-| RECO-03 | Validation rapide plat recommande | MOBILE | Todo | - | RECO-02, JOURNAL-02 |
+| RECO-03 | Validation rapide plat recommande | MOBILE | Done | ✅ (compilation OK) | RECO-02, JOURNAL-02 |
+
+### Notes Sprint 3 Batch 3
+- RecetteRecommandationCard : selecteur de portions (+/-) + bouton "J'ai mange ca"
+- ViewModel : Map<recetteId, portions> pour gerer les portions par recette
+- Feedback succes via successMessage StateFlow
+- Stub TODO pour ajout effectif au journal (use case a connecter)
 
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked
