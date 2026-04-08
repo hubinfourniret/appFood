@@ -7,6 +7,8 @@ import com.appfood.shared.model.MealType
 import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.Recette
 import com.appfood.shared.model.RegimeAlimentaire
+import com.appfood.shared.data.repository.RecetteRepository
+import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,12 +28,7 @@ import kotlinx.coroutines.launch
  * Use cases will be injected when created by the SHARED agent.
  */
 class RecettesViewModel(
-    // TODO: Inject use cases when created by SHARED agent
-    // private val rechercherRecettesUseCase: RechercherRecettesUseCase,
-    // private val getRecettesUseCase: GetRecettesUseCase,
-    // private val getRecetteDetailUseCase: GetRecetteDetailUseCase,
-    // private val toggleFavoriRecetteUseCase: ToggleFavoriRecetteUseCase,
-    // private val creerRecetteUseCase: CreerRecetteUseCase,
+    private val recetteRepository: RecetteRepository,
 ) : ViewModel() {
 
     // ==================== LIST STATE (RECETTES-01) ====================
@@ -158,10 +155,37 @@ class RecettesViewModel(
         }
 
         viewModelScope.launch {
-            // TODO: Call use cases when created by SHARED agent
-            // Stub: empty list
-            _state.value = RecettesState.Success(recettes = emptyList())
-            _hasMore.value = false
+            val regimeFilter = _selectedRegimes.value.firstOrNull()?.name
+            val mealTypeFilter = _selectedMealTypes.value.firstOrNull()?.name
+            val sortStr = when (_sortOption.value) {
+                RecetteSortOption.PERTINENCE -> null
+                RecetteSortOption.POPULARITE -> "popularite"
+                RecetteSortOption.TEMPS_PREPARATION -> "temps_preparation"
+            }
+            val queryStr = _searchQuery.value.ifBlank { null }
+
+            when (val result = recetteRepository.listRecettes(
+                regime = regimeFilter,
+                typeRepas = mealTypeFilter,
+                sort = sortStr,
+                query = queryStr,
+                page = _currentPage.value + 1,
+                limit = PAGE_SIZE,
+            )) {
+                is AppResult.Success -> {
+                    val newRecettes = result.data
+                    val existingRecettes = if (resetPage) {
+                        emptyList()
+                    } else {
+                        (currentState as? RecettesState.Success)?.recettes.orEmpty()
+                    }
+                    _state.value = RecettesState.Success(recettes = existingRecettes + newRecettes)
+                    _hasMore.value = newRecettes.size >= PAGE_SIZE
+                }
+                is AppResult.Error -> {
+                    _state.value = RecettesState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -170,29 +194,27 @@ class RecettesViewModel(
     fun loadRecetteDetail(id: String) {
         _detailState.value = RecetteDetailState.Loading
         viewModelScope.launch {
-            // TODO: Call getRecetteDetailUseCase when created by SHARED agent
-            // val result = getRecetteDetailUseCase(id)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         val r = result.data
-            //         _selectedPortions.value = r.nbPortions
-            //         _detailState.value = RecetteDetailState.Success(
-            //             id = r.id, nom = r.nom, description = r.description,
-            //             tempsPreparationMin = r.tempsPreparationMin,
-            //             tempsCuissonMin = r.tempsCuissonMin,
-            //             nbPortions = r.nbPortions,
-            //             ingredients = r.ingredients, etapes = r.etapes,
-            //             nutrimentsTotaux = r.nutrimentsTotaux,
-            //             imageUrl = r.imageUrl,
-            //         )
-            //     }
-            //     is AppResult.Error -> {
-            //         _detailState.value = RecetteDetailState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: simulate not found
-            _detailState.value = RecetteDetailState.Error("Recette introuvable (stub)")
+            when (val result = recetteRepository.getRecette(id)) {
+                is AppResult.Success -> {
+                    val r = result.data
+                    _selectedPortions.value = r.nbPortions
+                    _detailState.value = RecetteDetailState.Success(
+                        id = r.id,
+                        nom = r.nom,
+                        description = r.description,
+                        tempsPreparationMin = r.tempsPreparationMin,
+                        tempsCuissonMin = r.tempsCuissonMin,
+                        nbPortions = r.nbPortions,
+                        ingredients = r.ingredients,
+                        etapes = r.etapes,
+                        nutrimentsTotaux = r.nutrimentsTotaux,
+                        imageUrl = r.imageUrl,
+                    )
+                }
+                is AppResult.Error -> {
+                    _detailState.value = RecetteDetailState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -334,30 +356,8 @@ class RecettesViewModel(
 
         _createRecetteState.value = CreateRecetteState.Saving
         viewModelScope.launch {
-            // TODO: Call creerRecetteUseCase when created by SHARED agent
-            // val request = CreateRecetteRequest(
-            //     nom = form.nom,
-            //     description = form.description,
-            //     imageUrl = form.imageUrl.ifBlank { null },
-            //     tempsPreparationMin = form.tempsPrepMin.toIntOrNull() ?: 0,
-            //     tempsCuissonMin = form.tempsCuissonMin.toIntOrNull() ?: 0,
-            //     nbPortions = form.nbPortions.toIntOrNull() ?: 1,
-            //     regime = form.regime,
-            //     ingredients = form.ingredients.map { ... },
-            //     etapes = form.etapes.filter { it.isNotBlank() },
-            // )
-            // val result = creerRecetteUseCase(request)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _createRecetteState.value = CreateRecetteState.Success
-            //         _createRecetteForm.value = CreateRecetteFormState()
-            //     }
-            //     is AppResult.Error -> {
-            //         _createRecetteState.value = CreateRecetteState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: simulate success
+            // TODO: Wire to RecetteRepository.create() when the endpoint is available
+            // For now, simulate success since the repository doesn't have a create method yet
             _createRecetteState.value = CreateRecetteState.Success
             _createRecetteForm.value = CreateRecetteFormState()
         }

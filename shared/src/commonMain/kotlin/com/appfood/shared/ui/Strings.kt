@@ -313,6 +313,8 @@ object Strings {
     const val POIDS_LABEL = "Poids"
     const val POIDS_UNIT = "kg"
     const val POIDS_SAVE_BUTTON = "Enregistrer"
+    const val POIDS_SAVE_SUCCESS = "Poids enregistre avec succes"
+    const val POIDS_SAVE_ERROR = "Erreur lors de l'enregistrement du poids"
     const val POIDS_NO_DATA = "Aucune pesee enregistree"
     const val POIDS_CURRENT = "Actuel"
     const val POIDS_MIN = "Min"

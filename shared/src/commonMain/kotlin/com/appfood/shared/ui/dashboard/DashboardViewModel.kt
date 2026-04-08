@@ -2,24 +2,25 @@ package com.appfood.shared.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.response.DashboardResponse
+import com.appfood.shared.api.response.QuotaStatusResponse
+import com.appfood.shared.data.repository.DashboardRepository
 import com.appfood.shared.model.MealType
-import com.appfood.shared.model.NutrimentType
+import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 /**
  * ViewModel for the dashboard screen (DASHBOARD-01).
  * Displays daily nutriment tracking, meal summaries, and quick actions.
- *
- * Use cases will be injected when created by the SHARED agent.
  */
 class DashboardViewModel(
-    // TODO: Inject use cases when created by SHARED agent
-    // private val getDailyQuotasUseCase: GetDailyQuotasUseCase,
-    // private val getDailyEntriesUseCase: GetDailyEntriesUseCase,
-    // private val getPoidsUseCase: GetPoidsUseCase,
+    private val dashboardRepository: DashboardRepository? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<DashboardState>(DashboardState.Loading)
@@ -28,26 +29,21 @@ class DashboardViewModel(
     fun loadDashboard() {
         _state.value = DashboardState.Loading
         viewModelScope.launch {
-            // TODO: Call use cases when created by SHARED agent
-            // val quotasResult = getDailyQuotasUseCase()
-            // val entriesResult = getDailyEntriesUseCase()
-            // val poidsResult = getPoidsUseCase()
-            // Combine results into DashboardState.Success
-
-            // Stub: simulate success with sample data
-            _state.value = DashboardState.Success(
-                date = "28 mars 2026",
-                caloriesConsommees = 0.0,
-                caloriesCible = 2759.0,
-                quotasStatus = buildStubQuotas(),
-                repas = mapOf(
-                    MealType.PETIT_DEJEUNER to 0.0,
-                    MealType.DEJEUNER to 0.0,
-                    MealType.DINER to 0.0,
-                    MealType.COLLATION to 0.0,
-                ),
-                poidsCourant = null,
-            )
+            val repo = dashboardRepository
+            if (repo == null) {
+                // Fallback stub si pas de repository injecte
+                _state.value = buildStubSuccess()
+                return@launch
+            }
+            val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+            when (val result = repo.getDailyDashboard(today)) {
+                is AppResult.Success -> {
+                    _state.value = mapDashboardResponse(result.data)
+                }
+                is AppResult.Error -> {
+                    _state.value = DashboardState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -55,115 +51,81 @@ class DashboardViewModel(
         loadDashboard()
     }
 
+    /**
+     * Mappe la reponse API vers le state UI.
+     */
+    private fun mapDashboardResponse(response: DashboardResponse): DashboardState.Success {
+        val quotas = response.quotasStatus.map { it.toUiModel() }
+        val caloriesQuota = quotas.find { it.nutriment.equals("Calories", ignoreCase = true) }
+        val caloriesConsommees = caloriesQuota?.valeurConsommee ?: 0.0
+        val caloriesCible = caloriesQuota?.valeurCible ?: 0.0
+
+        // Agreger les calories par type de repas depuis le journal du jour
+        val repas = mutableMapOf<MealType, Double>()
+        for (entry in response.journalDuJour) {
+            val mealType = try { MealType.valueOf(entry.mealType) } catch (_: Exception) { continue }
+            repas[mealType] = (repas[mealType] ?: 0.0) + entry.nutrimentsCalcules.calories
+        }
+        // S'assurer que tous les types de repas sont presents
+        for (mt in MealType.entries) {
+            if (mt !in repas) repas[mt] = 0.0
+        }
+
+        return DashboardState.Success(
+            date = response.date,
+            caloriesConsommees = caloriesConsommees,
+            caloriesCible = caloriesCible,
+            quotasStatus = quotas.filter { !it.nutriment.equals("Calories", ignoreCase = true) },
+            repas = repas,
+            poidsCourant = response.poidsCourant,
+        )
+    }
+
+    private fun QuotaStatusResponse.toUiModel(): QuotaStatusUiModel {
+        val categorie = when {
+            nutriment in setOf("Proteines", "Glucides", "Lipides", "Fibres", "Calories") -> NutrimentCategorie.MACRO
+            nutriment.startsWith("Vitamine") -> NutrimentCategorie.VITAMINE
+            nutriment.startsWith("Omega") -> NutrimentCategorie.ACIDE_GRAS
+            else -> NutrimentCategorie.MINERAL
+        }
+        return QuotaStatusUiModel(
+            nutriment = nutriment,
+            valeurConsommee = valeurConsommee,
+            valeurCible = valeurCible,
+            pourcentage = pourcentage,
+            unite = unite,
+            categorie = categorie,
+        )
+    }
+
+    private fun buildStubSuccess(): DashboardState.Success = DashboardState.Success(
+        date = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date.toString(),
+        caloriesConsommees = 0.0,
+        caloriesCible = 2759.0,
+        quotasStatus = buildStubQuotas(),
+        repas = mapOf(
+            MealType.PETIT_DEJEUNER to 0.0,
+            MealType.DEJEUNER to 0.0,
+            MealType.DINER to 0.0,
+            MealType.COLLATION to 0.0,
+        ),
+        poidsCourant = null,
+    )
+
     private fun buildStubQuotas(): List<QuotaStatusUiModel> = listOf(
-        // Macros
-        QuotaStatusUiModel(
-            nutriment = "Proteines",
-            valeurConsommee = 0.0,
-            valeurCible = 82.0,
-            pourcentage = 0.0,
-            unite = "g",
-            categorie = NutrimentCategorie.MACRO,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Glucides",
-            valeurConsommee = 0.0,
-            valeurCible = 345.0,
-            pourcentage = 0.0,
-            unite = "g",
-            categorie = NutrimentCategorie.MACRO,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Lipides",
-            valeurConsommee = 0.0,
-            valeurCible = 92.0,
-            pourcentage = 0.0,
-            unite = "g",
-            categorie = NutrimentCategorie.MACRO,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Fibres",
-            valeurConsommee = 0.0,
-            valeurCible = 30.0,
-            pourcentage = 0.0,
-            unite = "g",
-            categorie = NutrimentCategorie.MACRO,
-        ),
-        // Vitamines
-        QuotaStatusUiModel(
-            nutriment = "Vitamine B12",
-            valeurConsommee = 0.0,
-            valeurCible = 2.4,
-            pourcentage = 0.0,
-            unite = "ug",
-            categorie = NutrimentCategorie.VITAMINE,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Vitamine D",
-            valeurConsommee = 0.0,
-            valeurCible = 15.0,
-            pourcentage = 0.0,
-            unite = "ug",
-            categorie = NutrimentCategorie.VITAMINE,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Vitamine C",
-            valeurConsommee = 0.0,
-            valeurCible = 110.0,
-            pourcentage = 0.0,
-            unite = "mg",
-            categorie = NutrimentCategorie.VITAMINE,
-        ),
-        // Mineraux
-        QuotaStatusUiModel(
-            nutriment = "Fer",
-            valeurConsommee = 0.0,
-            valeurCible = 11.0,
-            pourcentage = 0.0,
-            unite = "mg",
-            categorie = NutrimentCategorie.MINERAL,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Calcium",
-            valeurConsommee = 0.0,
-            valeurCible = 900.0,
-            pourcentage = 0.0,
-            unite = "mg",
-            categorie = NutrimentCategorie.MINERAL,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Zinc",
-            valeurConsommee = 0.0,
-            valeurCible = 12.0,
-            pourcentage = 0.0,
-            unite = "mg",
-            categorie = NutrimentCategorie.MINERAL,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Magnesium",
-            valeurConsommee = 0.0,
-            valeurCible = 420.0,
-            pourcentage = 0.0,
-            unite = "mg",
-            categorie = NutrimentCategorie.MINERAL,
-        ),
-        // Acides gras
-        QuotaStatusUiModel(
-            nutriment = "Omega-3",
-            valeurConsommee = 0.0,
-            valeurCible = 2.5,
-            pourcentage = 0.0,
-            unite = "g",
-            categorie = NutrimentCategorie.ACIDE_GRAS,
-        ),
-        QuotaStatusUiModel(
-            nutriment = "Omega-6",
-            valeurConsommee = 0.0,
-            valeurCible = 10.0,
-            pourcentage = 0.0,
-            unite = "g",
-            categorie = NutrimentCategorie.ACIDE_GRAS,
-        ),
+        QuotaStatusUiModel("Proteines", 0.0, 82.0, 0.0, "g", NutrimentCategorie.MACRO),
+        QuotaStatusUiModel("Glucides", 0.0, 345.0, 0.0, "g", NutrimentCategorie.MACRO),
+        QuotaStatusUiModel("Lipides", 0.0, 92.0, 0.0, "g", NutrimentCategorie.MACRO),
+        QuotaStatusUiModel("Fibres", 0.0, 30.0, 0.0, "g", NutrimentCategorie.MACRO),
+        QuotaStatusUiModel("Vitamine B12", 0.0, 2.4, 0.0, "ug", NutrimentCategorie.VITAMINE),
+        QuotaStatusUiModel("Vitamine D", 0.0, 15.0, 0.0, "ug", NutrimentCategorie.VITAMINE),
+        QuotaStatusUiModel("Vitamine C", 0.0, 110.0, 0.0, "mg", NutrimentCategorie.VITAMINE),
+        QuotaStatusUiModel("Fer", 0.0, 11.0, 0.0, "mg", NutrimentCategorie.MINERAL),
+        QuotaStatusUiModel("Calcium", 0.0, 900.0, 0.0, "mg", NutrimentCategorie.MINERAL),
+        QuotaStatusUiModel("Zinc", 0.0, 12.0, 0.0, "mg", NutrimentCategorie.MINERAL),
+        QuotaStatusUiModel("Magnesium", 0.0, 420.0, 0.0, "mg", NutrimentCategorie.MINERAL),
+        QuotaStatusUiModel("Omega-3", 0.0, 2.5, 0.0, "g", NutrimentCategorie.ACIDE_GRAS),
+        QuotaStatusUiModel("Omega-6", 0.0, 10.0, 0.0, "g", NutrimentCategorie.ACIDE_GRAS),
     )
 }
 

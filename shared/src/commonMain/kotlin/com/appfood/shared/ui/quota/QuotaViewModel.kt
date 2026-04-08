@@ -2,7 +2,12 @@ package com.appfood.shared.ui.quota
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.request.UpdateQuotaRequest
+import com.appfood.shared.data.local.LocalUserDataSource
+import com.appfood.shared.data.repository.QuotaRepository
 import com.appfood.shared.model.NutrimentType
+import com.appfood.shared.model.QuotaJournalier
+import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,15 +17,10 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel for the quota management screen (QUOTAS-02).
  * Allows users to view and customize their daily nutriment quotas.
- *
- * Use cases will be injected when created by the SHARED agent.
  */
 class QuotaViewModel(
-    // TODO: Inject use cases when created by SHARED agent
-    // private val getQuotasUseCase: GetQuotasUseCase,
-    // private val updateQuotaUseCase: UpdateQuotaUseCase,
-    // private val resetQuotaUseCase: ResetQuotaUseCase,
-    // private val resetAllQuotasUseCase: ResetAllQuotasUseCase,
+    private val quotaRepository: QuotaRepository,
+    private val localUserDataSource: LocalUserDataSource,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<QuotaManagementState>(QuotaManagementState.Loading)
@@ -32,24 +32,32 @@ class QuotaViewModel(
     private val _editValue = MutableStateFlow("")
     val editValue: StateFlow<String> = _editValue.asStateFlow()
 
+    init {
+        loadQuotas()
+    }
+
+    private fun getCurrentUserId(): String? {
+        return localUserDataSource.findAll().firstOrNull()?.id
+    }
+
     fun loadQuotas() {
         _state.value = QuotaManagementState.Loading
         viewModelScope.launch {
-            // TODO: Call getQuotasUseCase when created by SHARED agent
-            // val result = getQuotasUseCase()
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _state.value = QuotaManagementState.Success(result.data)
-            //     }
-            //     is AppResult.Error -> {
-            //         _state.value = QuotaManagementState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: simulate success with default quotas
-            _state.value = QuotaManagementState.Success(
-                quotas = buildStubQuotas(),
-            )
+            val userId = getCurrentUserId()
+            if (userId == null) {
+                _state.value = QuotaManagementState.Error("Utilisateur non connecte")
+                return@launch
+            }
+            when (val result = quotaRepository.getQuotas(userId)) {
+                is AppResult.Success -> {
+                    _state.value = QuotaManagementState.Success(
+                        quotas = result.data.map { it.toUiModel() },
+                    )
+                }
+                is AppResult.Error -> {
+                    _state.value = QuotaManagementState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -76,27 +84,26 @@ class QuotaViewModel(
         val newValue = _editValue.value.toDoubleOrNull() ?: return
 
         viewModelScope.launch {
-            // TODO: Call updateQuotaUseCase when created by SHARED agent
-            // val result = updateQuotaUseCase(nutrimentType, newValue)
-
-            // Stub: update locally
-            val currentState = _state.value
-            if (currentState is QuotaManagementState.Success) {
-                _state.update {
-                    val updatedQuotas = currentState.quotas.map { quota ->
-                        if (quota.nutrimentType == nutrimentType) {
-                            quota.copy(
-                                valeurCible = newValue,
-                                estPersonnalise = true,
-                            )
-                        } else {
-                            quota
+            val userId = getCurrentUserId() ?: return@launch
+            val request = UpdateQuotaRequest(valeurCible = newValue)
+            when (val result = quotaRepository.updateQuota(userId, nutrimentType, request)) {
+                is AppResult.Success -> {
+                    // Mettre a jour le quota modifie dans le state
+                    val updatedQuota = result.data.toUiModel()
+                    val currentState = _state.value
+                    if (currentState is QuotaManagementState.Success) {
+                        _state.update {
+                            val updatedQuotas = currentState.quotas.map { quota ->
+                                if (quota.nutrimentType == nutrimentType) updatedQuota else quota
+                            }
+                            QuotaManagementState.Success(quotas = updatedQuotas)
                         }
                     }
-                    QuotaManagementState.Success(quotas = updatedQuotas)
+                }
+                is AppResult.Error -> {
+                    // En cas d'erreur, on garde l'etat actuel (l'utilisateur verra le dialog ferme)
                 }
             }
-
             _editingNutriment.value = null
             _editValue.value = ""
         }
@@ -104,24 +111,22 @@ class QuotaViewModel(
 
     fun onResetQuota(nutrimentType: NutrimentType) {
         viewModelScope.launch {
-            // TODO: Call resetQuotaUseCase when created by SHARED agent
-            // val result = resetQuotaUseCase(nutrimentType)
-
-            // Stub: reset locally
-            val currentState = _state.value
-            if (currentState is QuotaManagementState.Success) {
-                _state.update {
-                    val updatedQuotas = currentState.quotas.map { quota ->
-                        if (quota.nutrimentType == nutrimentType) {
-                            quota.copy(
-                                valeurCible = quota.valeurCalculee,
-                                estPersonnalise = false,
-                            )
-                        } else {
-                            quota
+            val userId = getCurrentUserId() ?: return@launch
+            when (val result = quotaRepository.resetQuota(userId, nutrimentType)) {
+                is AppResult.Success -> {
+                    val updatedQuota = result.data.toUiModel()
+                    val currentState = _state.value
+                    if (currentState is QuotaManagementState.Success) {
+                        _state.update {
+                            val updatedQuotas = currentState.quotas.map { quota ->
+                                if (quota.nutrimentType == nutrimentType) updatedQuota else quota
+                            }
+                            QuotaManagementState.Success(quotas = updatedQuotas)
                         }
                     }
-                    QuotaManagementState.Success(quotas = updatedQuotas)
+                }
+                is AppResult.Error -> {
+                    // Silently ignore — quota reste inchange
                 }
             }
         }
@@ -129,20 +134,15 @@ class QuotaViewModel(
 
     fun onResetAllQuotas() {
         viewModelScope.launch {
-            // TODO: Call resetAllQuotasUseCase when created by SHARED agent
-            // val result = resetAllQuotasUseCase()
-
-            // Stub: reset all locally
-            val currentState = _state.value
-            if (currentState is QuotaManagementState.Success) {
-                _state.update {
-                    val updatedQuotas = currentState.quotas.map { quota ->
-                        quota.copy(
-                            valeurCible = quota.valeurCalculee,
-                            estPersonnalise = false,
-                        )
-                    }
-                    QuotaManagementState.Success(quotas = updatedQuotas)
+            val userId = getCurrentUserId() ?: return@launch
+            when (val result = quotaRepository.resetAllQuotas(userId)) {
+                is AppResult.Success -> {
+                    _state.value = QuotaManagementState.Success(
+                        quotas = result.data.map { it.toUiModel() },
+                    )
+                }
+                is AppResult.Error -> {
+                    // Silently ignore — quotas restent inchanges
                 }
             }
         }
@@ -152,22 +152,38 @@ class QuotaViewModel(
         loadQuotas()
     }
 
-    private fun buildStubQuotas(): List<QuotaUiModel> = listOf(
-        QuotaUiModel(NutrimentType.CALORIES, "Calories", 2759.0, 2759.0, "kcal", false),
-        QuotaUiModel(NutrimentType.PROTEINES, "Proteines", 82.0, 82.0, "g", false),
-        QuotaUiModel(NutrimentType.GLUCIDES, "Glucides", 345.0, 345.0, "g", false),
-        QuotaUiModel(NutrimentType.LIPIDES, "Lipides", 92.0, 92.0, "g", false),
-        QuotaUiModel(NutrimentType.FIBRES, "Fibres", 30.0, 30.0, "g", false),
-        QuotaUiModel(NutrimentType.VITAMINE_B12, "Vitamine B12", 2.4, 2.4, "ug", false),
-        QuotaUiModel(NutrimentType.VITAMINE_D, "Vitamine D", 15.0, 15.0, "ug", false),
-        QuotaUiModel(NutrimentType.VITAMINE_C, "Vitamine C", 110.0, 110.0, "mg", false),
-        QuotaUiModel(NutrimentType.FER, "Fer", 11.0, 11.0, "mg", false),
-        QuotaUiModel(NutrimentType.CALCIUM, "Calcium", 900.0, 900.0, "mg", false),
-        QuotaUiModel(NutrimentType.ZINC, "Zinc", 12.0, 12.0, "mg", false),
-        QuotaUiModel(NutrimentType.MAGNESIUM, "Magnesium", 420.0, 420.0, "mg", false),
-        QuotaUiModel(NutrimentType.OMEGA_3, "Omega-3", 2.5, 2.5, "g", false),
-        QuotaUiModel(NutrimentType.OMEGA_6, "Omega-6", 10.0, 10.0, "g", false),
-    )
+    /**
+     * Convertit un QuotaJournalier du domaine en QuotaUiModel pour l'affichage.
+     */
+    private fun QuotaJournalier.toUiModel(): QuotaUiModel {
+        return QuotaUiModel(
+            nutrimentType = nutriment,
+            label = nutriment.toLabel(),
+            valeurCible = valeurCible,
+            valeurCalculee = valeurCalculee,
+            unite = unite,
+            estPersonnalise = estPersonnalise,
+        )
+    }
+
+    private fun NutrimentType.toLabel(): String = when (this) {
+        NutrimentType.CALORIES -> "Calories"
+        NutrimentType.PROTEINES -> "Proteines"
+        NutrimentType.GLUCIDES -> "Glucides"
+        NutrimentType.LIPIDES -> "Lipides"
+        NutrimentType.FIBRES -> "Fibres"
+        NutrimentType.SEL -> "Sel"
+        NutrimentType.SUCRES -> "Sucres"
+        NutrimentType.FER -> "Fer"
+        NutrimentType.CALCIUM -> "Calcium"
+        NutrimentType.ZINC -> "Zinc"
+        NutrimentType.MAGNESIUM -> "Magnesium"
+        NutrimentType.VITAMINE_B12 -> "Vitamine B12"
+        NutrimentType.VITAMINE_D -> "Vitamine D"
+        NutrimentType.VITAMINE_C -> "Vitamine C"
+        NutrimentType.OMEGA_3 -> "Omega-3"
+        NutrimentType.OMEGA_6 -> "Omega-6"
+    }
 }
 
 // --- States ---

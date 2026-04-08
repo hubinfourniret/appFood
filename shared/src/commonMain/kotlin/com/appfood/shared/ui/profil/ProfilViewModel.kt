@@ -2,6 +2,8 @@ package com.appfood.shared.ui.profil
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.request.UpdatePreferencesRequest
+import com.appfood.shared.api.request.UpdateProfileRequest
 import com.appfood.shared.api.response.UserExportResponse
 import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.model.NiveauActivite
@@ -91,24 +93,40 @@ class ProfilViewModel(
     fun loadProfile() {
         _state.value = ProfilState.Loading
         viewModelScope.launch {
-            // TODO: Call getProfileUseCase when created by SHARED agent
-            // val result = getProfileUseCase()
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         populateFields(result.data)
-            //         _state.value = ProfilState.Loaded
-            //     }
-            //     is AppResult.Error -> _state.value = ProfilState.Error(result.message)
-            // }
-
-            // Stub: simulate loaded with default values
-            _sexe.value = Sexe.HOMME
-            _ageText.value = "30"
-            _poidsText.value = "75.0"
-            _tailleText.value = "178"
-            _regimeAlimentaire.value = RegimeAlimentaire.VEGAN
-            _niveauActivite.value = NiveauActivite.MODERE
-            _state.value = ProfilState.Loaded
+            val repo = userRepository
+            if (repo == null) {
+                // Fallback stub si pas de repository injecte
+                _sexe.value = Sexe.HOMME
+                _ageText.value = "30"
+                _poidsText.value = "75.0"
+                _tailleText.value = "178"
+                _regimeAlimentaire.value = RegimeAlimentaire.VEGAN
+                _niveauActivite.value = NiveauActivite.MODERE
+                _state.value = ProfilState.Loaded
+                return@launch
+            }
+            when (val result = repo.getCurrentUser()) {
+                is AppResult.Success -> {
+                    val profile = result.data.profile
+                    val preferences = result.data.preferences
+                    if (profile != null) {
+                        _sexe.value = try { Sexe.valueOf(profile.sexe) } catch (_: Exception) { null }
+                        _ageText.value = profile.age.toString()
+                        _poidsText.value = profile.poidsKg.toString()
+                        _tailleText.value = profile.tailleCm.toString()
+                        _regimeAlimentaire.value = try { RegimeAlimentaire.valueOf(profile.regimeAlimentaire) } catch (_: Exception) { null }
+                        _niveauActivite.value = try { NiveauActivite.valueOf(profile.niveauActivite) } catch (_: Exception) { null }
+                    }
+                    if (preferences != null) {
+                        _selectedAllergies.value = preferences.allergies.toSet()
+                        _excludedAliments.value = preferences.alimentsExclus
+                    }
+                    _state.value = ProfilState.Loaded
+                }
+                is AppResult.Error -> {
+                    _state.value = ProfilState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -147,20 +165,27 @@ class ProfilViewModel(
 
         _saveState.value = SaveState.Saving
         viewModelScope.launch {
-            // TODO: Call updateProfileUseCase when created by SHARED agent
-            // val result = updateProfileUseCase(
-            //     UpdateProfileRequest(
-            //         sexe = sexe.value?.name,
-            //         age = ageText.value.toIntOrNull(),
-            //         poidsKg = poidsText.value.toDoubleOrNull(),
-            //         tailleCm = tailleText.value.toIntOrNull(),
-            //         regimeAlimentaire = regimeAlimentaire.value?.name,
-            //         niveauActivite = niveauActivite.value?.name,
-            //     )
-            // )
-
-            // Stub: simulate success
-            _saveState.value = SaveState.Success(Strings.PROFIL_SAVE_SUCCESS)
+            val repo = userRepository
+            if (repo == null) {
+                _saveState.value = SaveState.Success(Strings.PROFIL_SAVE_SUCCESS)
+                return@launch
+            }
+            val request = UpdateProfileRequest(
+                sexe = _sexe.value?.name,
+                age = _ageText.value.toIntOrNull(),
+                poidsKg = _poidsText.value.toDoubleOrNull(),
+                tailleCm = _tailleText.value.toIntOrNull(),
+                regimeAlimentaire = _regimeAlimentaire.value?.name,
+                niveauActivite = _niveauActivite.value?.name,
+            )
+            when (val result = repo.updateProfile(request)) {
+                is AppResult.Success -> {
+                    _saveState.value = SaveState.Success(Strings.PROFIL_SAVE_SUCCESS)
+                }
+                is AppResult.Error -> {
+                    _saveState.value = SaveState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -230,16 +255,23 @@ class ProfilViewModel(
     fun onSavePreferences() {
         _saveState.value = SaveState.Saving
         viewModelScope.launch {
-            // TODO: Call updatePreferencesUseCase when created by SHARED agent
-            // val result = updatePreferencesUseCase(
-            //     UpdatePreferencesRequest(
-            //         allergies = selectedAllergies.value.toList(),
-            //         alimentsExclus = excludedAliments.value,
-            //     )
-            // )
-
-            // Stub: simulate success
-            _saveState.value = SaveState.Success(Strings.PREFERENCES_SAVE_SUCCESS)
+            val repo = userRepository
+            if (repo == null) {
+                _saveState.value = SaveState.Success(Strings.PREFERENCES_SAVE_SUCCESS)
+                return@launch
+            }
+            val request = UpdatePreferencesRequest(
+                allergies = _selectedAllergies.value.toList(),
+                alimentsExclus = _excludedAliments.value,
+            )
+            when (val result = repo.updatePreferences(request)) {
+                is AppResult.Success -> {
+                    _saveState.value = SaveState.Success(Strings.PREFERENCES_SAVE_SUCCESS)
+                }
+                is AppResult.Error -> {
+                    _saveState.value = SaveState.Error(result.message)
+                }
+            }
         }
     }
 

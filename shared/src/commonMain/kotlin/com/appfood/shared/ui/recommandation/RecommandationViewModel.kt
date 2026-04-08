@@ -2,11 +2,16 @@ package com.appfood.shared.ui.recommandation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.data.repository.RecommandationRepository
 import com.appfood.shared.model.NutrimentType
+import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 /**
  * ViewModel for the recommendations screen (RECO-01).
@@ -15,11 +20,14 @@ import kotlinx.coroutines.launch
  * Use cases will be injected when created by the SHARED agent.
  */
 class RecommandationViewModel(
-    // TODO: Inject use cases when created by SHARED agent
-    // private val getRecommandationsUseCase: GetRecommandationsUseCase,
-    // private val ajouterEntreeUseCase: AjouterEntreeUseCase,
-    // private val recommandationRecetteUseCase: RecommandationRecetteUseCase,
+    private val recommandationRepository: RecommandationRepository,
 ) : ViewModel() {
+
+    // TODO: Inject a real user ID provider when auth session is wired
+    private val currentUserId: String = "current-user"
+    private val currentDate: String get() = kotlinx.datetime.Instant.fromEpochMilliseconds(
+        kotlin.time.Clock.System.now().toEpochMilliseconds()
+    ).toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
 
     // --- Onglet actif ---
     private val _selectedTab = MutableStateFlow(RecommandationTab.ALIMENTS)
@@ -56,48 +64,65 @@ class RecommandationViewModel(
     private fun loadAlimentRecommandations() {
         _state.value = RecommandationState.Loading
         viewModelScope.launch {
-            // TODO: Call getRecommandationsUseCase when created by SHARED agent
-            // val result = getRecommandationsUseCase()
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _state.value = if (result.data.isEmpty()) {
-            //             RecommandationState.NoDeficit
-            //         } else {
-            //             RecommandationState.Success(result.data)
-            //         }
-            //     }
-            //     is AppResult.Error -> {
-            //         _state.value = RecommandationState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: simulate no deficit (empty list)
-            _state.value = RecommandationState.NoDeficit
+            when (val result = recommandationRepository.getAlimentRecommandations(
+                userId = currentUserId,
+                date = currentDate,
+            )) {
+                is AppResult.Success -> {
+                    val data = result.data
+                    _state.value = if (data.isEmpty()) {
+                        RecommandationState.NoDeficit
+                    } else {
+                        RecommandationState.Success(data.map { reco ->
+                            RecommandationUiModel(
+                                alimentId = reco.aliment.id,
+                                alimentNom = reco.aliment.nom,
+                                quantiteSuggereGrammes = reco.quantiteSuggereGrammes,
+                                couverture = reco.pourcentageCouverture.map { (type, pct) ->
+                                    CouvertureNutriment(
+                                        nutrimentType = type,
+                                        nutrimentLabel = type.name,
+                                        pourcentage = pct,
+                                    )
+                                },
+                            )
+                        })
+                    }
+                }
+                is AppResult.Error -> {
+                    _state.value = RecommandationState.Error(result.message)
+                }
+            }
         }
     }
 
     private fun loadRecetteRecommandations() {
         _recetteState.value = RecommandationRecetteState.Loading
         viewModelScope.launch {
-            // TODO: Call recommandationRecetteUseCase when created by SHARED agent
-            // val result = recommandationRecetteUseCase.execute(quotaStatuses, recettes, regime)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _recetteState.value = if (result.data.isEmpty()) {
-            //             RecommandationRecetteState.NoDeficit
-            //         } else {
-            //             RecommandationRecetteState.Success(
-            //                 result.data.map { it.toUiModel() }
-            //             )
-            //         }
-            //     }
-            //     is AppResult.Error -> {
-            //         _recetteState.value = RecommandationRecetteState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: simulate no deficit (empty list)
-            _recetteState.value = RecommandationRecetteState.NoDeficit
+            when (val result = recommandationRepository.getRecetteRecommandations(
+                userId = currentUserId,
+                date = currentDate,
+            )) {
+                is AppResult.Success -> {
+                    val data = result.data
+                    _recetteState.value = if (data.isEmpty()) {
+                        RecommandationRecetteState.NoDeficit
+                    } else {
+                        RecommandationRecetteState.Success(data.map { reco ->
+                            RecommandationRecetteUiModel(
+                                recetteId = reco.recette.id,
+                                recetteNom = reco.recette.nom,
+                                tempsPreparationMin = reco.recette.tempsPreparationMin,
+                                pourcentageCouvertureGlobal = reco.pourcentageCouvertureGlobal.toInt(),
+                                nutrimentsCibles = reco.nutrimentsCibles.map { it.name },
+                            )
+                        })
+                    }
+                }
+                is AppResult.Error -> {
+                    _recetteState.value = RecommandationRecetteState.Error(result.message)
+                }
+            }
         }
     }
 

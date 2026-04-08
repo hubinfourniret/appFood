@@ -26,6 +26,10 @@ import com.appfood.shared.ui.dashboard.DashboardScreen
 import com.appfood.shared.ui.dashboard.DashboardViewModel
 import com.appfood.shared.ui.dashboard.WeeklyDashboardScreen
 import com.appfood.shared.ui.dashboard.WeeklyDashboardViewModel
+import com.appfood.shared.data.repository.HydratationRepository
+import com.appfood.shared.domain.hydratation.AjouterEauUseCase
+import com.appfood.shared.domain.hydratation.GetHydratationJourUseCase
+import com.appfood.shared.domain.hydratation.UpdateObjectifHydratationUseCase
 import com.appfood.shared.ui.hydratation.HydratationScreen
 import com.appfood.shared.ui.hydratation.HydratationViewModel
 import com.appfood.shared.ui.legal.ConsentScreen
@@ -41,6 +45,10 @@ import com.appfood.shared.ui.journal.PortionSelectorScreen
 import com.appfood.shared.ui.journal.SearchAlimentScreen
 import com.appfood.shared.ui.onboarding.OnboardingScreen
 import com.appfood.shared.ui.onboarding.OnboardingViewModel
+import com.appfood.shared.domain.poids.DetecterChangementPoidsUseCase
+import com.appfood.shared.domain.poids.EnregistrerPoidsUseCase
+import com.appfood.shared.domain.poids.GetHistoriquePoidsUseCase
+import com.appfood.shared.domain.poids.RecalculerQuotasApresPoidsUseCase
 import com.appfood.shared.ui.poids.PoidsScreen
 import com.appfood.shared.ui.poids.PoidsViewModel
 import com.appfood.shared.ui.profil.EditProfilScreen
@@ -56,6 +64,11 @@ import com.appfood.shared.ui.recette.RecettesViewModel
 import com.appfood.shared.ui.recommandation.RecommandationsScreen
 import com.appfood.shared.ui.recommandation.RecommandationViewModel
 import com.appfood.shared.ui.settings.AboutScreen
+import com.appfood.shared.data.local.LocalUserDataSource
+import com.appfood.shared.data.repository.DashboardRepository
+import com.appfood.shared.data.repository.QuotaRepository
+import com.appfood.shared.data.repository.RecetteRepository
+import com.appfood.shared.data.repository.RecommandationRepository
 import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.ui.support.FaqScreen
 import com.appfood.shared.ui.support.FaqViewModel
@@ -83,17 +96,54 @@ fun AppNavigation(
     val userRepository = koinInject<UserRepository>()
     val authViewModel = remember(userRepository) { AuthViewModel(userRepository) }
     val onboardingViewModel = remember(userRepository) { OnboardingViewModel(userRepository = userRepository) }
-    val profilViewModel = remember { ProfilViewModel() }
+    val profilViewModel = remember(userRepository) { ProfilViewModel(userRepository = userRepository) }
     val journalViewModel = remember { JournalViewModel().also { it.init() } }
-    val dashboardViewModel = remember { DashboardViewModel() }
-    val quotaViewModel = remember { QuotaViewModel() }
-    val recommandationViewModel = remember { RecommandationViewModel() }
-    val hydratationViewModel = remember { HydratationViewModel() }
-    val poidsViewModel = remember { PoidsViewModel() }
-    val weeklyDashboardViewModel = remember { WeeklyDashboardViewModel() }
+    val dashboardRepository = koinInject<DashboardRepository>()
+    val dashboardViewModel = remember(dashboardRepository) { DashboardViewModel(dashboardRepository = dashboardRepository) }
+    val quotaRepository = koinInject<QuotaRepository>()
+    val localUserDataSource = koinInject<LocalUserDataSource>()
+    val quotaViewModel = remember(quotaRepository, localUserDataSource) { QuotaViewModel(quotaRepository, localUserDataSource) }
+    val recommandationRepository = koinInject<RecommandationRepository>()
+    val recommandationViewModel = remember(recommandationRepository) {
+        RecommandationViewModel(recommandationRepository).also { it.loadRecommandations() }
+    }
+    val getHydratationJourUseCase = koinInject<GetHydratationJourUseCase>()
+    val ajouterEauUseCase = koinInject<AjouterEauUseCase>()
+    val updateObjectifHydratationUseCase = koinInject<UpdateObjectifHydratationUseCase>()
+    val hydratationRepository = koinInject<HydratationRepository>()
+    val hydratationViewModel = remember(
+        getHydratationJourUseCase, ajouterEauUseCase, updateObjectifHydratationUseCase, hydratationRepository,
+    ) {
+        HydratationViewModel(
+            getHydratationJourUseCase = getHydratationJourUseCase,
+            ajouterEauUseCase = ajouterEauUseCase,
+            updateObjectifUseCase = updateObjectifHydratationUseCase,
+            hydratationRepository = hydratationRepository,
+        )
+    }
+    val enregistrerPoidsUseCase = koinInject<EnregistrerPoidsUseCase>()
+    val getHistoriquePoidsUseCase = koinInject<GetHistoriquePoidsUseCase>()
+    val detecterChangementPoidsUseCase = koinInject<DetecterChangementPoidsUseCase>()
+    val recalculerQuotasApresPoidsUseCase = koinInject<RecalculerQuotasApresPoidsUseCase>()
+    val poidsViewModel = remember(
+        enregistrerPoidsUseCase, getHistoriquePoidsUseCase,
+        detecterChangementPoidsUseCase, recalculerQuotasApresPoidsUseCase, userRepository,
+    ) {
+        PoidsViewModel(
+            enregistrerPoidsUseCase = enregistrerPoidsUseCase,
+            getHistoriquePoidsUseCase = getHistoriquePoidsUseCase,
+            detecterChangementPoidsUseCase = detecterChangementPoidsUseCase,
+            recalculerQuotasApresPoidsUseCase = recalculerQuotasApresPoidsUseCase,
+            userRepository = userRepository,
+        )
+    }
+    val weeklyDashboardViewModel = remember(dashboardRepository) { WeeklyDashboardViewModel(dashboardRepository = dashboardRepository) }
     val disclaimerViewModel = remember { DisclaimerViewModel() }
     val consentViewModel = remember { ConsentViewModel() }
-    val recettesViewModel = remember { RecettesViewModel().also { it.init() } }
+    val recetteRepository = koinInject<RecetteRepository>()
+    val recettesViewModel = remember(recetteRepository) {
+        RecettesViewModel(recetteRepository).also { it.init() }
+    }
     val faqViewModel = remember { FaqViewModel().also { it.init() } }
 
     Scaffold(
