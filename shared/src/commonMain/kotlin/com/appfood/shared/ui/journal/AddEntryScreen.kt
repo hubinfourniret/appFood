@@ -92,9 +92,9 @@ fun AddEntryScreen(
         }
     }
 
-    // Navigate on save success
+    // Navigate on save success (online or offline)
     LaunchedEffect(addEntryState) {
-        if (addEntryState is AddEntryState.Saved) {
+        if (addEntryState is AddEntryState.Saved || addEntryState is AddEntryState.SavedOffline) {
             viewModel.resetAddEntryFlow()
             onEntrySaved()
         }

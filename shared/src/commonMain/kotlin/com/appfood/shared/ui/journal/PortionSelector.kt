@@ -95,6 +95,7 @@ fun PortionSelectorScreen(
     val quantityGrams by viewModel.quantityGrams.collectAsState()
     val selectedPortion by viewModel.selectedPortion.collectAsState()
     val addEntryState by viewModel.addEntryState.collectAsState()
+    val nutritionPreview by viewModel.nutritionPreview.collectAsState()
 
     val aliment = selectedAliment ?: return
 
@@ -102,7 +103,7 @@ fun PortionSelectorScreen(
         aliment = aliment,
         quantityGrams = quantityGrams,
         selectedPortion = selectedPortion,
-        computedNutriments = viewModel.computedNutriments,
+        computedNutriments = nutritionPreview ?: NutrimentValues(),
         isSaving = addEntryState is AddEntryState.Saving,
         errorMessage = (addEntryState as? AddEntryState.Error)?.message,
         onQuantityChanged = viewModel::onQuantityChanged,

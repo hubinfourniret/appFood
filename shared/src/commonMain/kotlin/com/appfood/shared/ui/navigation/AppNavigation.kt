@@ -40,6 +40,7 @@ import com.appfood.shared.ui.legal.DisclaimerViewModel
 import com.appfood.shared.ui.legal.PrivacyPolicyScreen
 import com.appfood.shared.ui.legal.TermsOfServiceScreen
 import com.appfood.shared.ui.journal.AddEntryScreen
+import com.appfood.shared.ui.journal.JournalScreen
 import com.appfood.shared.ui.journal.JournalViewModel
 import com.appfood.shared.ui.journal.PortionSelectorScreen
 import com.appfood.shared.ui.journal.SearchAlimentScreen
@@ -74,6 +75,7 @@ import com.appfood.shared.data.repository.RecommandationRepository
 import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.data.remote.ConsentApi
 import com.appfood.shared.data.remote.SupportApi
+import com.appfood.shared.sync.SyncManager
 import com.appfood.shared.ui.support.FaqScreen
 import com.appfood.shared.ui.support.FaqViewModel
 import org.koin.compose.koinInject
@@ -104,11 +106,13 @@ fun AppNavigation(
     val journalRepository = koinInject<JournalRepository>()
     val alimentRepository = koinInject<AlimentRepository>()
     val recetteRepository = koinInject<RecetteRepository>()
-    val journalViewModel = remember(journalRepository, alimentRepository, recetteRepository) {
+    val syncManager = koinInject<SyncManager>()
+    val journalViewModel = remember(journalRepository, alimentRepository, recetteRepository, syncManager) {
         JournalViewModel(
             journalRepository = journalRepository,
             alimentRepository = alimentRepository,
             recetteRepository = recetteRepository,
+            syncManager = syncManager,
         ).also { it.init() }
     }
     val dashboardRepository = koinInject<DashboardRepository>()
@@ -117,8 +121,8 @@ fun AppNavigation(
     val localUserDataSource = koinInject<LocalUserDataSource>()
     val quotaViewModel = remember(quotaRepository, localUserDataSource) { QuotaViewModel(quotaRepository, localUserDataSource) }
     val recommandationRepository = koinInject<RecommandationRepository>()
-    val recommandationViewModel = remember(recommandationRepository) {
-        RecommandationViewModel(recommandationRepository).also { it.loadRecommandations() }
+    val recommandationViewModel = remember(recommandationRepository, journalRepository) {
+        RecommandationViewModel(recommandationRepository, journalRepository).also { it.loadRecommandations() }
     }
     val getHydratationJourUseCase = koinInject<GetHydratationJourUseCase>()
     val ajouterEauUseCase = koinInject<AjouterEauUseCase>()
@@ -340,7 +344,14 @@ fun AppNavigation(
                 )
             }
             composable<Screen.Journal> {
-                PlaceholderScreen(title = Strings.SCREEN_JOURNAL)
+                JournalScreen(
+                    viewModel = journalViewModel,
+                    onNavigateToAddEntry = {
+                        navController.navigate(Screen.AddEntry) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
             }
 
             // Journal flow — Add entry

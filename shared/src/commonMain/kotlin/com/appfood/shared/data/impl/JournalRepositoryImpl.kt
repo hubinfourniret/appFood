@@ -107,4 +107,30 @@ class JournalRepositoryImpl(
             )
         }
     }
+
+    override suspend fun addFavori(alimentId: String): AppResult<Unit> {
+        return try {
+            journalApi.addFavori(alimentId)
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(
+                code = "NETWORK_ERROR",
+                message = e.message ?: "Failed to add favorite",
+                cause = e,
+            )
+        }
+    }
+
+    override suspend fun removeFavori(alimentId: String): AppResult<Unit> {
+        return try {
+            journalApi.removeFavori(alimentId)
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(
+                code = "NETWORK_ERROR",
+                message = e.message ?: "Failed to remove favorite",
+                cause = e,
+            )
+        }
+    }
 }

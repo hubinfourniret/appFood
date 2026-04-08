@@ -14,6 +14,7 @@ import com.appfood.backend.routes.dto.UpdateJournalEntryRequest
 import com.appfood.backend.routes.dto.WeeklySummaryResponse
 import com.appfood.backend.service.JournalService
 import com.appfood.backend.service.NutrientSums
+import com.appfood.backend.service.ProfileService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -30,10 +31,76 @@ import org.koin.ktor.ext.inject
 fun Route.journalRoutes() {
     val journalService by inject<JournalService>()
     val alimentDao by inject<AlimentDao>()
+    val profileService by inject<ProfileService>()
 
     authenticate("auth-jwt") {
         route("/api/v1/journal") {
             // Specific routes BEFORE parameterized routes
+
+            // --- Favoris endpoints (JOURNAL-03) ---
+
+            get("/favoris") {
+                val userId = call.userId()
+                val favorisIds = profileService.getFavorisIds(userId)
+                val aliments = favorisIds.mapNotNull { id ->
+                    alimentDao.findById(id)
+                }
+                val entries = aliments.map { aliment ->
+                    JournalEntryResponse(
+                        id = "fav-${aliment.id}",
+                        date = "",
+                        mealType = "",
+                        alimentId = aliment.id,
+                        recetteId = null,
+                        nom = aliment.nom,
+                        quantiteGrammes = 0.0,
+                        nbPortions = null,
+                        nutrimentsCalcules = NutrimentValuesResponse(
+                            calories = aliment.calories,
+                            proteines = aliment.proteines,
+                            glucides = aliment.glucides,
+                            lipides = aliment.lipides,
+                            fibres = aliment.fibres,
+                            sel = aliment.sel,
+                            sucres = aliment.sucres,
+                            fer = aliment.fer,
+                            calcium = aliment.calcium,
+                            zinc = aliment.zinc,
+                            magnesium = aliment.magnesium,
+                            vitamineB12 = aliment.vitamineB12,
+                            vitamineD = aliment.vitamineD,
+                            vitamineC = aliment.vitamineC,
+                            omega3 = aliment.omega3,
+                            omega6 = aliment.omega6,
+                        ),
+                        createdAt = "",
+                        updatedAt = "",
+                    )
+                }
+                call.respond(
+                    HttpStatusCode.OK,
+                    JournalListResponse(data = entries, total = entries.size),
+                )
+            }
+
+            post("/favoris/{alimentId}") {
+                val userId = call.userId()
+                val alimentId = call.parameters["alimentId"]
+                    ?: throw ValidationException("alimentId requis")
+                // Verify aliment exists
+                alimentDao.findById(alimentId)
+                    ?: throw com.appfood.backend.plugins.NotFoundException("Aliment non trouve: $alimentId")
+                profileService.addFavori(userId, alimentId)
+                call.respond(HttpStatusCode.Created, ApiResponse(data = mapOf("alimentId" to alimentId)))
+            }
+
+            delete("/favoris/{alimentId}") {
+                val userId = call.userId()
+                val alimentId = call.parameters["alimentId"]
+                    ?: throw ValidationException("alimentId requis")
+                profileService.removeFavori(userId, alimentId)
+                call.respond(HttpStatusCode.NoContent)
+            }
 
             get("/summary") {
                 val userId = call.userId()

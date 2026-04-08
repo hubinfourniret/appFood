@@ -2,7 +2,10 @@ package com.appfood.shared.ui.recommandation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.request.AddJournalEntryRequest
+import com.appfood.shared.data.repository.JournalRepository
 import com.appfood.shared.data.repository.RecommandationRepository
+import com.appfood.shared.model.MealType
 import com.appfood.shared.model.NutrimentType
 import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +24,7 @@ import kotlinx.datetime.todayIn
  */
 class RecommandationViewModel(
     private val recommandationRepository: RecommandationRepository,
+    private val journalRepository: JournalRepository,
 ) : ViewModel() {
 
     // TODO: Inject a real user ID provider when auth session is wired
@@ -128,10 +132,21 @@ class RecommandationViewModel(
 
     fun onAteThis(recommandation: RecommandationUiModel) {
         viewModelScope.launch {
-            // TODO: Call ajouterEntreeUseCase when created by SHARED agent
-            // This would add the suggested food to the user's journal
-            // Then reload recommendations
-
+            val request = AddJournalEntryRequest(
+                date = currentDate,
+                mealType = MealType.COLLATION.name,
+                alimentId = recommandation.alimentId,
+                nom = recommandation.alimentNom,
+                quantiteGrammes = recommandation.quantiteSuggereGrammes,
+            )
+            when (val result = journalRepository.addEntry(request)) {
+                is AppResult.Success -> {
+                    _successMessage.value = com.appfood.shared.ui.Strings.recoAlimentAddedToJournal(recommandation.alimentNom)
+                }
+                is AppResult.Error -> {
+                    // Silently fail for now — user can retry
+                }
+            }
             loadRecommandations()
         }
     }
@@ -148,14 +163,20 @@ class RecommandationViewModel(
     fun onAddRecetteToJournal(recette: RecommandationRecetteUiModel) {
         val portions = getPortionsForRecette(recette.recetteId)
         viewModelScope.launch {
-            // TODO: Call ajouterRecetteAuJournalUseCase when created by SHARED agent
-            // 1. Creer une entree journal avec les nutriments calcules proportionnellement aux portions
-            //    val nutriments = recette.nutrimentsTotaux * portions
-            //    ajouterEntreeJournalUseCase(recetteId = recette.recetteId, portions = portions, nutriments = nutriments)
-            // 2. Afficher un feedback de succes
-            // 3. Recharger les recommandations
-
-            _successMessage.value = com.appfood.shared.ui.Strings.RECO_ADDED_TO_JOURNAL_SUCCESS
+            val request = AddJournalEntryRequest(
+                date = currentDate,
+                mealType = MealType.COLLATION.name,
+                recetteId = recette.recetteId,
+                nbPortions = portions.toDouble(),
+            )
+            when (val result = journalRepository.addEntry(request)) {
+                is AppResult.Success -> {
+                    _successMessage.value = com.appfood.shared.ui.Strings.RECO_ADDED_TO_JOURNAL_SUCCESS
+                }
+                is AppResult.Error -> {
+                    // Silently fail for now — user can retry
+                }
+            }
             loadRecommandations()
         }
     }

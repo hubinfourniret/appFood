@@ -15,19 +15,24 @@ import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.PortionStandard
 import com.appfood.shared.model.RegimeAlimentaire
 import com.appfood.shared.model.SourceAliment
+import com.appfood.shared.sync.SyncManager
 import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.Json
 
 /**
  * ViewModel for the entire journal feature (JOURNAL-01, JOURNAL-03, JOURNAL-04, JOURNAL-06, PORTIONS-01).
@@ -39,6 +44,7 @@ class JournalViewModel(
     private val journalRepository: JournalRepository,
     private val alimentRepository: AlimentRepository,
     private val recetteRepository: RecetteRepository,
+    private val syncManager: SyncManager,
 ) : ViewModel() {
 
     // --- Search state ---
@@ -83,32 +89,37 @@ class JournalViewModel(
     private val _editState = MutableStateFlow<EditEntryState>(EditEntryState.Idle)
     val editState: StateFlow<EditEntryState> = _editState.asStateFlow()
 
-    // --- Nutritional summary for current selection ---
-    val computedNutriments: NutrimentValues
-        get() {
-            val aliment = _selectedAliment.value ?: return NutrimentValues()
-            val grams = _quantityGrams.value
-            val factor = grams / 100.0
-            val n = aliment.nutrimentsPour100g
-            return NutrimentValues(
-                calories = n.calories * factor,
-                proteines = n.proteines * factor,
-                glucides = n.glucides * factor,
-                lipides = n.lipides * factor,
-                fibres = n.fibres * factor,
-                sel = n.sel * factor,
-                sucres = n.sucres * factor,
-                fer = n.fer * factor,
-                calcium = n.calcium * factor,
-                zinc = n.zinc * factor,
-                magnesium = n.magnesium * factor,
-                vitamineB12 = n.vitamineB12 * factor,
-                vitamineD = n.vitamineD * factor,
-                vitamineC = n.vitamineC * factor,
-                omega3 = n.omega3 * factor,
-                omega6 = n.omega6 * factor,
-            )
-        }
+    // --- Delete confirmation state (JOURNAL-06) ---
+    private val _showDeleteConfirmation = MutableStateFlow<String?>(null)
+    val showDeleteConfirmation: StateFlow<String?> = _showDeleteConfirmation.asStateFlow()
+
+    // --- Nutritional preview for current selection (reactive) ---
+    val nutritionPreview: StateFlow<NutrimentValues?> = combine(
+        _selectedAliment,
+        _quantityGrams,
+    ) { aliment, grams ->
+        if (aliment == null) return@combine null
+        val factor = grams / 100.0
+        val n = aliment.nutrimentsPour100g
+        NutrimentValues(
+            calories = n.calories * factor,
+            proteines = n.proteines * factor,
+            glucides = n.glucides * factor,
+            lipides = n.lipides * factor,
+            fibres = n.fibres * factor,
+            sel = n.sel * factor,
+            sucres = n.sucres * factor,
+            fer = n.fer * factor,
+            calcium = n.calcium * factor,
+            zinc = n.zinc * factor,
+            magnesium = n.magnesium * factor,
+            vitamineB12 = n.vitamineB12 * factor,
+            vitamineD = n.vitamineD * factor,
+            vitamineC = n.vitamineC * factor,
+            omega3 = n.omega3 * factor,
+            omega6 = n.omega6 * factor,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     @OptIn(FlowPreview::class)
     fun init() {
@@ -199,21 +210,38 @@ class JournalViewModel(
         val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date
 
         _addEntryState.value = AddEntryState.Saving
+
+        val request = AddJournalEntryRequest(
+            date = today.toString(),
+            mealType = mealType.name,
+            alimentId = aliment.id,
+            nom = aliment.nom,
+            quantiteGrammes = grams,
+        )
+
+        // Offline-first: enqueue in sync_queue immediately so the entry
+        // is persisted locally even if the API call fails.
+        val payloadJson = Json.encodeToString(
+            AddJournalEntryRequest.serializer(),
+            request,
+        )
+        syncManager.enqueue(
+            entityType = "journal",
+            entityId = "${aliment.id}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}",
+            action = "CREATE",
+            payloadJson = payloadJson,
+        )
+
         viewModelScope.launch {
-            val request = AddJournalEntryRequest(
-                date = today.toString(),
-                mealType = mealType.name,
-                alimentId = aliment.id,
-                nom = aliment.nom,
-                quantiteGrammes = grams,
-            )
             when (val result = journalRepository.addEntry(request)) {
                 is AppResult.Success -> {
                     _addEntryState.value = AddEntryState.Saved
                     loadRecents()
                 }
                 is AppResult.Error -> {
-                    _addEntryState.value = AddEntryState.Error(result.message)
+                    // Entry is already enqueued for sync — mark as saved
+                    // so the user is not blocked. SyncManager will retry later.
+                    _addEntryState.value = AddEntryState.SavedOffline
                 }
             }
         }
@@ -223,13 +251,21 @@ class JournalViewModel(
 
     fun onToggleFavorite(aliment: Aliment) {
         viewModelScope.launch {
-            // TODO: Cabler vers un endpoint toggle favori quand il sera disponible
-            // Pour l'instant, toggle local uniquement
+            val isFav = _favorites.value.any { it.id == aliment.id }
+            // Optimistic local update
             _favorites.update { current ->
-                if (current.any { it.id == aliment.id }) {
-                    current.filter { it.id != aliment.id }
-                } else {
-                    current + aliment
+                if (isFav) current.filter { it.id != aliment.id } else current + aliment
+            }
+            // Persist to backend
+            val result = if (isFav) {
+                journalRepository.removeFavori(aliment.id)
+            } else {
+                journalRepository.addFavori(aliment.id)
+            }
+            if (result is AppResult.Error) {
+                // Revert on failure
+                _favorites.update { current ->
+                    if (isFav) current + aliment else current.filter { it.id != aliment.id }
                 }
             }
         }
@@ -325,6 +361,23 @@ class JournalViewModel(
                 }
             }
         }
+    }
+
+    /** Show confirmation dialog before deleting (JOURNAL-06). */
+    fun onRequestDelete(entryId: String) {
+        _showDeleteConfirmation.value = entryId
+    }
+
+    /** User confirmed deletion — proceed. */
+    fun onConfirmDelete() {
+        val entryId = _showDeleteConfirmation.value ?: return
+        _showDeleteConfirmation.value = null
+        onDeleteEntry(entryId)
+    }
+
+    /** User cancelled deletion. */
+    fun onCancelDelete() {
+        _showDeleteConfirmation.value = null
     }
 
     fun resetEditState() {
@@ -485,6 +538,8 @@ sealed interface AddEntryState {
     data object SelectPortion : AddEntryState
     data object Saving : AddEntryState
     data object Saved : AddEntryState
+    /** Entry saved locally in sync_queue, will be synced when connection is restored. */
+    data object SavedOffline : AddEntryState
     data class Error(val message: String) : AddEntryState
 }
 

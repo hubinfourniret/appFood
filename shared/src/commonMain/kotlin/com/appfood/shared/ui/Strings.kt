@@ -251,7 +251,9 @@ object Strings {
     const val JOURNAL_PORTION_TEASPOON = "Cuillere a cafe"
     const val JOURNAL_PORTION_HANDFUL = "Poignee"
     const val JOURNAL_NUTRITION_SUMMARY = "Resume nutritionnel"
+    const val JOURNAL_NUTRITION_PREVIEW_TITLE = "Apercu nutritionnel"
     const val JOURNAL_VALIDATE_ENTRY = "Valider"
+    const val JOURNAL_SAVED_OFFLINE = "Enregistre hors ligne, sera synchronise automatiquement"
     fun journalPortionSummaryFor(grams: Double) = "Pour ${grams.toLong()}g :"
 
     // Journal — Nutriments
@@ -415,9 +417,10 @@ object Strings {
     fun recoRecetteCoverage(percent: Int) = "Couvre $percent% de vos besoins"
     fun recoRecetteNutrients(nutrients: String) = "Nutriments : $nutrients"
 
-    // Recommandations recettes — validation rapide (RECO-03)
+    // Recommandations — validation rapide (RECO-03)
     const val RECO_PORTIONS_LABEL = "Portions"
     fun recoPortionCount(count: Int) = "$count portion${if (count > 1) "s" else ""}"
+    fun recoAlimentAddedToJournal(alimentNom: String) = "$alimentNom ajoute au journal"
     const val RECO_ADDED_TO_JOURNAL_SUCCESS = "Recette ajoutee au journal"
 
     // Poids — Recalcul quotas (POIDS-02)

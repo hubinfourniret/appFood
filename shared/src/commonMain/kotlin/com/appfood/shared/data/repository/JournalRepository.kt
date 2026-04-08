@@ -26,4 +26,8 @@ interface JournalRepository {
     suspend fun getRecents(limit: Int? = null): AppResult<JournalListResponse>
 
     suspend fun getFavoris(): AppResult<JournalListResponse>
+
+    suspend fun addFavori(alimentId: String): AppResult<Unit>
+
+    suspend fun removeFavori(alimentId: String): AppResult<Unit>
 }

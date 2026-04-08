@@ -227,4 +227,62 @@ Corrections appliquees suite a l'audit des 4 epics (INFRA, DATA, AUTH, PROFIL) :
 
 **Compilation** : `:shared` ✅ | `:backend` ✅
 
+## Cablage ViewModels (post-Sprint 4, 2026-04-08)
+
+Tous les ViewModels ont ete cables aux repositories/use cases. Aucun stub TODO restant.
+
+| Feature | ViewModel | Cable a | Statut |
+|---------|-----------|---------|--------|
+| Auth | AuthViewModel | UserRepository (login, register, logout, delete) | ✅ Done |
+| Auth | AuthViewModel | Firebase SDK (resetPassword) | ✅ Done |
+| Onboarding | OnboardingViewModel | UserRepository (createProfile, updatePreferences) | ✅ Done |
+| Profil | ProfilViewModel | UserRepository (getProfile, updateProfile, updatePreferences, export) | ✅ Done |
+| Quotas | QuotaViewModel | QuotaRepository (load, update, reset, resetAll) | ✅ Done |
+| Dashboard | DashboardViewModel | DashboardRepository (getDaily) | ✅ Done |
+| Dashboard | WeeklyDashboardViewModel | DashboardRepository (getWeekly) | ✅ Done |
+| Hydratation | HydratationViewModel | UseCases (ajouter, getJour, updateObjectif) + Repository (weekly) | ✅ Done |
+| Poids | PoidsViewModel | UseCases (enregistrer, historique, detecter, recalculer) | ✅ Done |
+| Journal | JournalViewModel | JournalRepository + AlimentRepository + RecetteRepository | ✅ Done |
+| Recettes | RecettesViewModel | RecetteRepository (search, detail) | ✅ Done |
+| Recommandations | RecommandationViewModel | RecommandationRepository (aliments, recettes) | ✅ Done |
+| Consent | ConsentViewModel | ConsentApi (initial, get, update) | ✅ Done |
+| Disclaimer | DisclaimerViewModel | Local-only (in-memory) | ✅ Done |
+| FAQ | FaqViewModel | SupportApi (getFaq) + fallback statique | ✅ Done |
+
+### Couche data creee
+- DashboardApi + DashboardRepository + impl
+- JournalApi + JournalRepository + impl
+- AlimentApi + AlimentRepository + impl
+- PortionApi
+- ConsentApi
+- SupportApi
+
+## Criteres manquants identifies (en cours de correction)
+
+| US | Critere manquant | Statut |
+|----|-----------------|--------|
+| JOURNAL-01 | Resume nutritionnel avant validation | ✅ Done |
+| JOURNAL-01 | Offline-first enqueue sync | ✅ Done |
+| JOURNAL-03 | Favoris persistes cote serveur | ✅ Done (3 endpoints backend + cablage) |
+| JOURNAL-06 | Confirmation avant suppression | ✅ Done (AlertDialog + JournalScreen) |
+| RECO-03 | Ajout au journal non stubbe | ✅ Done (aliments + recettes) |
+| RECETTES-03 | Creation recette non stubbee | ✅ Done (RecetteApi.create + ViewModel) |
+
+## US non-MVP (reportees V1.1)
+
+| US | Titre | Raison |
+|----|-------|--------|
+| JOURNAL-05 | Copie repas/journee | V1.1 |
+| JOURNAL-07 | Scan code-barres | V1.1 |
+| NOTIF-02/03/04 | Notifications push (bilan, hebdo, preferences) | V1.1 |
+| AUTH-03 | Google Sign-In | Reporte |
+| AUTH-05 | Apple Sign-In | Action humaine requise |
+| INFRA-03 | Monitoring Sentry/UptimeRobot | Action humaine en cours |
+
+## US en attente validation utilisateur
+
+- LEGAL-01 — Politique de confidentialite (contenu placeholder)
+- LEGAL-02 — CGU (contenu placeholder)
+- LEGAL-04 — Chiffrement AES-256-GCM (ENCRYPTION_KEY configuree sur Railway)
+
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked

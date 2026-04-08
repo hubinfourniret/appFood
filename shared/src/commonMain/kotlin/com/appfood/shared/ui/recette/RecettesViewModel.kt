@@ -7,6 +7,8 @@ import com.appfood.shared.model.MealType
 import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.Recette
 import com.appfood.shared.model.RegimeAlimentaire
+import com.appfood.shared.api.request.CreateRecetteRequest
+import com.appfood.shared.api.request.IngredientRequest
 import com.appfood.shared.data.repository.RecetteRepository
 import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.FlowPreview
@@ -350,16 +352,48 @@ class RecettesViewModel(
         }
     }
 
+    fun onCreateIngredientIdChanged(index: Int, id: String) {
+        _createRecetteForm.update { form ->
+            form.copy(
+                ingredients = form.ingredients.toMutableList().also { list ->
+                    list[index] = list[index].copy(alimentId = id)
+                },
+            )
+        }
+    }
+
     fun onCreateRecetteSubmit() {
         val form = _createRecetteForm.value
         if (form.nom.isBlank()) return
 
         _createRecetteState.value = CreateRecetteState.Saving
         viewModelScope.launch {
-            // TODO: Wire to RecetteRepository.create() when the endpoint is available
-            // For now, simulate success since the repository doesn't have a create method yet
-            _createRecetteState.value = CreateRecetteState.Success
-            _createRecetteForm.value = CreateRecetteFormState()
+            val request = CreateRecetteRequest(
+                nom = form.nom,
+                description = form.description,
+                tempsPreparationMin = form.tempsPrepMin.toIntOrNull() ?: 0,
+                tempsCuissonMin = form.tempsCuissonMin.toIntOrNull() ?: 0,
+                nbPortions = form.nbPortions.toIntOrNull() ?: 1,
+                regimesCompatibles = listOf(form.regime.name),
+                typeRepas = emptyList(),
+                ingredients = form.ingredients.mapNotNull { entry ->
+                    val qty = entry.quantiteGrammes.toDoubleOrNull() ?: return@mapNotNull null
+                    val id = entry.alimentId.ifBlank { return@mapNotNull null }
+                    IngredientRequest(alimentId = id, quantiteGrammes = qty)
+                },
+                etapes = form.etapes.filter { it.isNotBlank() },
+                imageUrl = form.imageUrl.ifBlank { null },
+                publie = true,
+            )
+            when (val result = recetteRepository.createRecette(request)) {
+                is AppResult.Success -> {
+                    _createRecetteState.value = CreateRecetteState.Success
+                    _createRecetteForm.value = CreateRecetteFormState()
+                }
+                is AppResult.Error -> {
+                    _createRecetteState.value = CreateRecetteState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -422,6 +456,7 @@ data class CreateRecetteFormState(
 )
 
 data class IngredientFormEntry(
+    val alimentId: String = "",
     val alimentNom: String = "",
     val quantiteGrammes: String = "",
 )

@@ -190,6 +190,49 @@ class ProfileService(
         }
     }
 
+    // --- Favoris helpers (JOURNAL-03) ---
+
+    suspend fun getFavorisIds(userId: String): List<String> {
+        val prefs = userPreferencesDao.findByUserId(userId) ?: return emptyList()
+        return deserializeList(prefs.alimentsFavoris)
+    }
+
+    suspend fun addFavori(userId: String, alimentId: String) {
+        val prefs = userPreferencesDao.findByUserId(userId)
+        if (prefs == null) {
+            userPreferencesDao.insert(
+                userId = userId,
+                alimentsFavoris = serializeList(listOf(alimentId)),
+            )
+        } else {
+            val current = deserializeList(prefs.alimentsFavoris).toMutableList()
+            if (alimentId !in current) {
+                current.add(alimentId)
+                userPreferencesDao.update(
+                    userId = userId,
+                    alimentsExclus = prefs.alimentsExclus,
+                    allergies = prefs.allergies,
+                    alimentsFavoris = serializeList(current),
+                )
+            }
+        }
+        logger.info("AddFavori: alimentId=$alimentId for userId=$userId")
+    }
+
+    suspend fun removeFavori(userId: String, alimentId: String) {
+        val prefs = userPreferencesDao.findByUserId(userId) ?: return
+        val current = deserializeList(prefs.alimentsFavoris).toMutableList()
+        if (current.remove(alimentId)) {
+            userPreferencesDao.update(
+                userId = userId,
+                alimentsExclus = prefs.alimentsExclus,
+                allergies = prefs.allergies,
+                alimentsFavoris = serializeList(current),
+            )
+        }
+        logger.info("RemoveFavori: alimentId=$alimentId for userId=$userId")
+    }
+
     suspend fun exportUserData(userId: String): ExportData {
         val userProfileData = getUserProfile(userId)
         val journalEntries = journalEntryDao.findByUserAll(userId)

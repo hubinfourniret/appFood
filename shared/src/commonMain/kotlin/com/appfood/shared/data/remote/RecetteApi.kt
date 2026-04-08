@@ -1,5 +1,7 @@
 package com.appfood.shared.data.remote
 
+import com.appfood.shared.api.request.CreateRecetteRequest
+import com.appfood.shared.api.response.RecetteDetailResponse
 import com.appfood.shared.api.response.RecetteListResponse
 import com.appfood.shared.api.response.RecetteSummaryResponse
 import io.ktor.client.call.body
@@ -29,5 +31,9 @@ class RecetteApi(private val apiClient: ApiClient) {
 
     suspend fun getRecette(id: String): RecetteSummaryResponse {
         return apiClient.getRequest("/api/v1/recettes/$id").body()
+    }
+
+    suspend fun createRecette(request: CreateRecetteRequest): RecetteDetailResponse {
+        return apiClient.postRequest("/api/v1/recettes", request).body()
     }
 }

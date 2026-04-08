@@ -52,4 +52,12 @@ class JournalApi(private val apiClient: ApiClient) {
     suspend fun getFavoris(): JournalListResponse {
         return apiClient.getRequest("/api/v1/journal/favoris").body()
     }
+
+    suspend fun addFavori(alimentId: String) {
+        apiClient.postRequest("/api/v1/journal/favoris/$alimentId", emptyMap<String, String>())
+    }
+
+    suspend fun removeFavori(alimentId: String) {
+        apiClient.deleteRequest("/api/v1/journal/favoris/$alimentId")
+    }
 }

@@ -1,5 +1,6 @@
 package com.appfood.shared.data.repository
 
+import com.appfood.shared.api.request.CreateRecetteRequest
 import com.appfood.shared.model.Recette
 import com.appfood.shared.util.AppResult
 
@@ -21,4 +22,7 @@ interface RecetteRepository {
 
     /** Get a single recipe by ID. */
     suspend fun getRecette(id: String): AppResult<Recette>
+
+    /** Create a custom recipe (RECETTES-03). */
+    suspend fun createRecette(request: CreateRecetteRequest): AppResult<Recette>
 }
