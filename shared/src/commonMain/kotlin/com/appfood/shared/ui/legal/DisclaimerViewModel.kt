@@ -10,36 +10,23 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel for the legal disclaimer screen (UX-05).
  * Tracks whether the user has accepted the disclaimer.
+ *
+ * The disclaimer is local-only (no backend endpoint).
+ * Acceptance is tracked in-memory for the current session — the disclaimer
+ * is shown once per onboarding flow (between Onboarding and Dashboard).
+ * For future versions, persistence via local settings can be added.
  */
-class DisclaimerViewModel(
-    // TODO: Inject ConsentRepository when created by SHARED agent
-    // private val updateConsentUseCase: UpdateConsentUseCase,
-) : ViewModel() {
+class DisclaimerViewModel : ViewModel() {
 
     private val _state = MutableStateFlow<DisclaimerState>(DisclaimerState.Pending)
     val state: StateFlow<DisclaimerState> = _state.asStateFlow()
 
     /**
      * Called when the user taps "J'ai compris" to accept the disclaimer.
+     * Acceptance is immediate (no network call needed).
      */
     fun onAcceptDisclaimer() {
-        _state.value = DisclaimerState.Saving
-        viewModelScope.launch {
-            // TODO: Persist acceptance via ConsentRepository
-            // val result = updateConsentUseCase(
-            //     UpdateConsentRequest(
-            //         consentType = ConsentType.DISCLAIMER_MEDICAL.name,
-            //         accepted = true,
-            //     )
-            // )
-            // when (result) {
-            //     is AppResult.Success -> _state.value = DisclaimerState.Accepted
-            //     is AppResult.Error -> _state.value = DisclaimerState.Error(result.message)
-            // }
-
-            // Stub: simulate success
-            _state.value = DisclaimerState.Accepted
-        }
+        _state.value = DisclaimerState.Accepted
     }
 }
 
@@ -49,10 +36,10 @@ class DisclaimerViewModel(
 sealed interface DisclaimerState {
     /** Disclaimer not yet accepted — user must accept to continue. */
     data object Pending : DisclaimerState
-    /** Saving acceptance in progress. */
+    /** Saving acceptance in progress (kept for UI compatibility). */
     data object Saving : DisclaimerState
     /** Disclaimer accepted — user can proceed. */
     data object Accepted : DisclaimerState
-    /** An error occurred while saving acceptance. */
+    /** An error occurred (kept for UI compatibility). */
     data class Error(val message: String) : DisclaimerState
 }

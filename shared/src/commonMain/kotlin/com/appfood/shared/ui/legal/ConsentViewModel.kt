@@ -2,6 +2,9 @@ package com.appfood.shared.ui.legal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.request.InitialConsentRequest
+import com.appfood.shared.api.request.UpdateConsentRequest
+import com.appfood.shared.data.remote.ConsentApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,9 +16,7 @@ import kotlinx.coroutines.launch
  * No tracking is activated without explicit user consent (RGPD / ePrivacy compliant).
  */
 class ConsentViewModel(
-    // TODO: Inject use cases when created by SHARED agent
-    // private val updateConsentUseCase: UpdateConsentUseCase,
-    // private val getConsentsUseCase: GetConsentsUseCase,
+    private val consentApi: ConsentApi,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<ConsentState>(ConsentState.Pending)
@@ -36,20 +37,18 @@ class ConsentViewModel(
      */
     fun loadExistingConsents() {
         viewModelScope.launch {
-            // TODO: Load from ConsentRepository when created by SHARED agent
-            // val result = getConsentsUseCase()
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         result.data.forEach { consent ->
-            //             when (consent.type) {
-            //                 ConsentType.ANALYTICS -> _analyticsEnabled.value = consent.accepted
-            //                 ConsentType.ADVERTISING -> _advertisingEnabled.value = consent.accepted
-            //                 ConsentType.SERVICE_IMPROVEMENT -> _improvementEnabled.value = consent.accepted
-            //             }
-            //         }
-            //     }
-            //     is AppResult.Error -> { /* Keep defaults */ }
-            // }
+            try {
+                val response = consentApi.getConsents()
+                response.data.forEach { consent ->
+                    when (consent.type) {
+                        "analytics" -> _analyticsEnabled.value = consent.accepte
+                        "publicite" -> _advertisingEnabled.value = consent.accepte
+                        "amelioration_service" -> _improvementEnabled.value = consent.accepte
+                    }
+                }
+            } catch (_: Exception) {
+                // Keep defaults on error — user can still toggle and save
+            }
         }
     }
 
@@ -83,33 +82,52 @@ class ConsentViewModel(
 
     // --- Save ---
 
+    /**
+     * Save initial consents (first launch, after registration).
+     * Calls POST /api/v1/consents/initial.
+     */
     fun onConfirmChoices() {
         _state.value = ConsentState.Saving
         viewModelScope.launch {
-            // TODO: Persist consents via ConsentRepository when created by SHARED agent
-            // val consents = listOf(
-            //     UpdateConsentRequest(
-            //         consentType = ConsentType.ANALYTICS.name,
-            //         accepted = _analyticsEnabled.value,
-            //     ),
-            //     UpdateConsentRequest(
-            //         consentType = ConsentType.ADVERTISING.name,
-            //         accepted = _advertisingEnabled.value,
-            //     ),
-            //     UpdateConsentRequest(
-            //         consentType = ConsentType.SERVICE_IMPROVEMENT.name,
-            //         accepted = _improvementEnabled.value,
-            //     ),
-            // )
-            // val result = updateConsentUseCase(InitialConsentRequest(consents = consents))
-            // when (result) {
-            //     is AppResult.Success -> _state.value = ConsentState.Confirmed
-            //     is AppResult.Error -> _state.value = ConsentState.Error(result.message)
-            // }
-
-            // Stub: simulate success
-            _state.value = ConsentState.Confirmed
+            try {
+                consentApi.saveInitialConsents(
+                    InitialConsentRequest(
+                        analytics = _analyticsEnabled.value,
+                        publicite = _advertisingEnabled.value,
+                        ameliorationService = _improvementEnabled.value,
+                        versionPolitique = CURRENT_POLICY_VERSION,
+                    ),
+                )
+                _state.value = ConsentState.Confirmed
+            } catch (e: Exception) {
+                _state.value = ConsentState.Error(e.message ?: "Erreur lors de la sauvegarde des consentements")
+            }
         }
+    }
+
+    /**
+     * Update a single consent type (from settings screen).
+     * Calls PUT /api/v1/consents/{type}.
+     */
+    fun updateConsent(type: String, accepted: Boolean) {
+        viewModelScope.launch {
+            try {
+                consentApi.updateConsent(
+                    type = type,
+                    request = UpdateConsentRequest(
+                        accepte = accepted,
+                        versionPolitique = CURRENT_POLICY_VERSION,
+                    ),
+                )
+            } catch (_: Exception) {
+                // Silently fail — toggle stays in UI state, will be retried next time
+            }
+        }
+    }
+
+    companion object {
+        /** Current version of the privacy policy — bump when policy changes. */
+        private const val CURRENT_POLICY_VERSION = "1.0"
     }
 }
 

@@ -21,6 +21,7 @@ import com.appfood.shared.data.local.LocalUserDataSource
 import com.appfood.shared.data.remote.AlimentApi
 import com.appfood.shared.data.remote.ApiClient
 import com.appfood.shared.data.remote.AuthApi
+import com.appfood.shared.data.remote.ConsentApi
 import com.appfood.shared.data.remote.DashboardApi
 import com.appfood.shared.data.remote.HydratationApi
 import com.appfood.shared.data.remote.JournalApi
@@ -29,6 +30,7 @@ import com.appfood.shared.data.remote.PortionApi
 import com.appfood.shared.data.remote.QuotaApi
 import com.appfood.shared.data.remote.RecetteApi
 import com.appfood.shared.data.remote.RecommandationApi
+import com.appfood.shared.data.remote.SupportApi
 import com.appfood.shared.data.remote.SyncApi
 import com.appfood.shared.data.remote.UserApi
 import com.appfood.shared.data.repository.AlimentRepository
@@ -96,6 +98,8 @@ val sharedModule = module {
     single { AlimentApi(get()) }
     single { JournalApi(get()) }
     single { PortionApi(get()) }
+    single { ConsentApi(get()) }
+    single { SupportApi(get()) }
 
     // Sync infrastructure
     // ConnectivityMonitor is registered in the platform-specific module (expect/actual)

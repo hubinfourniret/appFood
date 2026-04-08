@@ -72,6 +72,8 @@ import com.appfood.shared.data.repository.QuotaRepository
 import com.appfood.shared.data.repository.RecetteRepository
 import com.appfood.shared.data.repository.RecommandationRepository
 import com.appfood.shared.data.repository.UserRepository
+import com.appfood.shared.data.remote.ConsentApi
+import com.appfood.shared.data.remote.SupportApi
 import com.appfood.shared.ui.support.FaqScreen
 import com.appfood.shared.ui.support.FaqViewModel
 import org.koin.compose.koinInject
@@ -150,11 +152,13 @@ fun AppNavigation(
     }
     val weeklyDashboardViewModel = remember(dashboardRepository) { WeeklyDashboardViewModel(dashboardRepository = dashboardRepository) }
     val disclaimerViewModel = remember { DisclaimerViewModel() }
-    val consentViewModel = remember { ConsentViewModel() }
+    val consentApi = koinInject<ConsentApi>()
+    val consentViewModel = remember(consentApi) { ConsentViewModel(consentApi) }
     val recettesViewModel = remember(recetteRepository) {
         RecettesViewModel(recetteRepository).also { it.init() }
     }
-    val faqViewModel = remember { FaqViewModel().also { it.init() } }
+    val supportApi = koinInject<SupportApi>()
+    val faqViewModel = remember(supportApi) { FaqViewModel(supportApi).also { it.init() } }
 
     Scaffold(
         bottomBar = {

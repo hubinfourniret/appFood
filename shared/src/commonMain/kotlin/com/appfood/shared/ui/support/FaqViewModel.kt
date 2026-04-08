@@ -3,6 +3,7 @@ package com.appfood.shared.ui.support
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.appfood.shared.api.response.FaqResponse
+import com.appfood.shared.data.remote.SupportApi
 import com.appfood.shared.ui.Strings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +15,7 @@ import kotlinx.coroutines.launch
  * Loads FAQ items from the API with a static fallback when offline.
  */
 class FaqViewModel(
-    // TODO: Inject use case when created by SHARED agent
-    // private val chargerFaqUseCase: ChargerFaqUseCase,
+    private val supportApi: SupportApi,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<FaqState>(FaqState.Loading)
@@ -28,27 +28,19 @@ class FaqViewModel(
     fun loadFaq() {
         _state.value = FaqState.Loading
         viewModelScope.launch {
-            // TODO: Replace with actual API call when use case is available
-            // val result = chargerFaqUseCase()
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         val grouped = result.data.groupByTheme()
-            //         _state.value = FaqState.Success(grouped)
-            //     }
-            //     is AppResult.Error -> {
-            //         // Fallback to static content when offline
-            //         _state.value = FaqState.Success(staticFaqContent())
-            //     }
-            // }
-
-            // Stub: use static content as placeholder
-            _state.value = FaqState.Success(staticFaqContent())
+            try {
+                val response = supportApi.getFaq()
+                val grouped = response.data.groupByTheme()
+                _state.value = FaqState.Success(grouped)
+            } catch (_: Exception) {
+                // Fallback to static content when offline or API error
+                _state.value = FaqState.Success(staticFaqContent())
+            }
         }
     }
 
     /**
      * Static FAQ content used as fallback when the API is unavailable.
-     * This will be replaced by server-side content once the use case is wired.
      */
     private fun staticFaqContent(): List<FaqThemeGroup> {
         return listOf(
