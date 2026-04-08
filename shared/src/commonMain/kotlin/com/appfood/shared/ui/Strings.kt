@@ -292,6 +292,10 @@ object Strings {
     const val DASHBOARD_NO_ENTRY = "Aucune saisie"
     const val DASHBOARD_SEE_RECOMMENDATIONS = "Voir les suggestions"
 
+    // PROFIL-01 — Bandeau rappel profil incomplet
+    const val DASHBOARD_INCOMPLETE_PROFILE_MESSAGE = "Complete ton profil pour des recommandations personnalisees"
+    const val DASHBOARD_INCOMPLETE_PROFILE_CTA = "Completer"
+
     // Quotas (QUOTAS-02)
     const val QUOTAS_TITLE = "Gestion des quotas"
     const val QUOTAS_CALCULATED = "Calcule"
@@ -428,6 +432,12 @@ object Strings {
     fun poidsRecalculDialogMessage(changeKg: Double) =
         "Votre poids a change de ${((kotlin.math.abs(changeKg) * 10).toInt() / 10.0)} kg. Voulez-vous recalculer vos quotas nutritionnels ?"
     const val POIDS_RECALCUL_SUCCESS = "Quotas recalcules avec succes"
+
+    // POIDS-02 — Historique des recalculs
+    const val POIDS_RECALCUL_HISTORY_TITLE = "Historique des ajustements"
+    const val POIDS_RECALCUL_HISTORY_EMPTY = "Aucun recalcul de quotas enregistre"
+    fun poidsRecalculHistoryEntry(date: String, ancienPoids: Double, nouveauPoids: Double) =
+        "$date : $ancienPoids kg -> $nouveauPoids kg"
 
     // Disclaimer (UX-05)
     const val DISCLAIMER_TITLE = "Information importante"

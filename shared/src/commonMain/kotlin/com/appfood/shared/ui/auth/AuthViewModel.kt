@@ -152,6 +152,13 @@ class AuthViewModel(
             )
             when (result) {
                 is AppResult.Success -> {
+                    // AUTH-01 : Envoyer email de verification apres inscription
+                    try {
+                        Firebase.auth.currentUser?.sendEmailVerification()
+                    } catch (_: Exception) {
+                        // Ne pas bloquer l'inscription si l'envoi echoue
+                        println("WARNING: Echec envoi email de verification")
+                    }
                     _state.value = AuthState.Success(needsOnboarding = true)
                 }
                 is AppResult.Error -> {

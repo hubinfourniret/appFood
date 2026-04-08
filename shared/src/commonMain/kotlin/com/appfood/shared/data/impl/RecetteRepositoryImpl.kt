@@ -3,8 +3,10 @@ package com.appfood.shared.data.impl
 import com.appfood.shared.api.request.CreateRecetteRequest
 import com.appfood.shared.api.response.RecetteDetailResponse
 import com.appfood.shared.api.response.RecetteSummaryResponse
+import com.appfood.shared.data.local.LocalRecetteDataSource
 import com.appfood.shared.data.remote.RecetteApi
 import com.appfood.shared.data.repository.RecetteRepository
+import com.appfood.shared.db.Local_recette
 import com.appfood.shared.model.MealType
 import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.Recette
@@ -15,10 +17,16 @@ import kotlin.time.Clock
 
 /**
  * Combines remote API calls with local cache for recipe browsing.
+ * Cache LRU limite a 100 recettes.
  */
 class RecetteRepositoryImpl(
     private val recetteApi: RecetteApi,
+    private val localRecetteDataSource: LocalRecetteDataSource,
 ) : RecetteRepository {
+
+    companion object {
+        const val MAX_CACHED_RECETTES = 100
+    }
 
     override suspend fun listRecettes(
         regime: String?,
@@ -31,6 +39,8 @@ class RecetteRepositoryImpl(
         return try {
             val response = recetteApi.listRecettes(regime, typeRepas, sort, query, page, limit)
             val recettes = response.data.map { it.toDomain() }
+            // Cache chaque recette retournee
+            response.data.forEach { cacheRecette(it) }
             AppResult.Success(recettes)
         } catch (e: Exception) {
             AppResult.Error(
@@ -44,6 +54,7 @@ class RecetteRepositoryImpl(
     override suspend fun getRecette(id: String): AppResult<Recette> {
         return try {
             val response = recetteApi.getRecette(id)
+            cacheRecette(response)
             AppResult.Success(response.toDomain())
         } catch (e: Exception) {
             AppResult.Error(
@@ -57,6 +68,7 @@ class RecetteRepositoryImpl(
     override suspend fun createRecette(request: CreateRecetteRequest): AppResult<Recette> {
         return try {
             val response = recetteApi.createRecette(request)
+            cacheRecette(response)
             AppResult.Success(response.toDomain())
         } catch (e: Exception) {
             AppResult.Error(
@@ -65,6 +77,56 @@ class RecetteRepositoryImpl(
                 cause = e,
             )
         }
+    }
+
+    private fun cacheRecette(response: RecetteSummaryResponse) {
+        val now = Clock.System.now().toEpochMilliseconds()
+        val local = Local_recette(
+            id = response.id,
+            nom = response.nom,
+            description = response.description,
+            temps_preparation_min = response.tempsPreparationMin.toLong(),
+            temps_cuisson_min = response.tempsCuissonMin.toLong(),
+            nb_portions = response.nbPortions.toLong(),
+            regimes_compatibles = response.regimesCompatibles.joinToString(","),
+            source = response.source,
+            type_repas = response.typeRepas.joinToString(","),
+            image_url = response.imageUrl,
+            calories = response.nutrimentsParPortion.calories,
+            proteines = response.nutrimentsParPortion.proteines,
+            glucides = response.nutrimentsParPortion.glucides,
+            lipides = response.nutrimentsParPortion.lipides,
+            fibres = response.nutrimentsParPortion.fibres,
+            access_date = now,
+            created_at = now,
+        )
+        localRecetteDataSource.insertOrReplace(local)
+        localRecetteDataSource.evictOldEntries(MAX_CACHED_RECETTES)
+    }
+
+    private fun cacheRecette(response: RecetteDetailResponse) {
+        val now = Clock.System.now().toEpochMilliseconds()
+        val local = Local_recette(
+            id = response.id,
+            nom = response.nom,
+            description = response.description,
+            temps_preparation_min = response.tempsPreparationMin.toLong(),
+            temps_cuisson_min = response.tempsCuissonMin.toLong(),
+            nb_portions = response.nbPortions.toLong(),
+            regimes_compatibles = response.regimesCompatibles.joinToString(","),
+            source = response.source,
+            type_repas = response.typeRepas.joinToString(","),
+            image_url = response.imageUrl,
+            calories = response.nutrimentsParPortion.calories,
+            proteines = response.nutrimentsParPortion.proteines,
+            glucides = response.nutrimentsParPortion.glucides,
+            lipides = response.nutrimentsParPortion.lipides,
+            fibres = response.nutrimentsParPortion.fibres,
+            access_date = now,
+            created_at = now,
+        )
+        localRecetteDataSource.insertOrReplace(local)
+        localRecetteDataSource.evictOldEntries(MAX_CACHED_RECETTES)
     }
 
     private fun RecetteDetailResponse.toDomain(): Recette {

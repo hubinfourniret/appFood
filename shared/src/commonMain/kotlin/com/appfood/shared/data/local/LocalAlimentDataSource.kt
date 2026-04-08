@@ -2,13 +2,18 @@ package com.appfood.shared.data.local
 
 import com.appfood.shared.db.AppDatabase
 import com.appfood.shared.db.Local_aliment
+import kotlin.time.Clock
 
 class LocalAlimentDataSource(private val database: AppDatabase) {
 
     private val queries = database.alimentQueriesQueries
 
     fun findById(id: String): Local_aliment? {
-        return queries.findById(id).executeAsOneOrNull()
+        val result = queries.findById(id).executeAsOneOrNull()
+        if (result != null) {
+            updateLastAccessed(id)
+        }
+        return result
     }
 
     fun search(query: String): List<Local_aliment> {
@@ -44,6 +49,30 @@ class LocalAlimentDataSource(private val database: AppDatabase) {
             omega_3 = aliment.omega_3,
             omega_6 = aliment.omega_6,
             regimes_compatibles = aliment.regimes_compatibles,
+            last_accessed = Clock.System.now().toEpochMilliseconds(),
         )
+    }
+
+    fun updateLastAccessed(id: String) {
+        queries.updateLastAccessed(
+            last_accessed = Clock.System.now().toEpochMilliseconds(),
+            id = id,
+        )
+    }
+
+    fun countAll(): Long {
+        return queries.countAll().executeAsOne()
+    }
+
+    /**
+     * Strategie LRU : supprime les entrees les plus anciennes (par last_accessed)
+     * si le cache depasse maxEntries.
+     */
+    fun evictOldEntries(maxEntries: Int) {
+        val count = countAll()
+        if (count > maxEntries) {
+            val toDelete = count - maxEntries
+            queries.deleteOldest(toDelete)
+        }
     }
 }

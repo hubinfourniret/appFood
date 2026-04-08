@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.appfood.shared.model.MealType
+import com.appfood.shared.ui.common.IncompleteProfileBanner
 import com.appfood.shared.ui.Strings
 import com.appfood.shared.ui.common.DashboardLoadingSkeleton
 import com.appfood.shared.ui.common.EmptyDashboardState
@@ -51,6 +52,7 @@ fun DashboardScreen(
     onNavigateToRecommandations: () -> Unit,
     onNavigateToHydratation: () -> Unit,
     onNavigateToWeeklyDashboard: () -> Unit,
+    onNavigateToOnboarding: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val hydratationState by hydratationViewModel.state.collectAsState()
@@ -71,6 +73,7 @@ fun DashboardScreen(
         onAddBottle = hydratationViewModel::addBottle,
         onNavigateToHydratation = onNavigateToHydratation,
         onNavigateToWeeklyDashboard = onNavigateToWeeklyDashboard,
+        onNavigateToOnboarding = onNavigateToOnboarding,
     )
 }
 
@@ -87,6 +90,7 @@ private fun DashboardContent(
     onAddBottle: () -> Unit,
     onNavigateToHydratation: () -> Unit,
     onNavigateToWeeklyDashboard: () -> Unit,
+    onNavigateToOnboarding: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -125,6 +129,7 @@ private fun DashboardContent(
                         onAddMeal = onAddMeal,
                         onManageQuotas = onManageQuotas,
                         onSeeRecommandations = onSeeRecommandations,
+                        onNavigateToOnboarding = onNavigateToOnboarding,
                         modifier = Modifier.padding(innerPadding),
                     )
                 }
@@ -139,6 +144,7 @@ private fun DashboardSuccessContent(
     onAddMeal: () -> Unit,
     onManageQuotas: () -> Unit,
     onSeeRecommandations: () -> Unit,
+    onNavigateToOnboarding: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -148,6 +154,13 @@ private fun DashboardSuccessContent(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // PROFIL-01 — Bandeau rappel profil incomplet
+        if (!state.onboardingComplete) {
+            IncompleteProfileBanner(
+                onCompleteProfile = onNavigateToOnboarding,
+            )
+        }
+
         // Date
         Text(
             text = state.date,

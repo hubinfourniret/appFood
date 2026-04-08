@@ -56,6 +56,7 @@ fun PoidsScreen(
     val saveMessage by viewModel.saveMessage.collectAsState()
     val selectedPeriod by viewModel.selectedPeriod.collectAsState()
     val showRecalculDialog by viewModel.showRecalculDialog.collectAsState()
+    val recalculHistory by viewModel.recalculHistory.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.init()
@@ -68,6 +69,7 @@ fun PoidsScreen(
         saveMessage = saveMessage,
         selectedPeriod = selectedPeriod,
         showRecalculDialog = showRecalculDialog,
+        recalculHistory = recalculHistory,
         onPoidsInputChanged = viewModel::onPoidsInputChanged,
         onSavePoids = viewModel::onSavePoids,
         onPeriodChanged = viewModel::onPeriodChanged,
@@ -88,6 +90,7 @@ private fun PoidsContent(
     saveMessage: String?,
     selectedPeriod: PoidsPeriod,
     showRecalculDialog: Boolean,
+    recalculHistory: List<RecalculEvent>,
     onPoidsInputChanged: (String) -> Unit,
     onSavePoids: () -> Unit,
     onPeriodChanged: (PoidsPeriod) -> Unit,
@@ -232,7 +235,55 @@ private fun PoidsContent(
                 }
             }
 
+            // POIDS-02 — Historique des recalculs
+            if (recalculHistory.isNotEmpty()) {
+                RecalculHistorySection(recalculHistory = recalculHistory)
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+/**
+ * POIDS-02 — Section displaying the history of quota recalculations
+ * triggered by significant weight changes during the current session.
+ */
+@Composable
+private fun RecalculHistorySection(
+    recalculHistory: List<RecalculEvent>,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = Strings.POIDS_RECALCUL_HISTORY_TITLE,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            recalculHistory.forEach { event ->
+                Text(
+                    text = Strings.poidsRecalculHistoryEntry(
+                        date = event.date,
+                        ancienPoids = event.ancienPoids,
+                        nouveauPoids = event.nouveauPoids,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

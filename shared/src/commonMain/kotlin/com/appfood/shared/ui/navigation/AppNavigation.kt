@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -73,6 +74,7 @@ import com.appfood.shared.data.repository.QuotaRepository
 import com.appfood.shared.data.repository.RecetteRepository
 import com.appfood.shared.data.repository.RecommandationRepository
 import com.appfood.shared.data.repository.UserRepository
+import com.appfood.shared.data.remote.ApiClient
 import com.appfood.shared.data.remote.ConsentApi
 import com.appfood.shared.data.remote.SupportApi
 import com.appfood.shared.sync.SyncManager
@@ -116,7 +118,9 @@ fun AppNavigation(
         ).also { it.init() }
     }
     val dashboardRepository = koinInject<DashboardRepository>()
-    val dashboardViewModel = remember(dashboardRepository) { DashboardViewModel(dashboardRepository = dashboardRepository) }
+    val dashboardViewModel = remember(dashboardRepository, userRepository) {
+        DashboardViewModel(dashboardRepository = dashboardRepository, userRepository = userRepository)
+    }
     val quotaRepository = koinInject<QuotaRepository>()
     val localUserDataSource = koinInject<LocalUserDataSource>()
     val quotaViewModel = remember(quotaRepository, localUserDataSource) { QuotaViewModel(quotaRepository, localUserDataSource) }
@@ -163,6 +167,16 @@ fun AppNavigation(
     }
     val supportApi = koinInject<SupportApi>()
     val faqViewModel = remember(supportApi) { FaqViewModel(supportApi).also { it.init() } }
+
+    // AUTH-02 : Observer l'expiration de session (401) pour rediriger vers Login
+    val apiClient = koinInject<ApiClient>()
+    LaunchedEffect(apiClient) {
+        apiClient.sessionExpired.collect {
+            navController.navigate(Screen.Login) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -338,6 +352,11 @@ fun AppNavigation(
                     },
                     onNavigateToWeeklyDashboard = {
                         navController.navigate(Screen.WeeklyDashboard) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToOnboarding = {
+                        navController.navigate(Screen.Onboarding) {
                             launchSingleTop = true
                         }
                     },

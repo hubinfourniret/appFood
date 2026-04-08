@@ -31,7 +31,7 @@ CREATE TABLE local_journal_entry (
     updated_at INTEGER NOT NULL
 );
 
--- Aliments cache
+-- Aliments cache (LRU)
 CREATE TABLE local_aliment (
     id TEXT NOT NULL PRIMARY KEY,
     nom TEXT NOT NULL,
@@ -55,7 +55,8 @@ CREATE TABLE local_aliment (
     vitamine_c REAL NOT NULL DEFAULT 0.0,
     omega_3 REAL NOT NULL DEFAULT 0.0,
     omega_6 REAL NOT NULL DEFAULT 0.0,
-    regimes_compatibles TEXT NOT NULL
+    regimes_compatibles TEXT NOT NULL,
+    last_accessed INTEGER NOT NULL DEFAULT 0
 );
 
 -- Portions standard (aliment_id NULL = portion generique)

@@ -53,11 +53,18 @@ class PoidsViewModel(
     private val _showRecalculDialog = MutableStateFlow(false)
     val showRecalculDialog: StateFlow<Boolean> = _showRecalculDialog.asStateFlow()
 
+    // --- POIDS-02 : Historique des recalculs (in-memory) ---
+    private val _recalculHistory = MutableStateFlow<List<RecalculEvent>>(emptyList())
+    val recalculHistory: StateFlow<List<RecalculEvent>> = _recalculHistory.asStateFlow()
+
     private val _isRecalculating = MutableStateFlow(false)
     val isRecalculating: StateFlow<Boolean> = _isRecalculating.asStateFlow()
 
     /** Cached userId fetched once from UserRepository. */
     private var cachedUserId: String? = null
+
+    /** Cached last detection result for building recalcul history entry. */
+    private var lastDetectionResult: DetecterChangementPoidsUseCase.Result? = null
 
     fun init() {
         loadHistorique()
@@ -123,6 +130,7 @@ class PoidsViewModel(
             when (val result = detecterChangementPoidsUseCase(userId)) {
                 is AppResult.Success -> {
                     if (result.data.changementSignificatif) {
+                        lastDetectionResult = result.data
                         _showRecalculDialog.value = true
                     }
                 }
@@ -149,6 +157,21 @@ class PoidsViewModel(
                         result.data.message
                     } else {
                         Strings.POIDS_RECALCUL_SUCCESS
+                    }
+                    // POIDS-02 : Ajouter l'evenement de recalcul a l'historique in-memory
+                    lastDetectionResult?.let { detection ->
+                        val ancienPoids = detection.poidsReference ?: return@let
+                        val nouveauPoids = detection.poidsActuel ?: return@let
+                        val nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
+                        val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(nowMs)
+                        val today = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+                        val event = RecalculEvent(
+                            date = today,
+                            ancienPoids = ancienPoids,
+                            nouveauPoids = nouveauPoids,
+                        )
+                        _recalculHistory.value = _recalculHistory.value + event
+                        lastDetectionResult = null
                     }
                 }
                 is AppResult.Error -> {
@@ -261,3 +284,13 @@ data class PoidsEntry(
 enum class PoidsPeriod {
     WEEK, MONTH, THREE_MONTHS, SIX_MONTHS, YEAR
 }
+
+/**
+ * POIDS-02 — Represents a quota recalculation event triggered by a weight change.
+ * Stored in-memory (not persisted) for the current session.
+ */
+data class RecalculEvent(
+    val date: String,
+    val ancienPoids: Double,
+    val nouveauPoids: Double,
+)

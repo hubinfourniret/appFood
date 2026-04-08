@@ -5,8 +5,17 @@ search:
 SELECT * FROM local_aliment WHERE nom LIKE ? ORDER BY nom ASC;
 
 insertOrReplace:
-INSERT OR REPLACE INTO local_aliment(id, nom, marque, categorie, source, source_id, calories, proteines, glucides, lipides, fibres, sel, sucres, fer, calcium, zinc, magnesium, vitamine_b12, vitamine_d, vitamine_c, omega_3, omega_6, regimes_compatibles)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO local_aliment(id, nom, marque, categorie, source, source_id, calories, proteines, glucides, lipides, fibres, sel, sucres, fer, calcium, zinc, magnesium, vitamine_b12, vitamine_d, vitamine_c, omega_3, omega_6, regimes_compatibles, last_accessed)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 findByCategorie:
 SELECT * FROM local_aliment WHERE categorie = ? ORDER BY nom ASC;
+
+updateLastAccessed:
+UPDATE local_aliment SET last_accessed = ? WHERE id = ?;
+
+countAll:
+SELECT COUNT(*) FROM local_aliment;
+
+deleteOldest:
+DELETE FROM local_aliment WHERE id IN (SELECT id FROM local_aliment ORDER BY last_accessed ASC LIMIT ?);

@@ -16,6 +16,7 @@ import com.appfood.shared.data.local.LocalJournalDataSource
 import com.appfood.shared.data.local.LocalPoidsDataSource
 import com.appfood.shared.data.local.LocalPortionDataSource
 import com.appfood.shared.data.local.LocalQuotaDataSource
+import com.appfood.shared.data.local.LocalRecetteDataSource
 import com.appfood.shared.data.local.LocalSyncQueueDataSource
 import com.appfood.shared.data.local.LocalUserDataSource
 import com.appfood.shared.data.remote.AlimentApi
@@ -126,10 +127,10 @@ val sharedModule = module {
     single<RecommandationRepository> { RecommandationRepositoryImpl(get()) }
     single<HydratationRepository> { HydratationRepositoryImpl(get(), get(), get()) }
     single<PoidsRepository> { PoidsRepositoryImpl(get(), get(), get()) }
-    single<RecetteRepository> { RecetteRepositoryImpl(get()) }
+    single<RecetteRepository> { RecetteRepositoryImpl(get(), get()) }
     single<DashboardRepository> { DashboardRepositoryImpl(get()) }
     single<JournalRepository> { JournalRepositoryImpl(get()) }
-    single<AlimentRepository> { AlimentRepositoryImpl(get(), get()) }
+    single<AlimentRepository> { AlimentRepositoryImpl(get(), get(), get()) }
 
     // Data sources locales (SQLDelight)
     singleOf(::LocalJournalDataSource)
@@ -139,5 +140,6 @@ val sharedModule = module {
     singleOf(::LocalQuotaDataSource)
     singleOf(::LocalUserDataSource)
     singleOf(::LocalPortionDataSource)
+    singleOf(::LocalRecetteDataSource)
     singleOf(::LocalSyncQueueDataSource)
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.appfood.shared.api.response.DashboardResponse
 import com.appfood.shared.api.response.QuotaStatusResponse
 import com.appfood.shared.data.repository.DashboardRepository
+import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.model.MealType
 import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ import kotlinx.datetime.todayIn
  */
 class DashboardViewModel(
     private val dashboardRepository: DashboardRepository? = null,
+    private val userRepository: UserRepository? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<DashboardState>(DashboardState.Loading)
@@ -29,21 +31,36 @@ class DashboardViewModel(
     fun loadDashboard() {
         _state.value = DashboardState.Loading
         viewModelScope.launch {
+            // Fetch onboarding status from UserRepository
+            val onboardingComplete = fetchOnboardingComplete()
+
             val repo = dashboardRepository
             if (repo == null) {
                 // Fallback stub si pas de repository injecte
-                _state.value = buildStubSuccess()
+                _state.value = buildStubSuccess().copy(onboardingComplete = onboardingComplete)
                 return@launch
             }
             val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
             when (val result = repo.getDailyDashboard(today)) {
                 is AppResult.Success -> {
-                    _state.value = mapDashboardResponse(result.data)
+                    _state.value = mapDashboardResponse(result.data).copy(onboardingComplete = onboardingComplete)
                 }
                 is AppResult.Error -> {
                     _state.value = DashboardState.Error(result.message)
                 }
             }
+        }
+    }
+
+    /**
+     * Fetches onboarding completion status from UserRepository.
+     * Returns true by default if repository is unavailable or request fails.
+     */
+    private suspend fun fetchOnboardingComplete(): Boolean {
+        val repo = userRepository ?: return true
+        return when (val result = repo.getCurrentUser()) {
+            is AppResult.Success -> result.data.user.onboardingComplete
+            is AppResult.Error -> true
         }
     }
 
@@ -140,6 +157,7 @@ sealed interface DashboardState {
         val quotasStatus: List<QuotaStatusUiModel>,
         val repas: Map<MealType, Double>,
         val poidsCourant: Double?,
+        val onboardingComplete: Boolean = true,
     ) : DashboardState
     data class Error(val message: String) : DashboardState
 }
