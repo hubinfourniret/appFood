@@ -8,7 +8,6 @@ import com.appfood.backend.routes.dto.FaqResponse
 class SupportService(
     private val faqDao: FaqDao,
 ) {
-
     /**
      * Retourne toutes les FAQ actives, triees par ordre.
      */
@@ -19,11 +18,12 @@ class SupportService(
         )
     }
 
-    private fun FaqRow.toResponse() = FaqResponse(
-        id = id,
-        theme = theme,
-        question = question,
-        reponse = reponse,
-        ordre = ordre,
-    )
+    private fun FaqRow.toResponse() =
+        FaqResponse(
+            id = id,
+            theme = theme,
+            question = question,
+            reponse = reponse,
+            ordre = ordre,
+        )
 }

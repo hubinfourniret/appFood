@@ -2,11 +2,11 @@ package com.appfood.backend.plugins
 
 import com.appfood.backend.routes.alimentRoutes
 import com.appfood.backend.routes.authRoutes
+import com.appfood.backend.routes.consentRoutes
 import com.appfood.backend.routes.dashboardRoutes
 import com.appfood.backend.routes.healthRoutes
 import com.appfood.backend.routes.hydratationRoutes
 import com.appfood.backend.routes.journalRoutes
-import com.appfood.backend.routes.consentRoutes
 import com.appfood.backend.routes.notificationRoutes
 import com.appfood.backend.routes.poidsRoutes
 import com.appfood.backend.routes.portionRoutes

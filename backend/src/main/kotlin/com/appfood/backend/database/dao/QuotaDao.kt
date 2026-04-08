@@ -22,34 +22,26 @@ data class QuotaRow(
 )
 
 class QuotaDao {
-
-    suspend fun findByUserId(userId: String): List<QuotaRow> = dbQuery {
-        QuotasTable.selectAll()
-            .where { QuotasTable.userId eq userId }
-            .map { it.toRow() }
-    }
-
-    suspend fun findByUserAndNutriment(userId: String, nutriment: NutrimentType): QuotaRow? = dbQuery {
-        QuotasTable.selectAll()
-            .where { (QuotasTable.userId eq userId) and (QuotasTable.nutriment eq nutriment) }
-            .map { it.toRow() }
-            .singleOrNull()
-    }
-
-    suspend fun upsert(row: QuotaRow) = dbQuery {
-        QuotasTable.upsert(QuotasTable.userId, QuotasTable.nutriment) {
-            it[userId] = row.userId
-            it[nutriment] = row.nutriment
-            it[valeurCible] = row.valeurCible
-            it[estPersonnalise] = row.estPersonnalise
-            it[valeurCalculee] = row.valeurCalculee
-            it[unite] = row.unite
-            it[updatedAt] = Clock.System.now()
+    suspend fun findByUserId(userId: String): List<QuotaRow> =
+        dbQuery {
+            QuotasTable.selectAll()
+                .where { QuotasTable.userId eq userId }
+                .map { it.toRow() }
         }
-    }
 
-    suspend fun upsertAll(rows: List<QuotaRow>) = dbQuery {
-        rows.forEach { row ->
+    suspend fun findByUserAndNutriment(
+        userId: String,
+        nutriment: NutrimentType,
+    ): QuotaRow? =
+        dbQuery {
+            QuotasTable.selectAll()
+                .where { (QuotasTable.userId eq userId) and (QuotasTable.nutriment eq nutriment) }
+                .map { it.toRow() }
+                .singleOrNull()
+        }
+
+    suspend fun upsert(row: QuotaRow) =
+        dbQuery {
             QuotasTable.upsert(QuotasTable.userId, QuotasTable.nutriment) {
                 it[userId] = row.userId
                 it[nutriment] = row.nutriment
@@ -60,19 +52,35 @@ class QuotaDao {
                 it[updatedAt] = Clock.System.now()
             }
         }
-    }
 
-    suspend fun deleteByUserId(userId: String): Int = dbQuery {
-        QuotasTable.deleteWhere { QuotasTable.userId eq userId }
-    }
+    suspend fun upsertAll(rows: List<QuotaRow>) =
+        dbQuery {
+            rows.forEach { row ->
+                QuotasTable.upsert(QuotasTable.userId, QuotasTable.nutriment) {
+                    it[userId] = row.userId
+                    it[nutriment] = row.nutriment
+                    it[valeurCible] = row.valeurCible
+                    it[estPersonnalise] = row.estPersonnalise
+                    it[valeurCalculee] = row.valeurCalculee
+                    it[unite] = row.unite
+                    it[updatedAt] = Clock.System.now()
+                }
+            }
+        }
 
-    private fun ResultRow.toRow() = QuotaRow(
-        userId = this[QuotasTable.userId],
-        nutriment = this[QuotasTable.nutriment],
-        valeurCible = this[QuotasTable.valeurCible],
-        estPersonnalise = this[QuotasTable.estPersonnalise],
-        valeurCalculee = this[QuotasTable.valeurCalculee],
-        unite = this[QuotasTable.unite],
-        updatedAt = this[QuotasTable.updatedAt],
-    )
+    suspend fun deleteByUserId(userId: String): Int =
+        dbQuery {
+            QuotasTable.deleteWhere { QuotasTable.userId eq userId }
+        }
+
+    private fun ResultRow.toRow() =
+        QuotaRow(
+            userId = this[QuotasTable.userId],
+            nutriment = this[QuotasTable.nutriment],
+            valeurCible = this[QuotasTable.valeurCible],
+            estPersonnalise = this[QuotasTable.estPersonnalise],
+            valeurCalculee = this[QuotasTable.valeurCalculee],
+            unite = this[QuotasTable.unite],
+            updatedAt = this[QuotasTable.updatedAt],
+        )
 }

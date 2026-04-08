@@ -35,35 +35,39 @@ fun Route.portionRoutes() {
             post {
                 val userId = call.userId()
                 val request = call.receive<CreatePortionRequest>()
-                val result = portionService.createPortion(
-                    userId = userId,
-                    alimentId = request.alimentId,
-                    nom = request.nom,
-                    quantiteGrammes = request.quantiteGrammes,
-                )
-                call.respond(HttpStatusCode.Created, ApiResponse(data = result))
+                val result =
+                    portionService.createPortion(
+                        userId = userId,
+                        alimentId = request.alimentId,
+                        nom = request.nom,
+                        quantiteGrammes = request.quantiteGrammes,
+                    )
+                call.respond(HttpStatusCode.Created, result)
             }
 
             // PUT /portions/{id} — update a custom portion
             put("/{id}") {
                 val userId = call.userId()
-                val id = call.parameters["id"]
-                    ?: throw ValidationException("ID requis")
+                val id =
+                    call.parameters["id"]
+                        ?: throw ValidationException("ID requis")
                 val request = call.receive<UpdatePortionRequest>()
-                val result = portionService.updatePortion(
-                    portionId = id,
-                    userId = userId,
-                    nom = request.nom,
-                    quantiteGrammes = request.quantiteGrammes,
-                )
-                call.respond(HttpStatusCode.OK, ApiResponse(data = result))
+                val result =
+                    portionService.updatePortion(
+                        portionId = id,
+                        userId = userId,
+                        nom = request.nom,
+                        quantiteGrammes = request.quantiteGrammes,
+                    )
+                call.respond(HttpStatusCode.OK, result)
             }
 
             // DELETE /portions/{id} — delete a custom portion
             delete("/{id}") {
                 val userId = call.userId()
-                val id = call.parameters["id"]
-                    ?: throw ValidationException("ID requis")
+                val id =
+                    call.parameters["id"]
+                        ?: throw ValidationException("ID requis")
                 portionService.deletePortion(portionId = id, userId = userId)
                 call.respond(HttpStatusCode.NoContent)
             }

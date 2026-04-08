@@ -21,39 +21,68 @@ suspend fun Application.configureMeilisearch(client: MeilisearchClient) {
     }
 
     // Configuration des settings
-    val settings = buildJsonObject {
-        put("searchableAttributes", JsonArray(listOf(
-            JsonPrimitive("nom"),
-            JsonPrimitive("categorie"),
-            JsonPrimitive("marque"),
-        )))
-        put("filterableAttributes", JsonArray(listOf(
-            JsonPrimitive("regimesCompatibles"),
-            JsonPrimitive("categorie"),
-            JsonPrimitive("source"),
-        )))
-        put("sortableAttributes", JsonArray(listOf(
-            JsonPrimitive("nom"),
-        )))
-        put("stopWords", JsonArray(listOf(
-            "de", "du", "des", "le", "la", "les", "au", "aux",
-            "un", "une", "en", "et",
-        ).map { JsonPrimitive(it) }))
-        put("synonyms", buildJsonObject {
-            put("tomate", JsonArray(listOf(JsonPrimitive("tomates"))))
-            put("pomme", JsonArray(listOf(JsonPrimitive("pommes"))))
-            put("carotte", JsonArray(listOf(JsonPrimitive("carottes"))))
-            put("haricot", JsonArray(listOf(JsonPrimitive("haricots"))))
-            put("lentille", JsonArray(listOf(JsonPrimitive("lentilles"))))
-            put("pois chiche", JsonArray(listOf(JsonPrimitive("pois chiches"))))
-            put("noix", JsonArray(listOf(JsonPrimitive("noix de grenoble"))))
-            put("riz", JsonArray(listOf(
-                JsonPrimitive("riz blanc"),
-                JsonPrimitive("riz complet"),
-                JsonPrimitive("riz basmati"),
-            )))
-        })
-    }
+    val settings =
+        buildJsonObject {
+            put(
+                "searchableAttributes",
+                JsonArray(
+                    listOf(
+                        JsonPrimitive("nom"),
+                        JsonPrimitive("categorie"),
+                        JsonPrimitive("marque"),
+                    ),
+                ),
+            )
+            put(
+                "filterableAttributes",
+                JsonArray(
+                    listOf(
+                        JsonPrimitive("regimesCompatibles"),
+                        JsonPrimitive("categorie"),
+                        JsonPrimitive("source"),
+                    ),
+                ),
+            )
+            put(
+                "sortableAttributes",
+                JsonArray(
+                    listOf(
+                        JsonPrimitive("nom"),
+                    ),
+                ),
+            )
+            put(
+                "stopWords",
+                JsonArray(
+                    listOf(
+                        "de", "du", "des", "le", "la", "les", "au", "aux",
+                        "un", "une", "en", "et",
+                    ).map { JsonPrimitive(it) },
+                ),
+            )
+            put(
+                "synonyms",
+                buildJsonObject {
+                    put("tomate", JsonArray(listOf(JsonPrimitive("tomates"))))
+                    put("pomme", JsonArray(listOf(JsonPrimitive("pommes"))))
+                    put("carotte", JsonArray(listOf(JsonPrimitive("carottes"))))
+                    put("haricot", JsonArray(listOf(JsonPrimitive("haricots"))))
+                    put("lentille", JsonArray(listOf(JsonPrimitive("lentilles"))))
+                    put("pois chiche", JsonArray(listOf(JsonPrimitive("pois chiches"))))
+                    put("noix", JsonArray(listOf(JsonPrimitive("noix de grenoble"))))
+                    put(
+                        "riz",
+                        JsonArray(
+                            listOf(
+                                JsonPrimitive("riz blanc"),
+                                JsonPrimitive("riz complet"),
+                                JsonPrimitive("riz basmati"),
+                            ),
+                        ),
+                    )
+                },
+            )
+        }
 
     try {
         client.updateSettings(AlimentIndexer.INDEX_NAME, settings)

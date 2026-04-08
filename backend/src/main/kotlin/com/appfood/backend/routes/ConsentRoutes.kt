@@ -20,7 +20,6 @@ fun Route.consentRoutes() {
 
     authenticate("auth-jwt") {
         route("/api/v1/consents") {
-
             // POST /api/v1/consents/initial — BEFORE /{type}
             post("/initial") {
                 val userId = call.userId()
@@ -42,7 +41,7 @@ fun Route.consentRoutes() {
                 val type = call.parameters["type"]!!
                 val request = call.receive<UpdateConsentRequest>()
                 val response = consentService.updateConsent(userId, type, request)
-                call.respond(HttpStatusCode.OK, ApiResponse(data = response))
+                call.respond(HttpStatusCode.OK, response)
             }
         }
     }

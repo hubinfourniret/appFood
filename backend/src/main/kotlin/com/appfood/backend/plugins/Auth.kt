@@ -30,7 +30,7 @@ fun Application.configureAuth() {
                 JWT.require(Algorithm.HMAC256(jwtSecret))
                     .withAudience(jwtAudience)
                     .withIssuer(jwtIssuer)
-                    .build()
+                    .build(),
             )
             validate { credential ->
                 val userId = credential.payload.subject

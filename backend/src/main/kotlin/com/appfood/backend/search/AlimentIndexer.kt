@@ -4,7 +4,6 @@ import com.appfood.backend.database.dao.AlimentDao
 import com.appfood.backend.database.dao.AlimentRow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.put
@@ -48,31 +47,32 @@ class AlimentIndexer(
         meilisearchClient.addDocuments(INDEX_NAME, documents)
     }
 
-    private fun AlimentRow.toDocument() = buildJsonObject {
-        put("id", id)
-        put("nom", nom)
-        put("categorie", categorie)
-        put("marque", marque ?: "")
-        put("source", source.name)
-        put("sourceId", sourceId ?: "")
-        put("regimesCompatibles", parseJsonArray(regimesCompatibles))
-        put("calories", calories)
-        put("proteines", proteines)
-        put("glucides", glucides)
-        put("lipides", lipides)
-        put("fibres", fibres)
-        put("sel", sel)
-        put("sucres", sucres)
-        put("fer", fer)
-        put("calcium", calcium)
-        put("zinc", zinc)
-        put("magnesium", magnesium)
-        put("vitamineB12", vitamineB12)
-        put("vitamineD", vitamineD)
-        put("vitamineC", vitamineC)
-        put("omega3", omega3)
-        put("omega6", omega6)
-    }
+    private fun AlimentRow.toDocument() =
+        buildJsonObject {
+            put("id", id)
+            put("nom", nom)
+            put("categorie", categorie)
+            put("marque", marque ?: "")
+            put("source", source.name)
+            put("sourceId", sourceId ?: "")
+            put("regimesCompatibles", parseJsonArray(regimesCompatibles))
+            put("calories", calories)
+            put("proteines", proteines)
+            put("glucides", glucides)
+            put("lipides", lipides)
+            put("fibres", fibres)
+            put("sel", sel)
+            put("sucres", sucres)
+            put("fer", fer)
+            put("calcium", calcium)
+            put("zinc", zinc)
+            put("magnesium", magnesium)
+            put("vitamineB12", vitamineB12)
+            put("vitamineD", vitamineD)
+            put("vitamineC", vitamineC)
+            put("omega3", omega3)
+            put("omega6", omega6)
+        }
 
     private fun parseJsonArray(jsonString: String): JsonArray {
         return try {

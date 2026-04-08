@@ -34,7 +34,10 @@ class MeilisearchClient(
         return this
     }
 
-    suspend fun createIndex(indexName: String, primaryKey: String): HttpResponse {
+    suspend fun createIndex(
+        indexName: String,
+        primaryKey: String,
+    ): HttpResponse {
         return httpClient.post("$baseUrl/indexes") {
             header("Authorization", "Bearer $apiKey")
             contentType(ContentType.Application.Json)
@@ -42,7 +45,10 @@ class MeilisearchClient(
         }.checkSuccess("createIndex($indexName)")
     }
 
-    suspend fun updateSettings(indexName: String, settings: JsonObject): HttpResponse {
+    suspend fun updateSettings(
+        indexName: String,
+        settings: JsonObject,
+    ): HttpResponse {
         return httpClient.patch("$baseUrl/indexes/$indexName/settings") {
             header("Authorization", "Bearer $apiKey")
             contentType(ContentType.Application.Json)
@@ -50,7 +56,10 @@ class MeilisearchClient(
         }.checkSuccess("updateSettings($indexName)")
     }
 
-    suspend fun addDocuments(indexName: String, documents: JsonArray): HttpResponse {
+    suspend fun addDocuments(
+        indexName: String,
+        documents: JsonArray,
+    ): HttpResponse {
         return httpClient.post("$baseUrl/indexes/$indexName/documents") {
             header("Authorization", "Bearer $apiKey")
             contentType(ContentType.Application.Json)
@@ -58,7 +67,10 @@ class MeilisearchClient(
         }.checkSuccess("addDocuments($indexName, ${documents.size} docs)")
     }
 
-    suspend fun search(indexName: String, query: SearchQuery): SearchResult {
+    suspend fun search(
+        indexName: String,
+        query: SearchQuery,
+    ): SearchResult {
         return httpClient.post("$baseUrl/indexes/$indexName/search") {
             header("Authorization", "Bearer $apiKey")
             contentType(ContentType.Application.Json)

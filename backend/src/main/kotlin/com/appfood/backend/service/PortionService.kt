@@ -21,14 +21,18 @@ class PortionService(
      * Returns specific portions for the aliment + generic portions + user's custom portions.
      * If alimentId is null, returns only generic + user's custom portions.
      */
-    suspend fun listPortions(alimentId: String?, userId: String): PortionListResponse {
-        val portions = if (alimentId != null) {
-            portionDao.findByAlimentId(alimentId, userId)
-        } else {
-            val generiques = portionDao.findGeneriques()
-            val personnalisees = portionDao.findByUserId(userId)
-            generiques + personnalisees
-        }
+    suspend fun listPortions(
+        alimentId: String?,
+        userId: String,
+    ): PortionListResponse {
+        val portions =
+            if (alimentId != null) {
+                portionDao.findByAlimentId(alimentId, userId)
+            } else {
+                val generiques = portionDao.findGeneriques()
+                val personnalisees = portionDao.findByUserId(userId)
+                generiques + personnalisees
+            }
 
         val responses = portions.map { it.toPortionResponse() }
         return PortionListResponse(
@@ -53,15 +57,16 @@ class PortionService(
             throw ValidationException("La quantite en grammes doit etre superieure a 0")
         }
 
-        val row = PortionRow(
-            id = UUID.randomUUID().toString(),
-            alimentId = alimentId,
-            nom = nom,
-            quantiteGrammes = quantiteGrammes,
-            estGenerique = false,
-            estPersonnalise = true,
-            userId = userId,
-        )
+        val row =
+            PortionRow(
+                id = UUID.randomUUID().toString(),
+                alimentId = alimentId,
+                nom = nom,
+                quantiteGrammes = quantiteGrammes,
+                estGenerique = false,
+                estPersonnalise = true,
+                userId = userId,
+            )
 
         val inserted = portionDao.insert(row)
         logger.info("Created custom portion id=${inserted.id} for userId=$userId")
@@ -77,8 +82,9 @@ class PortionService(
         nom: String?,
         quantiteGrammes: Double?,
     ): PortionResponse {
-        val existing = portionDao.findById(portionId)
-            ?: throw NotFoundException("Portion non trouvee: $portionId")
+        val existing =
+            portionDao.findById(portionId)
+                ?: throw NotFoundException("Portion non trouvee: $portionId")
 
         verifyOwnership(existing, userId)
 
@@ -89,8 +95,9 @@ class PortionService(
             throw ValidationException("Le nom de la portion ne peut pas etre vide")
         }
 
-        val updated = portionDao.update(portionId, nom, quantiteGrammes)
-            ?: throw NotFoundException("Portion non trouvee apres mise a jour: $portionId")
+        val updated =
+            portionDao.update(portionId, nom, quantiteGrammes)
+                ?: throw NotFoundException("Portion non trouvee apres mise a jour: $portionId")
 
         logger.info("Updated portion id=$portionId for userId=$userId")
         return updated.toPortionResponse()
@@ -99,9 +106,13 @@ class PortionService(
     /**
      * Delete a custom portion. Only the owner can delete their custom portions.
      */
-    suspend fun deletePortion(portionId: String, userId: String) {
-        val existing = portionDao.findById(portionId)
-            ?: throw NotFoundException("Portion non trouvee: $portionId")
+    suspend fun deletePortion(
+        portionId: String,
+        userId: String,
+    ) {
+        val existing =
+            portionDao.findById(portionId)
+                ?: throw NotFoundException("Portion non trouvee: $portionId")
 
         verifyOwnership(existing, userId)
 
@@ -112,7 +123,10 @@ class PortionService(
     /**
      * Verifies that the portion is owned by the user and is a custom portion.
      */
-    private fun verifyOwnership(portion: PortionRow, userId: String) {
+    private fun verifyOwnership(
+        portion: PortionRow,
+        userId: String,
+    ) {
         if (!portion.estPersonnalise) {
             throw ForbiddenException("Seules les portions personnalisees peuvent etre modifiees")
         }

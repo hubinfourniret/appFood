@@ -9,10 +9,15 @@ import kotlinx.serialization.Serializable
 
 // Exceptions metier
 class NotFoundException(override val message: String = "Ressource non trouvee") : RuntimeException(message)
+
 class UnauthorizedException(override val message: String = "Non authentifie") : RuntimeException(message)
+
 class ForbiddenException(override val message: String = "Acces interdit") : RuntimeException(message)
+
 class BadRequestException(override val message: String = "Requete invalide") : RuntimeException(message)
+
 class ValidationException(override val message: String = "Validation echouee") : RuntimeException(message)
+
 class ConflictException(override val message: String = "Conflit") : RuntimeException(message)
 
 @Serializable
@@ -20,17 +25,19 @@ data class ErrorResponse(
     val error: ErrorDetail,
 ) {
     constructor(status: Int, message: String) : this(
-        error = ErrorDetail(
-            code = when (status) {
-                400 -> "BAD_REQUEST"
-                401 -> "UNAUTHORIZED"
-                403 -> "FORBIDDEN"
-                404 -> "NOT_FOUND"
-                409 -> "CONFLICT"
-                else -> "INTERNAL_ERROR"
-            },
-            message = message,
-        ),
+        error =
+            ErrorDetail(
+                code =
+                    when (status) {
+                        400 -> "BAD_REQUEST"
+                        401 -> "UNAUTHORIZED"
+                        403 -> "FORBIDDEN"
+                        404 -> "NOT_FOUND"
+                        409 -> "CONFLICT"
+                        else -> "INTERNAL_ERROR"
+                    },
+                message = message,
+            ),
     )
 }
 
@@ -76,6 +83,24 @@ fun Application.configureStatusPages() {
             call.respond(
                 HttpStatusCode.Conflict,
                 ErrorResponse(error = ErrorDetail("CONFLICT", cause.message)),
+            )
+        }
+        exception<io.ktor.server.plugins.BadRequestException> { call, cause ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse(error = ErrorDetail("BAD_REQUEST", cause.message ?: "Requete invalide")),
+            )
+        }
+        exception<io.ktor.server.plugins.ContentTransformationException> { call, cause ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse(error = ErrorDetail("BAD_REQUEST", cause.message ?: "Requete invalide")),
+            )
+        }
+        exception<kotlinx.serialization.SerializationException> { call, cause ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse(error = ErrorDetail("BAD_REQUEST", cause.message ?: "Format de requete invalide")),
             )
         }
         exception<Exception> { call, cause ->

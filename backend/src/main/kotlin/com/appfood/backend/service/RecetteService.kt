@@ -14,7 +14,6 @@ import com.appfood.backend.plugins.ForbiddenException
 import com.appfood.backend.plugins.NotFoundException
 import com.appfood.backend.plugins.ValidationException
 import com.appfood.backend.routes.dto.CreateRecetteRequest
-import com.appfood.backend.routes.dto.IngredientRequest
 import com.appfood.backend.routes.dto.UpdateRecetteRequest
 import com.appfood.backend.security.toEnumOrThrow
 import kotlinx.datetime.Clock
@@ -58,33 +57,39 @@ class RecetteService(
         }
 
         // Sort
-        val sorted = when (sort) {
-            "temps_preparation" -> filtered.sortedBy { it.tempsPreparationMin }
-            "nom" -> filtered.sortedBy { it.nom.lowercase() }
-            else -> filtered // default: pertinence (insertion order for now)
-        }
+        val sorted =
+            when (sort) {
+                "temps_preparation" -> filtered.sortedBy { it.tempsPreparationMin }
+                "nom" -> filtered.sortedBy { it.nom.lowercase() }
+                else -> filtered // default: pertinence (insertion order for now)
+            }
 
         val total = sorted.size
         val pageIndex = (page - 1).coerceAtLeast(0)
         val paginated = sorted.drop(pageIndex * size).take(size)
 
         // Load ingredients for each recette
-        val result = paginated.map { recette ->
-            val ingredients = recetteDao.findIngredientsByRecetteId(recette.id)
-            RecetteWithIngredients(recette, ingredients)
-        }
+        val result =
+            paginated.map { recette ->
+                val ingredients = recetteDao.findIngredientsByRecetteId(recette.id)
+                RecetteWithIngredients(recette, ingredients)
+            }
 
         return Pair(result, total)
     }
 
     suspend fun getRecetteDetail(id: String): RecetteWithIngredients {
-        val recette = recetteDao.findById(id)
-            ?: throw NotFoundException("Recette non trouvee: $id")
+        val recette =
+            recetteDao.findById(id)
+                ?: throw NotFoundException("Recette non trouvee: $id")
         val ingredients = recetteDao.findIngredientsByRecetteId(id)
         return RecetteWithIngredients(recette, ingredients)
     }
 
-    suspend fun createRecette(userId: String, request: CreateRecetteRequest): RecetteWithIngredients {
+    suspend fun createRecette(
+        userId: String,
+        request: CreateRecetteRequest,
+    ): RecetteWithIngredients {
         checkAdmin(userId)
         validateCreateRequest(request)
 
@@ -96,8 +101,9 @@ class RecetteService(
         var totalNutrients = NutrientSums()
 
         for (ingredient in request.ingredients) {
-            val aliment = alimentDao.findById(ingredient.alimentId)
-                ?: throw NotFoundException("Aliment non trouve: ${ingredient.alimentId}")
+            val aliment =
+                alimentDao.findById(ingredient.alimentId)
+                    ?: throw NotFoundException("Aliment non trouve: ${ingredient.alimentId}")
 
             val factor = ingredient.quantiteGrammes / 100.0
             totalNutrients = addAlimentNutrients(totalNutrients, aliment, factor)
@@ -117,38 +123,39 @@ class RecetteService(
         val typeRepasJson = request.typeRepas.joinToString(",")
         val etapesJson = request.etapes.joinToString("|||")
 
-        val recetteRow = RecetteRow(
-            id = recetteId,
-            nom = request.nom,
-            description = request.description,
-            tempsPreparationMin = request.tempsPreparationMin,
-            tempsCuissonMin = request.tempsCuissonMin,
-            nbPortions = request.nbPortions,
-            regimesCompatibles = regimesJson,
-            source = SourceRecette.MANUELLE,
-            typeRepas = typeRepasJson,
-            etapes = etapesJson,
-            calories = totalNutrients.calories,
-            proteines = totalNutrients.proteines,
-            glucides = totalNutrients.glucides,
-            lipides = totalNutrients.lipides,
-            fibres = totalNutrients.fibres,
-            sel = totalNutrients.sel,
-            sucres = totalNutrients.sucres,
-            fer = totalNutrients.fer,
-            calcium = totalNutrients.calcium,
-            zinc = totalNutrients.zinc,
-            magnesium = totalNutrients.magnesium,
-            vitamineB12 = totalNutrients.vitamineB12,
-            vitamineD = totalNutrients.vitamineD,
-            vitamineC = totalNutrients.vitamineC,
-            omega3 = totalNutrients.omega3,
-            omega6 = totalNutrients.omega6,
-            imageUrl = request.imageUrl,
-            publie = request.publie,
-            createdAt = now,
-            updatedAt = now,
-        )
+        val recetteRow =
+            RecetteRow(
+                id = recetteId,
+                nom = request.nom,
+                description = request.description,
+                tempsPreparationMin = request.tempsPreparationMin,
+                tempsCuissonMin = request.tempsCuissonMin,
+                nbPortions = request.nbPortions,
+                regimesCompatibles = regimesJson,
+                source = SourceRecette.MANUELLE,
+                typeRepas = typeRepasJson,
+                etapes = etapesJson,
+                calories = totalNutrients.calories,
+                proteines = totalNutrients.proteines,
+                glucides = totalNutrients.glucides,
+                lipides = totalNutrients.lipides,
+                fibres = totalNutrients.fibres,
+                sel = totalNutrients.sel,
+                sucres = totalNutrients.sucres,
+                fer = totalNutrients.fer,
+                calcium = totalNutrients.calcium,
+                zinc = totalNutrients.zinc,
+                magnesium = totalNutrients.magnesium,
+                vitamineB12 = totalNutrients.vitamineB12,
+                vitamineD = totalNutrients.vitamineD,
+                vitamineC = totalNutrients.vitamineC,
+                omega3 = totalNutrients.omega3,
+                omega6 = totalNutrients.omega6,
+                imageUrl = request.imageUrl,
+                publie = request.publie,
+                createdAt = now,
+                updatedAt = now,
+            )
 
         recetteDao.insert(recetteRow)
         ingredientRows.forEach { recetteDao.insertIngredient(it) }
@@ -157,11 +164,16 @@ class RecetteService(
         return RecetteWithIngredients(recetteRow, ingredientRows)
     }
 
-    suspend fun updateRecette(userId: String, recetteId: String, request: UpdateRecetteRequest): RecetteWithIngredients {
+    suspend fun updateRecette(
+        userId: String,
+        recetteId: String,
+        request: UpdateRecetteRequest,
+    ): RecetteWithIngredients {
         checkAdmin(userId)
 
-        val existing = recetteDao.findById(recetteId)
-            ?: throw NotFoundException("Recette non trouvee: $recetteId")
+        val existing =
+            recetteDao.findById(recetteId)
+                ?: throw NotFoundException("Recette non trouvee: $recetteId")
 
         // Validate enums if provided
         request.regimesCompatibles?.forEach { it.toEnumOrThrow<RegimeAlimentaire>("regimesCompatibles") }
@@ -189,8 +201,9 @@ class RecetteService(
             var totalNutrients = NutrientSums()
             val rows = mutableListOf<IngredientRow>()
             for (ingredient in request.ingredients) {
-                val aliment = alimentDao.findById(ingredient.alimentId)
-                    ?: throw NotFoundException("Aliment non trouve: ${ingredient.alimentId}")
+                val aliment =
+                    alimentDao.findById(ingredient.alimentId)
+                        ?: throw NotFoundException("Aliment non trouve: ${ingredient.alimentId}")
                 val factor = ingredient.quantiteGrammes / 100.0
                 totalNutrients = addAlimentNutrients(totalNutrients, aliment, factor)
                 rows.add(
@@ -207,34 +220,35 @@ class RecetteService(
             newIngredientRows = rows
         }
 
-        val updatedRow = existing.copy(
-            nom = request.nom ?: existing.nom,
-            description = request.description ?: existing.description,
-            tempsPreparationMin = request.tempsPreparationMin ?: existing.tempsPreparationMin,
-            tempsCuissonMin = request.tempsCuissonMin ?: existing.tempsCuissonMin,
-            nbPortions = request.nbPortions ?: existing.nbPortions,
-            regimesCompatibles = request.regimesCompatibles?.joinToString(",") ?: existing.regimesCompatibles,
-            typeRepas = request.typeRepas?.joinToString(",") ?: existing.typeRepas,
-            etapes = request.etapes?.joinToString("|||") ?: existing.etapes,
-            calories = updatedNutrients?.calories ?: existing.calories,
-            proteines = updatedNutrients?.proteines ?: existing.proteines,
-            glucides = updatedNutrients?.glucides ?: existing.glucides,
-            lipides = updatedNutrients?.lipides ?: existing.lipides,
-            fibres = updatedNutrients?.fibres ?: existing.fibres,
-            sel = updatedNutrients?.sel ?: existing.sel,
-            sucres = updatedNutrients?.sucres ?: existing.sucres,
-            fer = updatedNutrients?.fer ?: existing.fer,
-            calcium = updatedNutrients?.calcium ?: existing.calcium,
-            zinc = updatedNutrients?.zinc ?: existing.zinc,
-            magnesium = updatedNutrients?.magnesium ?: existing.magnesium,
-            vitamineB12 = updatedNutrients?.vitamineB12 ?: existing.vitamineB12,
-            vitamineD = updatedNutrients?.vitamineD ?: existing.vitamineD,
-            vitamineC = updatedNutrients?.vitamineC ?: existing.vitamineC,
-            omega3 = updatedNutrients?.omega3 ?: existing.omega3,
-            omega6 = updatedNutrients?.omega6 ?: existing.omega6,
-            imageUrl = request.imageUrl ?: existing.imageUrl,
-            publie = request.publie ?: existing.publie,
-        )
+        val updatedRow =
+            existing.copy(
+                nom = request.nom ?: existing.nom,
+                description = request.description ?: existing.description,
+                tempsPreparationMin = request.tempsPreparationMin ?: existing.tempsPreparationMin,
+                tempsCuissonMin = request.tempsCuissonMin ?: existing.tempsCuissonMin,
+                nbPortions = request.nbPortions ?: existing.nbPortions,
+                regimesCompatibles = request.regimesCompatibles?.joinToString(",") ?: existing.regimesCompatibles,
+                typeRepas = request.typeRepas?.joinToString(",") ?: existing.typeRepas,
+                etapes = request.etapes?.joinToString("|||") ?: existing.etapes,
+                calories = updatedNutrients?.calories ?: existing.calories,
+                proteines = updatedNutrients?.proteines ?: existing.proteines,
+                glucides = updatedNutrients?.glucides ?: existing.glucides,
+                lipides = updatedNutrients?.lipides ?: existing.lipides,
+                fibres = updatedNutrients?.fibres ?: existing.fibres,
+                sel = updatedNutrients?.sel ?: existing.sel,
+                sucres = updatedNutrients?.sucres ?: existing.sucres,
+                fer = updatedNutrients?.fer ?: existing.fer,
+                calcium = updatedNutrients?.calcium ?: existing.calcium,
+                zinc = updatedNutrients?.zinc ?: existing.zinc,
+                magnesium = updatedNutrients?.magnesium ?: existing.magnesium,
+                vitamineB12 = updatedNutrients?.vitamineB12 ?: existing.vitamineB12,
+                vitamineD = updatedNutrients?.vitamineD ?: existing.vitamineD,
+                vitamineC = updatedNutrients?.vitamineC ?: existing.vitamineC,
+                omega3 = updatedNutrients?.omega3 ?: existing.omega3,
+                omega6 = updatedNutrients?.omega6 ?: existing.omega6,
+                imageUrl = request.imageUrl ?: existing.imageUrl,
+                publie = request.publie ?: existing.publie,
+            )
 
         recetteDao.update(updatedRow)
 
@@ -252,11 +266,15 @@ class RecetteService(
         )
     }
 
-    suspend fun deleteRecette(userId: String, recetteId: String) {
+    suspend fun deleteRecette(
+        userId: String,
+        recetteId: String,
+    ) {
         checkAdmin(userId)
 
-        val existing = recetteDao.findById(recetteId)
-            ?: throw NotFoundException("Recette non trouvee: $recetteId")
+        val existing =
+            recetteDao.findById(recetteId)
+                ?: throw NotFoundException("Recette non trouvee: $recetteId")
 
         recetteDao.deleteIngredientsByRecetteId(recetteId)
         recetteDao.delete(recetteId)
@@ -264,8 +282,9 @@ class RecetteService(
     }
 
     private suspend fun checkAdmin(userId: String) {
-        val user = userDao.findById(userId)
-            ?: throw NotFoundException("Utilisateur non trouve")
+        val user =
+            userDao.findById(userId)
+                ?: throw NotFoundException("Utilisateur non trouve")
         if (user.role != Role.ADMIN) {
             throw ForbiddenException("Acces reserve aux administrateurs")
         }
@@ -288,7 +307,11 @@ class RecetteService(
         }
     }
 
-    private fun addAlimentNutrients(sums: NutrientSums, aliment: AlimentRow, factor: Double): NutrientSums {
+    private fun addAlimentNutrients(
+        sums: NutrientSums,
+        aliment: AlimentRow,
+        factor: Double,
+    ): NutrientSums {
         return NutrientSums(
             calories = sums.calories + aliment.calories * factor,
             proteines = sums.proteines + aliment.proteines * factor,

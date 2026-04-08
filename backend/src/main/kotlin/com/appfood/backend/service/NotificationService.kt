@@ -32,17 +32,19 @@ class NotificationService(
         val validSize = size.coerceIn(1, MAX_PAGE_SIZE)
         val offset = ((validPage - 1) * validSize).toLong()
 
-        val rows = if (nonLuesUniquement) {
-            notificationDao.findByUserIdUnreadOnly(userId, validSize, offset)
-        } else {
-            notificationDao.findByUserId(userId, validSize, offset)
-        }
+        val rows =
+            if (nonLuesUniquement) {
+                notificationDao.findByUserIdUnreadOnly(userId, validSize, offset)
+            } else {
+                notificationDao.findByUserId(userId, validSize, offset)
+            }
 
-        val total = if (nonLuesUniquement) {
-            notificationDao.countUnread(userId).toInt()
-        } else {
-            notificationDao.countByUserId(userId).toInt()
-        }
+        val total =
+            if (nonLuesUniquement) {
+                notificationDao.countUnread(userId).toInt()
+            } else {
+                notificationDao.countByUserId(userId).toInt()
+            }
 
         val nonLues = notificationDao.countUnread(userId).toInt()
 
@@ -56,15 +58,19 @@ class NotificationService(
     /**
      * Marque une notification comme lue et la retourne.
      */
-    suspend fun markAsRead(userId: String, notificationId: String): NotificationResponse {
+    suspend fun markAsRead(
+        userId: String,
+        notificationId: String,
+    ): NotificationResponse {
         val updated = notificationDao.markAsRead(notificationId, userId)
         if (!updated) {
             throw NotFoundException("Notification non trouvee: $notificationId")
         }
         logger.info("MarkAsRead: userId=$userId, notificationId=$notificationId")
 
-        val row = notificationDao.findById(notificationId, userId)
-            ?: throw NotFoundException("Notification non trouvee: $notificationId")
+        val row =
+            notificationDao.findById(notificationId, userId)
+                ?: throw NotFoundException("Notification non trouvee: $notificationId")
         return row.toResponse()
     }
 
@@ -80,7 +86,10 @@ class NotificationService(
     /**
      * Enregistre un token FCM pour recevoir les notifications push.
      */
-    suspend fun registerToken(userId: String, request: RegisterFcmTokenRequest): RegisterTokenResponse {
+    suspend fun registerToken(
+        userId: String,
+        request: RegisterFcmTokenRequest,
+    ): RegisterTokenResponse {
         if (request.token.isBlank()) {
             throw ValidationException("Le token FCM ne peut pas etre vide")
         }
@@ -104,14 +113,15 @@ class NotificationService(
         return RegisterTokenResponse(registered = true)
     }
 
-    private fun NotificationRow.toResponse() = NotificationResponse(
-        id = id,
-        type = type.name,
-        titre = titre,
-        contenu = contenu,
-        dateEnvoi = dateEnvoi.toString(),
-        lue = lue,
-    )
+    private fun NotificationRow.toResponse() =
+        NotificationResponse(
+            id = id,
+            type = type.name,
+            titre = titre,
+            contenu = contenu,
+            dateEnvoi = dateEnvoi.toString(),
+            lue = lue,
+        )
 
     companion object {
         private const val MAX_PAGE_SIZE = 100

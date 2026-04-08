@@ -5,7 +5,6 @@ import com.appfood.backend.database.dao.HydratationEntryRow
 import com.appfood.backend.database.dao.HydratationRow
 import com.appfood.backend.database.dao.UserProfileDao
 import com.appfood.backend.database.tables.NiveauActivite
-import com.appfood.backend.plugins.NotFoundException
 import com.appfood.backend.plugins.ValidationException
 import com.appfood.backend.routes.dto.AddHydratationRequest
 import com.appfood.backend.routes.dto.HydratationDaySummary
@@ -27,9 +26,13 @@ class HydratationService(
     /**
      * Retourne le cumul d'hydratation + entrees pour une date donnee.
      */
-    suspend fun getDaily(userId: String, date: LocalDate): HydratationResponse {
-        val row = hydratationDao.findByUserAndDate(userId, date)
-            ?: return emptyDayResponse(userId, date)
+    suspend fun getDaily(
+        userId: String,
+        date: LocalDate,
+    ): HydratationResponse {
+        val row =
+            hydratationDao.findByUserAndDate(userId, date)
+                ?: return emptyDayResponse(userId, date)
 
         val entries = hydratationDao.findEntriesByHydratationId(row.id)
         return row.toResponse(entries)
@@ -38,7 +41,10 @@ class HydratationService(
     /**
      * Retourne le resume hebdomadaire d'hydratation.
      */
-    suspend fun getWeekly(userId: String, weekOf: LocalDate): HydratationWeeklyResponse {
+    suspend fun getWeekly(
+        userId: String,
+        weekOf: LocalDate,
+    ): HydratationWeeklyResponse {
         val dayOfWeek = weekOf.dayOfWeek.ordinal // Monday=0
         val monday = LocalDate.fromEpochDays(weekOf.toEpochDays() - dayOfWeek)
         val sunday = LocalDate.fromEpochDays(monday.toEpochDays() + 6)
@@ -55,11 +61,12 @@ class HydratationService(
             val quantite = row?.quantiteMl ?: 0
             val objectif = row?.objectifMl ?: defaultObjectif
             totalMl += quantite
-            parJour[d.toString()] = HydratationDaySummary(
-                quantiteMl = quantite,
-                objectifMl = objectif,
-                pourcentage = if (objectif > 0) quantite.toDouble() / objectif * 100.0 else 0.0,
-            )
+            parJour[d.toString()] =
+                HydratationDaySummary(
+                    quantiteMl = quantite,
+                    objectifMl = objectif,
+                    pourcentage = if (objectif > 0) quantite.toDouble() / objectif * 100.0 else 0.0,
+                )
         }
 
         val joursAvecDonnees = rows.size.coerceAtLeast(1)
@@ -77,7 +84,10 @@ class HydratationService(
     /**
      * Ajoute une entree d'hydratation. Auto-cree la journee si besoin.
      */
-    suspend fun addEntry(userId: String, request: AddHydratationRequest): HydratationResponse {
+    suspend fun addEntry(
+        userId: String,
+        request: AddHydratationRequest,
+    ): HydratationResponse {
         val date = parseDate(request.date)
         if (request.quantiteMl <= 0) {
             throw ValidationException("quantiteMl doit etre > 0")
@@ -89,17 +99,18 @@ class HydratationService(
         if (row == null) {
             // Auto-creation de la journee
             val defaultObjectif = computeDefaultObjectif(userId)
-            row = hydratationDao.insert(
-                HydratationRow(
-                    id = UUID.randomUUID().toString(),
-                    userId = userId,
-                    date = date,
-                    quantiteMl = 0,
-                    objectifMl = defaultObjectif,
-                    estObjectifPersonnalise = false,
-                    updatedAt = now,
-                ),
-            )
+            row =
+                hydratationDao.insert(
+                    HydratationRow(
+                        id = UUID.randomUUID().toString(),
+                        userId = userId,
+                        date = date,
+                        quantiteMl = 0,
+                        objectifMl = defaultObjectif,
+                        estObjectifPersonnalise = false,
+                        updatedAt = now,
+                    ),
+                )
         }
 
         // Ajouter l'entree
@@ -126,7 +137,10 @@ class HydratationService(
     /**
      * Met a jour l'objectif d'hydratation personnalise.
      */
-    suspend fun updateObjectif(userId: String, request: UpdateHydratationObjectifRequest): HydratationResponse {
+    suspend fun updateObjectif(
+        userId: String,
+        request: UpdateHydratationObjectifRequest,
+    ): HydratationResponse {
         if (request.objectifMl <= 0) {
             throw ValidationException("objectifMl doit etre > 0")
         }
@@ -135,17 +149,18 @@ class HydratationService(
         var row = hydratationDao.findByUserAndDate(userId, today)
 
         if (row == null) {
-            row = hydratationDao.insert(
-                HydratationRow(
-                    id = UUID.randomUUID().toString(),
-                    userId = userId,
-                    date = today,
-                    quantiteMl = 0,
-                    objectifMl = request.objectifMl,
-                    estObjectifPersonnalise = true,
-                    updatedAt = Clock.System.now(),
-                ),
-            )
+            row =
+                hydratationDao.insert(
+                    HydratationRow(
+                        id = UUID.randomUUID().toString(),
+                        userId = userId,
+                        date = today,
+                        quantiteMl = 0,
+                        objectifMl = request.objectifMl,
+                        estObjectifPersonnalise = true,
+                        updatedAt = Clock.System.now(),
+                    ),
+                )
         } else {
             hydratationDao.updateObjectif(row.id, userId, request.objectifMl, true)
         }
@@ -191,18 +206,22 @@ class HydratationService(
             return DEFAULT_OBJECTIF_ML
         }
 
-        val mlPerKg = when (profile.niveauActivite) {
-            NiveauActivite.SEDENTAIRE -> 30
-            NiveauActivite.LEGER -> 31
-            NiveauActivite.MODERE -> 32
-            NiveauActivite.ACTIF -> 34
-            NiveauActivite.TRES_ACTIF -> 35
-        }
+        val mlPerKg =
+            when (profile.niveauActivite) {
+                NiveauActivite.SEDENTAIRE -> 30
+                NiveauActivite.LEGER -> 31
+                NiveauActivite.MODERE -> 32
+                NiveauActivite.ACTIF -> 34
+                NiveauActivite.TRES_ACTIF -> 35
+            }
 
         return (profile.poidsKg * mlPerKg).toInt()
     }
 
-    private suspend fun emptyDayResponse(userId: String, date: LocalDate): HydratationResponse {
+    private suspend fun emptyDayResponse(
+        userId: String,
+        date: LocalDate,
+    ): HydratationResponse {
         val defaultObjectif = computeDefaultObjectif(userId)
         return HydratationResponse(
             id = "",
@@ -224,13 +243,14 @@ class HydratationService(
             objectifMl = objectifMl,
             estObjectifPersonnalise = estObjectifPersonnalise,
             pourcentage = pourcentage,
-            entrees = entries.map {
-                HydratationEntryResponse(
-                    id = it.id,
-                    heure = it.heure.toString(),
-                    quantiteMl = it.quantiteMl,
-                )
-            },
+            entrees =
+                entries.map {
+                    HydratationEntryResponse(
+                        id = it.id,
+                        heure = it.heure.toString(),
+                        quantiteMl = it.quantiteMl,
+                    )
+                },
         )
     }
 

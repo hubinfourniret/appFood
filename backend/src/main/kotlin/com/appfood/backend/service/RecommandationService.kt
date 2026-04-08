@@ -31,8 +31,9 @@ class RecommandationService(
         date: LocalDate,
         limit: Int = 10,
     ): RecommandationAlimentResult {
-        val profile = userProfileDao.findByUserId(userId)
-            ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST /users/me/profile.")
+        val profile =
+            userProfileDao.findByUserId(userId)
+                ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST /users/me/profile.")
 
         val quotaStatuses = quotaService.getQuotaStatus(userId, date)
         val deficits = identifyDeficits(quotaStatuses, profile.regimeAlimentaire)
@@ -53,16 +54,18 @@ class RecommandationService(
 
         // Load all compatible aliments (batch load for scoring)
         val allAliments = alimentDao.findAll(limit = 2000, offset = 0)
-        val compatibleAliments = allAliments.filter { aliment ->
-            isRegimeCompatible(aliment.regimesCompatibles, profile.regimeAlimentaire) &&
-                aliment.id !in alimentsExclus &&
-                !isAllergenExcluded(aliment.categorie, allergies)
-        }
+        val compatibleAliments =
+            allAliments.filter { aliment ->
+                isRegimeCompatible(aliment.regimesCompatibles, profile.regimeAlimentaire) &&
+                    aliment.id !in alimentsExclus &&
+                    !isAllergenExcluded(aliment.categorie, allergies)
+            }
 
         // Score each aliment
-        val scored = compatibleAliments.mapNotNull { aliment ->
-            scoreAliment(aliment, deficits)
-        }.sortedByDescending { it.score }
+        val scored =
+            compatibleAliments.mapNotNull { aliment ->
+                scoreAliment(aliment, deficits)
+            }.sortedByDescending { it.score }
 
         // Apply diversity: max 2 per category in top results
         val diversified = applyDiversity(scored, maxPerCategorie = 2, targetCount = limit)
@@ -81,8 +84,9 @@ class RecommandationService(
         date: LocalDate,
         limit: Int = 5,
     ): RecommandationRecetteResult {
-        val profile = userProfileDao.findByUserId(userId)
-            ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST /users/me/profile.")
+        val profile =
+            userProfileDao.findByUserId(userId)
+                ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST /users/me/profile.")
 
         val quotaStatuses = quotaService.getQuotaStatus(userId, date)
         val deficits = identifyDeficits(quotaStatuses, profile.regimeAlimentaire)
@@ -98,14 +102,16 @@ class RecommandationService(
 
         // Load all published recettes
         val allRecettes = recetteDao.findAll(limit = 500, offset = 0)
-        val compatibleRecettes = allRecettes.filter { recette ->
-            isRegimeCompatible(recette.regimesCompatibles, profile.regimeAlimentaire)
-        }
+        val compatibleRecettes =
+            allRecettes.filter { recette ->
+                isRegimeCompatible(recette.regimesCompatibles, profile.regimeAlimentaire)
+            }
 
         // Score each recette
-        val scored = compatibleRecettes.mapNotNull { recette ->
-            scoreRecette(recette, deficits)
-        }.sortedByDescending { it.score }
+        val scored =
+            compatibleRecettes.mapNotNull { recette ->
+                scoreRecette(recette, deficits)
+            }.sortedByDescending { it.score }
 
         return RecommandationRecetteResult(
             manquesIdentifies = manquesIdentifies,
@@ -152,20 +158,22 @@ class RecommandationService(
 
     private fun getCriticalNutrients(regime: RegimeAlimentaire): Set<NutrimentType> {
         return when (regime) {
-            RegimeAlimentaire.VEGAN -> setOf(
-                NutrimentType.VITAMINE_B12,
-                NutrimentType.FER,
-                NutrimentType.ZINC,
-                NutrimentType.OMEGA_3,
-                NutrimentType.CALCIUM,
-                NutrimentType.PROTEINES,
-            )
-            RegimeAlimentaire.VEGETARIEN -> setOf(
-                NutrimentType.VITAMINE_B12,
-                NutrimentType.FER,
-                NutrimentType.ZINC,
-                NutrimentType.OMEGA_3,
-            )
+            RegimeAlimentaire.VEGAN ->
+                setOf(
+                    NutrimentType.VITAMINE_B12,
+                    NutrimentType.FER,
+                    NutrimentType.ZINC,
+                    NutrimentType.OMEGA_3,
+                    NutrimentType.CALCIUM,
+                    NutrimentType.PROTEINES,
+                )
+            RegimeAlimentaire.VEGETARIEN ->
+                setOf(
+                    NutrimentType.VITAMINE_B12,
+                    NutrimentType.FER,
+                    NutrimentType.ZINC,
+                    NutrimentType.OMEGA_3,
+                )
             RegimeAlimentaire.FLEXITARIEN -> emptySet()
             RegimeAlimentaire.OMNIVORE -> emptySet()
         }
@@ -200,11 +208,12 @@ class RecommandationService(
 
         // Calculate suggested quantity based on the principal nutrient
         val principalDensity = getAlimentNutrientValue(aliment, bestDensityNutriment.nutriment)
-        val rawQuantite = if (principalDensity > 0.0) {
-            (bestDensityNutriment.manque / principalDensity) * 100.0
-        } else {
-            100.0
-        }
+        val rawQuantite =
+            if (principalDensity > 0.0) {
+                (bestDensityNutriment.manque / principalDensity) * 100.0
+            } else {
+                100.0
+            }
         val quantiteSuggereGrammes = roundToTen(min(rawQuantite, 300.0))
 
         // Now score with the suggested quantity
@@ -262,11 +271,12 @@ class RecommandationService(
 
         if (totalScore <= 0.0) return null
 
-        val pourcentageCouvertureGlobal = if (countDeficitsCouverts > 0) {
-            (totalCouverture / countDeficitsCouverts * 10).roundToInt() / 10.0
-        } else {
-            0.0
-        }
+        val pourcentageCouvertureGlobal =
+            if (countDeficitsCouverts > 0) {
+                (totalCouverture / countDeficitsCouverts * 10).roundToInt() / 10.0
+            } else {
+                0.0
+            }
 
         return ScoredRecette(
             recette = recette,
@@ -279,7 +289,10 @@ class RecommandationService(
 
     // --- Filtering helpers ---
 
-    private fun isRegimeCompatible(regimesCompatiblesJson: String, userRegime: RegimeAlimentaire): Boolean {
+    private fun isRegimeCompatible(
+        regimesCompatiblesJson: String,
+        userRegime: RegimeAlimentaire,
+    ): Boolean {
         // regimesCompatibles is stored as a JSON array string e.g. ["VEGAN","VEGETARIEN"]
         // A VEGAN aliment is compatible with all regimes
         val regimesStr = regimesCompatiblesJson.uppercase()
@@ -291,7 +304,10 @@ class RecommandationService(
         }
     }
 
-    private fun isAllergenExcluded(categorie: String, allergies: List<String>): Boolean {
+    private fun isAllergenExcluded(
+        categorie: String,
+        allergies: List<String>,
+    ): Boolean {
         val catLower = categorie.lowercase()
         for (allergie in allergies) {
             val patterns = ALLERGEN_PATTERNS[allergie.lowercase()] ?: continue
@@ -330,7 +346,10 @@ class RecommandationService(
 
     // --- Nutrient value accessors ---
 
-    private fun getAlimentNutrientValue(aliment: AlimentRow, nutriment: NutrimentType): Double {
+    private fun getAlimentNutrientValue(
+        aliment: AlimentRow,
+        nutriment: NutrimentType,
+    ): Double {
         return when (nutriment) {
             NutrimentType.CALORIES -> aliment.calories
             NutrimentType.PROTEINES -> aliment.proteines
@@ -351,7 +370,10 @@ class RecommandationService(
         }
     }
 
-    private fun getRecetteNutrientValue(recette: RecetteRow, nutriment: NutrimentType): Double {
+    private fun getRecetteNutrientValue(
+        recette: RecetteRow,
+        nutriment: NutrimentType,
+    ): Double {
         return when (nutriment) {
             NutrimentType.CALORIES -> recette.calories
             NutrimentType.PROTEINES -> recette.proteines
@@ -385,14 +407,15 @@ class RecommandationService(
     }
 
     companion object {
-        private val ALLERGEN_PATTERNS = mapOf(
-            "gluten" to listOf("ble", "seigle", "orge", "avoine"),
-            "soja" to listOf("soja"),
-            "arachides" to listOf("arachide", "cacahuete"),
-            "fruits_a_coque" to listOf("noix", "amande", "noisette", "cajou", "pistache", "pecan", "macadamia"),
-            "lait" to listOf("lait", "fromage", "yaourt", "beurre", "creme"),
-            "oeufs" to listOf("oeuf", "egg"),
-        )
+        private val ALLERGEN_PATTERNS =
+            mapOf(
+                "gluten" to listOf("ble", "seigle", "orge", "avoine"),
+                "soja" to listOf("soja"),
+                "arachides" to listOf("arachide", "cacahuete"),
+                "fruits_a_coque" to listOf("noix", "amande", "noisette", "cajou", "pistache", "pecan", "macadamia"),
+                "lait" to listOf("lait", "fromage", "yaourt", "beurre", "creme"),
+                "oeufs" to listOf("oeuf", "egg"),
+            )
     }
 }
 

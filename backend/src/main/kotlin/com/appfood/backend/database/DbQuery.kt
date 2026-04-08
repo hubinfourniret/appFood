@@ -7,5 +7,4 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
  * Wrapper pour les transactions Exposed.
  * Toutes les operations DB doivent passer par cette fonction.
  */
-suspend fun <T> dbQuery(block: suspend () -> T): T =
-    newSuspendedTransaction(Dispatchers.IO) { block() }
+suspend fun <T> dbQuery(block: suspend () -> T): T = newSuspendedTransaction(Dispatchers.IO) { block() }

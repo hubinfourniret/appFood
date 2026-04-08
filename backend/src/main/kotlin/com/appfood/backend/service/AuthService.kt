@@ -90,12 +90,13 @@ class AuthService(
         }
 
         // Create user in PostgreSQL
-        val user = userDao.insert(
-            id = tokenInfo.uid,
-            email = email,
-            nom = nom,
-            prenom = prenom,
-        )
+        val user =
+            userDao.insert(
+                id = tokenInfo.uid,
+                email = email,
+                nom = nom,
+                prenom = prenom,
+            )
         logger.info("Register: created user id=${user.id}, email=${user.email}")
 
         val token = generateJwt(user.id)
@@ -108,8 +109,9 @@ class AuthService(
         logger.info("Login: verified Firebase token for uid=${tokenInfo.uid}")
 
         // Find user in PostgreSQL
-        val user = userDao.findById(tokenInfo.uid)
-            ?: throw UnauthorizedException("Utilisateur non trouve. Veuillez vous inscrire.")
+        val user =
+            userDao.findById(tokenInfo.uid)
+                ?: throw UnauthorizedException("Utilisateur non trouve. Veuillez vous inscrire.")
 
         // Recuperer le profil pour onboardingComplete
         val profile = userProfileDao.findByUserId(user.id)

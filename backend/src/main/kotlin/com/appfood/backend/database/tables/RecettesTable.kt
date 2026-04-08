@@ -15,6 +15,7 @@ object RecettesTable : Table("recettes") {
     val sourceRecette = enumerationByName<SourceRecette>("source", 20)
     val typeRepas = text("type_repas")
     val etapes = text("etapes")
+
     // Nutriments totaux (calcules)
     val calories = double("calories")
     val proteines = double("proteines")

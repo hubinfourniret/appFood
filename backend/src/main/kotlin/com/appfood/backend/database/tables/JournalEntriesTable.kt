@@ -14,6 +14,7 @@ object JournalEntriesTable : Table("journal_entries") {
     val nom = varchar("nom", 255)
     val quantiteGrammes = double("quantite_grammes")
     val nbPortions = double("nb_portions").nullable()
+
     // Nutriments calcules (snapshot au moment de la saisie)
     val calories = double("calories")
     val proteines = double("proteines")

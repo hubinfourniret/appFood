@@ -57,24 +57,25 @@ const val TEST_USER_EMAIL = "test@example.com"
  * Some tables (HydratationEntriesTable, IngredientsTable) might not exist
  * as standalone objects depending on codebase state; we include what is available.
  */
-private val ALL_TEST_TABLES = arrayOf(
-    UsersTable,
-    UserProfilesTable,
-    UserPreferencesTable,
-    AlimentsTable,
-    PortionsTable,
-    RecettesTable,
-    IngredientsTable,
-    JournalEntriesTable,
-    QuotasTable,
-    PoidsHistoryTable,
-    HydratationTable,
-    HydratationEntriesTable,
-    FcmTokensTable,
-    NotificationsTable,
-    ConsentsTable,
-    FaqTable,
-)
+private val ALL_TEST_TABLES =
+    arrayOf(
+        UsersTable,
+        UserProfilesTable,
+        UserPreferencesTable,
+        AlimentsTable,
+        PortionsTable,
+        RecettesTable,
+        IngredientsTable,
+        JournalEntriesTable,
+        QuotasTable,
+        PoidsHistoryTable,
+        HydratationTable,
+        HydratationEntriesTable,
+        FcmTokensTable,
+        NotificationsTable,
+        ConsentsTable,
+        FaqTable,
+    )
 
 /**
  * Generates a valid JWT token for test requests.
@@ -161,7 +162,7 @@ fun Application.testModule() {
                 JWT.require(Algorithm.HMAC256(TEST_JWT_SECRET))
                     .withAudience(TEST_JWT_AUDIENCE)
                     .withIssuer(TEST_JWT_ISSUER)
-                    .build()
+                    .build(),
             )
             validate { credential ->
                 val userId = credential.payload.subject
@@ -193,11 +194,13 @@ fun Application.testModule() {
 fun ApplicationTestBuilder.createJsonClient(): HttpClient {
     return createClient {
         install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-                prettyPrint = false
-            })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                    prettyPrint = false
+                },
+            )
         }
     }
 }

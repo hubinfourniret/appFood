@@ -43,18 +43,20 @@ class AlimentService(
         val validatedSize = size.coerceIn(1, 100)
         val validatedPage = page.coerceAtLeast(1)
 
-        val filters = buildList {
-            if (regime != null) add("regimesCompatibles = \"$regime\"")
-            if (categorie != null) add("categorie = \"$categorie\"")
-        }
+        val filters =
+            buildList {
+                if (regime != null) add("regimesCompatibles = \"$regime\"")
+                if (categorie != null) add("categorie = \"$categorie\"")
+            }
 
-        val searchQuery = SearchQuery(
-            q = query,
-            filter = filters.ifEmpty { null },
-            sort = null,
-            limit = validatedSize,
-            offset = (validatedPage - 1) * validatedSize,
-        )
+        val searchQuery =
+            SearchQuery(
+                q = query,
+                filter = filters.ifEmpty { null },
+                sort = null,
+                limit = validatedSize,
+                offset = (validatedPage - 1) * validatedSize,
+            )
 
         val result = meilisearchClient.search(AlimentIndexer.INDEX_NAME, searchQuery)
         logger.info("Search: query='$query', results=${result.hits.size}, total=${result.estimatedTotalHits}")
@@ -72,8 +74,9 @@ class AlimentService(
      * Find an aliment by ID from the database.
      */
     suspend fun findById(id: String): AlimentResponse {
-        val aliment = alimentDao.findById(id)
-            ?: throw NotFoundException("Aliment non trouve: $id")
+        val aliment =
+            alimentDao.findById(id)
+                ?: throw NotFoundException("Aliment non trouve: $id")
 
         val portions = portionDao.findByAlimentId(id, userId = null)
         return aliment.toAlimentResponse(portions)
@@ -94,8 +97,9 @@ class AlimentService(
 
         // Fallback to Open Food Facts
         logger.info("Barcode $code not found locally, querying Open Food Facts")
-        val offResult = openFoodFactsClient.searchByBarcode(code)
-            ?: throw NotFoundException("Produit non trouve pour le code-barres: $code")
+        val offResult =
+            openFoodFactsClient.searchByBarcode(code)
+                ?: throw NotFoundException("Produit non trouve pour le code-barres: $code")
 
         val portions = portionDao.findByAlimentId(offResult.id, userId = null)
         return offResult.toAlimentResponse(portions)
@@ -103,77 +107,80 @@ class AlimentService(
 
     // --- Mapping helpers ---
 
-    private fun SearchHit.toAlimentResponse() = AlimentResponse(
-        id = id,
-        nom = nom,
-        marque = marque,
-        source = source,
-        sourceId = sourceId,
-        codeBarres = null, // Not available from Meilisearch index
-        categorie = categorie,
-        regimesCompatibles = regimesCompatibles,
-        nutrimentsPour100g = NutrimentValuesResponse(
-            calories = calories,
-            proteines = proteines,
-            glucides = glucides,
-            lipides = lipides,
-            fibres = fibres,
-            sel = sel,
-            sucres = sucres,
-            fer = fer,
-            calcium = calcium,
-            zinc = zinc,
-            magnesium = magnesium,
-            vitamineB12 = vitamineB12,
-            vitamineD = vitamineD,
-            vitamineC = vitamineC,
-            omega3 = omega3,
-            omega6 = omega6,
-        ),
-        portionsStandard = emptyList(), // Not loaded from search results for performance
-    )
+    private fun SearchHit.toAlimentResponse() =
+        AlimentResponse(
+            id = id,
+            nom = nom,
+            marque = marque,
+            source = source,
+            sourceId = sourceId,
+            codeBarres = null, // Not available from Meilisearch index
+            categorie = categorie,
+            regimesCompatibles = regimesCompatibles,
+            nutrimentsPour100g =
+                NutrimentValuesResponse(
+                    calories = calories,
+                    proteines = proteines,
+                    glucides = glucides,
+                    lipides = lipides,
+                    fibres = fibres,
+                    sel = sel,
+                    sucres = sucres,
+                    fer = fer,
+                    calcium = calcium,
+                    zinc = zinc,
+                    magnesium = magnesium,
+                    vitamineB12 = vitamineB12,
+                    vitamineD = vitamineD,
+                    vitamineC = vitamineC,
+                    omega3 = omega3,
+                    omega6 = omega6,
+                ),
+            portionsStandard = emptyList(), // Not loaded from search results for performance
+        )
 
-    private fun AlimentRow.toAlimentResponse(
-        portions: List<PortionRow> = emptyList(),
-    ) = AlimentResponse(
-        id = id,
-        nom = nom,
-        marque = marque,
-        source = source.name,
-        sourceId = sourceId,
-        codeBarres = codeBarres,
-        categorie = categorie,
-        regimesCompatibles = parseRegimesCompatibles(regimesCompatibles),
-        nutrimentsPour100g = NutrimentValuesResponse(
-            calories = calories,
-            proteines = proteines,
-            glucides = glucides,
-            lipides = lipides,
-            fibres = fibres,
-            sel = sel,
-            sucres = sucres,
-            fer = fer,
-            calcium = calcium,
-            zinc = zinc,
-            magnesium = magnesium,
-            vitamineB12 = vitamineB12,
-            vitamineD = vitamineD,
-            vitamineC = vitamineC,
-            omega3 = omega3,
-            omega6 = omega6,
-        ),
-        portionsStandard = portions.map { it.toPortionResponse() },
-    )
+    private fun AlimentRow.toAlimentResponse(portions: List<PortionRow> = emptyList()) =
+        AlimentResponse(
+            id = id,
+            nom = nom,
+            marque = marque,
+            source = source.name,
+            sourceId = sourceId,
+            codeBarres = codeBarres,
+            categorie = categorie,
+            regimesCompatibles = parseRegimesCompatibles(regimesCompatibles),
+            nutrimentsPour100g =
+                NutrimentValuesResponse(
+                    calories = calories,
+                    proteines = proteines,
+                    glucides = glucides,
+                    lipides = lipides,
+                    fibres = fibres,
+                    sel = sel,
+                    sucres = sucres,
+                    fer = fer,
+                    calcium = calcium,
+                    zinc = zinc,
+                    magnesium = magnesium,
+                    vitamineB12 = vitamineB12,
+                    vitamineD = vitamineD,
+                    vitamineC = vitamineC,
+                    omega3 = omega3,
+                    omega6 = omega6,
+                ),
+            portionsStandard = portions.map { it.toPortionResponse() },
+        )
 
     companion object {
-        fun PortionRow.toPortionResponse() = PortionResponse(
-            id = id,
-            alimentId = alimentId,
-            nom = nom,
-            quantiteGrammes = quantiteGrammes,
-            estGenerique = estGenerique,
-            estPersonnalise = estPersonnalise,
-        )
+        fun PortionRow.toPortionResponse() =
+            PortionResponse(
+                id = id,
+                alimentId = alimentId,
+                nom = nom,
+                quantiteGrammes = quantiteGrammes,
+                estGenerique = estGenerique,
+                estPersonnalise = estPersonnalise,
+            )
 
         /**
          * Parses the regimesCompatibles JSON array string into a list of strings.

@@ -25,23 +25,28 @@ class DashboardService(
     /**
      * Aggregated dashboard data for a given date.
      */
-    suspend fun getDashboard(userId: String, date: LocalDate): DashboardData {
+    suspend fun getDashboard(
+        userId: String,
+        date: LocalDate,
+    ): DashboardData {
         // 1. Quota statuses
-        val quotasStatus = try {
-            quotaService.getQuotaStatus(userId, date)
-        } catch (e: Exception) {
-            logger.warn("No quotas found for userId=$userId, returning empty list")
-            emptyList()
-        }
+        val quotasStatus =
+            try {
+                quotaService.getQuotaStatus(userId, date)
+            } catch (e: Exception) {
+                logger.warn("No quotas found for userId=$userId, returning empty list")
+                emptyList()
+            }
 
         // 2. Journal entries for the day
-        val journalEntries = journalService.getEntries(
-            userId = userId,
-            date = date,
-            dateFrom = null,
-            dateTo = null,
-            mealTypeStr = null,
-        )
+        val journalEntries =
+            journalService.getEntries(
+                userId = userId,
+                date = date,
+                dateFrom = null,
+                dateTo = null,
+                mealTypeStr = null,
+            )
 
         // 3. Hydratation (nullable)
         val hydratation = hydratationDao.findByUserAndDate(userId, date)
@@ -67,7 +72,10 @@ class DashboardService(
     /**
      * Aggregated weekly dashboard data.
      */
-    suspend fun getWeeklyDashboard(userId: String, weekOf: LocalDate): WeeklyDashboardData {
+    suspend fun getWeeklyDashboard(
+        userId: String,
+        weekOf: LocalDate,
+    ): WeeklyDashboardData {
         val dayOfWeek = weekOf.dayOfWeek.ordinal // Monday=0
         val monday = LocalDate.fromEpochDays(weekOf.toEpochDays() - dayOfWeek)
         val sunday = LocalDate.fromEpochDays(monday.toEpochDays() + 6)
@@ -88,27 +96,30 @@ class DashboardService(
             val objectif = row?.objectifMl ?: lastObjectif
             if (row != null) lastObjectif = row.objectifMl
             totalHydratation += quantite
-            parJour[d.toString()] = HydratationDaySummary(
-                quantiteMl = quantite,
-                objectifMl = objectif,
-                pourcentage = if (objectif > 0) quantite.toDouble() / objectif * 100.0 else 0.0,
-            )
+            parJour[d.toString()] =
+                HydratationDaySummary(
+                    quantiteMl = quantite,
+                    objectifMl = objectif,
+                    pourcentage = if (objectif > 0) quantite.toDouble() / objectif * 100.0 else 0.0,
+                )
         }
 
-        val hydratationHebdo = HydratationWeeklyResponse(
-            dateFrom = monday.toString(),
-            dateTo = sunday.toString(),
-            moyenneJournaliereMl = totalHydratation / 7,
-            objectifMl = lastObjectif,
-            parJour = parJour,
-        )
+        val hydratationHebdo =
+            HydratationWeeklyResponse(
+                dateFrom = monday.toString(),
+                dateTo = sunday.toString(),
+                moyenneJournaliereMl = totalHydratation / 7,
+                objectifMl = lastObjectif,
+                parJour = parJour,
+            )
 
         // 3. Nutriments critiques: ceux dont la moyenne est < 70% du quota
-        val quotas = try {
-            quotaService.getQuotaStatus(userId, weekOf)
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val quotas =
+            try {
+                quotaService.getQuotaStatus(userId, weekOf)
+            } catch (e: Exception) {
+                emptyList()
+            }
 
         // Utiliser la moyenne journaliere pour identifier les nutriments critiques
         val moyenne = weeklySummary.moyenneJournaliere
@@ -134,34 +145,40 @@ class DashboardService(
             val avgSecond = averageNutrientSums(secondHalf.map { it.value })
 
             // Comparer calories, proteines, fibres, fer, vitamineB12
-            val comparisons = listOf(
-                Triple("Calories", avgFirst.calories, avgSecond.calories),
-                Triple("Proteines", avgFirst.proteines, avgSecond.proteines),
-                Triple("Fibres", avgFirst.fibres, avgSecond.fibres),
-                Triple("Fer", avgFirst.fer, avgSecond.fer),
-                Triple("Vitamine B12", avgFirst.vitamineB12, avgSecond.vitamineB12),
-                Triple("Calcium", avgFirst.calcium, avgSecond.calcium),
-            )
+            val comparisons =
+                listOf(
+                    Triple("Calories", avgFirst.calories, avgSecond.calories),
+                    Triple("Proteines", avgFirst.proteines, avgSecond.proteines),
+                    Triple("Fibres", avgFirst.fibres, avgSecond.fibres),
+                    Triple("Fer", avgFirst.fer, avgSecond.fer),
+                    Triple("Vitamine B12", avgFirst.vitamineB12, avgSecond.vitamineB12),
+                    Triple("Calcium", avgFirst.calcium, avgSecond.calcium),
+                )
 
             for ((name, first, second) in comparisons) {
                 if (first > 0.0) {
                     val change = (second - first) / first * 100.0
-                    if (change > 15.0) ameliorations.add("$name en hausse (+${"%.0f".format(change)}%)")
-                    else if (change < -15.0) degradations.add("$name en baisse (${"%.0f".format(change)}%)")
+                    if (change > 15.0) {
+                        ameliorations.add("$name en hausse (+${"%.0f".format(change)}%)")
+                    } else if (change < -15.0) {
+                        degradations.add("$name en baisse (${"%.0f".format(change)}%)")
+                    }
                 }
             }
         }
 
         // Convert WeeklySummary to WeeklySummaryResponse
-        val nutritionHebdo = WeeklySummaryResponse(
-            dateFrom = weeklySummary.dateFrom.toString(),
-            dateTo = weeklySummary.dateTo.toString(),
-            moyenneJournaliere = weeklySummary.moyenneJournaliere.toNutrimentValuesResponse(),
-            parJour = weeklySummary.parJour.map { (date, sums) ->
-                date.toString() to sums.toNutrimentValuesResponse()
-            }.toMap(),
-            joursAvecSaisie = weeklySummary.joursAvecSaisie,
-        )
+        val nutritionHebdo =
+            WeeklySummaryResponse(
+                dateFrom = weeklySummary.dateFrom.toString(),
+                dateTo = weeklySummary.dateTo.toString(),
+                moyenneJournaliere = weeklySummary.moyenneJournaliere.toNutrimentValuesResponse(),
+                parJour =
+                    weeklySummary.parJour.map { (date, sums) ->
+                        date.toString() to sums.toNutrimentValuesResponse()
+                    }.toMap(),
+                joursAvecSaisie = weeklySummary.joursAvecSaisie,
+            )
 
         return WeeklyDashboardData(
             dateFrom = monday,
@@ -174,7 +191,10 @@ class DashboardService(
         )
     }
 
-    private fun getNutrientValueFromSums(nutrimentName: String, sums: NutrientSums): Double {
+    private fun getNutrientValueFromSums(
+        nutrimentName: String,
+        sums: NutrientSums,
+    ): Double {
         return when (nutrimentName) {
             "CALORIES" -> sums.calories
             "PROTEINES" -> sums.proteines
@@ -219,24 +239,25 @@ class DashboardService(
         )
     }
 
-    private fun NutrientSums.toNutrimentValuesResponse() = NutrimentValuesResponse(
-        calories = calories,
-        proteines = proteines,
-        glucides = glucides,
-        lipides = lipides,
-        fibres = fibres,
-        sel = sel,
-        sucres = sucres,
-        fer = fer,
-        calcium = calcium,
-        zinc = zinc,
-        magnesium = magnesium,
-        vitamineB12 = vitamineB12,
-        vitamineD = vitamineD,
-        vitamineC = vitamineC,
-        omega3 = omega3,
-        omega6 = omega6,
-    )
+    private fun NutrientSums.toNutrimentValuesResponse() =
+        NutrimentValuesResponse(
+            calories = calories,
+            proteines = proteines,
+            glucides = glucides,
+            lipides = lipides,
+            fibres = fibres,
+            sel = sel,
+            sucres = sucres,
+            fer = fer,
+            calcium = calcium,
+            zinc = zinc,
+            magnesium = magnesium,
+            vitamineB12 = vitamineB12,
+            vitamineD = vitamineD,
+            vitamineC = vitamineC,
+            omega3 = omega3,
+            omega6 = omega6,
+        )
 
     /**
      * Invalidate the recommendation cache for a user.
@@ -263,25 +284,28 @@ class DashboardService(
         }
 
         // Compute fresh recommendations
-        val alimentResult = try {
-            recommandationService.getRecommandationsAliments(userId, date, limit = 5)
-        } catch (e: Exception) {
-            logger.warn("Failed to compute aliment recommendations for userId=$userId: ${e.message}")
-            RecommandationAlimentResult(emptyList(), emptyList())
-        }
+        val alimentResult =
+            try {
+                recommandationService.getRecommandationsAliments(userId, date, limit = 5)
+            } catch (e: Exception) {
+                logger.warn("Failed to compute aliment recommendations for userId=$userId: ${e.message}")
+                RecommandationAlimentResult(emptyList(), emptyList())
+            }
 
-        val recetteResult = try {
-            recommandationService.getRecommandationsRecettes(userId, date, limit = 3)
-        } catch (e: Exception) {
-            logger.warn("Failed to compute recette recommendations for userId=$userId: ${e.message}")
-            RecommandationRecetteResult(emptyList(), emptyList())
-        }
+        val recetteResult =
+            try {
+                recommandationService.getRecommandationsRecettes(userId, date, limit = 3)
+            } catch (e: Exception) {
+                logger.warn("Failed to compute recette recommendations for userId=$userId: ${e.message}")
+                RecommandationRecetteResult(emptyList(), emptyList())
+            }
 
-        val cached = CachedRecommandations(
-            aliments = alimentResult,
-            recettes = recetteResult,
-            timestamp = now,
-        )
+        val cached =
+            CachedRecommandations(
+                aliments = alimentResult,
+                recettes = recetteResult,
+                timestamp = now,
+            )
         recoCache[cacheKey] = cached
 
         // Evict stale entries to prevent memory leak
@@ -292,9 +316,10 @@ class DashboardService(
 
     private fun evictStaleEntries() {
         val now = Clock.System.now()
-        val staleKeys = recoCache.entries
-            .filter { (now - it.value.timestamp).inWholeMinutes >= TTL_MINUTES * 2 }
-            .map { it.key }
+        val staleKeys =
+            recoCache.entries
+                .filter { (now - it.value.timestamp).inWholeMinutes >= TTL_MINUTES * 2 }
+                .map { it.key }
         staleKeys.forEach { recoCache.remove(it) }
     }
 

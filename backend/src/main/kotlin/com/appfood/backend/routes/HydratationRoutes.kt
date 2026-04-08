@@ -22,16 +22,16 @@ fun Route.hydratationRoutes() {
 
     authenticate("auth-jwt") {
         route("/api/v1/hydratation") {
-
             // GET /api/v1/hydratation?date={}
             get {
                 val userId = call.userId()
                 val dateStr = call.request.queryParameters["date"]
-                val date = if (dateStr != null) {
-                    parseHydratationDate(dateStr)
-                } else {
-                    todayHydratationDate()
-                }
+                val date =
+                    if (dateStr != null) {
+                        parseHydratationDate(dateStr)
+                    } else {
+                        todayHydratationDate()
+                    }
                 val response = hydratationService.getDaily(userId, date)
                 call.respond(HttpStatusCode.OK, response)
             }
@@ -40,11 +40,12 @@ fun Route.hydratationRoutes() {
             get("/weekly") {
                 val userId = call.userId()
                 val weekOfStr = call.request.queryParameters["weekOf"]
-                val weekOf = if (weekOfStr != null) {
-                    parseHydratationDate(weekOfStr)
-                } else {
-                    todayHydratationDate()
-                }
+                val weekOf =
+                    if (weekOfStr != null) {
+                        parseHydratationDate(weekOfStr)
+                    } else {
+                        todayHydratationDate()
+                    }
                 val response = hydratationService.getWeekly(userId, weekOf)
                 call.respond(HttpStatusCode.OK, response)
             }

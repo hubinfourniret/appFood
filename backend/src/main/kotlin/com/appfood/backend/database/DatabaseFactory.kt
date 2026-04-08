@@ -21,24 +21,25 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
-private val ALL_TABLES = arrayOf(
-    UsersTable,
-    UserProfilesTable,
-    UserPreferencesTable,
-    AlimentsTable,
-    PortionsTable,
-    RecettesTable,
-    IngredientsTable,
-    JournalEntriesTable,
-    QuotasTable,
-    PoidsHistoryTable,
-    HydratationTable,
-    HydratationEntriesTable,
-    FcmTokensTable,
-    NotificationsTable,
-    ConsentsTable,
-    FaqTable,
-)
+private val ALL_TABLES =
+    arrayOf(
+        UsersTable,
+        UserProfilesTable,
+        UserPreferencesTable,
+        AlimentsTable,
+        PortionsTable,
+        RecettesTable,
+        IngredientsTable,
+        JournalEntriesTable,
+        QuotasTable,
+        PoidsHistoryTable,
+        HydratationTable,
+        HydratationEntriesTable,
+        FcmTokensTable,
+        NotificationsTable,
+        ConsentsTable,
+        FaqTable,
+    )
 
 /**
  * Configure la connexion a la base de donnees PostgreSQL.

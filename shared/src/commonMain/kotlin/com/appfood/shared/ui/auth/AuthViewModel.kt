@@ -84,8 +84,8 @@ class AuthViewModel(
         _state.value = AuthState.Loading
         viewModelScope.launch {
             // TODO: Remplacer par le vrai Firebase token (Firebase.auth.currentUser.getIdToken())
-            // En mode FIREBASE_MOCK=true, le backend accepte "mock:<email>"
-            val firebaseToken = "mock:${_loginEmail.value}"
+            // En mode FIREBASE_MOCK=true, le backend accepte "uid:email"
+            val firebaseToken = "mock-${_loginEmail.value.hashCode().toUInt()}:${_loginEmail.value}"
 
             val result = userRepository.login(LoginRequest(firebaseToken = firebaseToken))
             when (result) {
@@ -139,8 +139,8 @@ class AuthViewModel(
         _state.value = AuthState.Loading
         viewModelScope.launch {
             // TODO: Remplacer par le vrai Firebase token (Firebase.auth.currentUser.getIdToken())
-            // En mode FIREBASE_MOCK=true, le backend accepte "mock:<email>"
-            val firebaseToken = "mock:${_registerEmail.value}"
+            // En mode FIREBASE_MOCK=true, le backend accepte "uid:email"
+            val firebaseToken = "mock-${_registerEmail.value.hashCode().toUInt()}:${_registerEmail.value}"
 
             val result = userRepository.register(
                 RegisterRequest(

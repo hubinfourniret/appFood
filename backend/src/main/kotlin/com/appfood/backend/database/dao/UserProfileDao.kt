@@ -31,13 +31,13 @@ data class UserProfileRow(
 class UserProfileDao(
     private val encryptionService: EncryptionService,
 ) {
-
-    suspend fun findByUserId(userId: String): UserProfileRow? = dbQuery {
-        UserProfilesTable.selectAll()
-            .where { UserProfilesTable.userId eq userId }
-            .map { it.toRow() }
-            .singleOrNull()
-    }
+    suspend fun findByUserId(userId: String): UserProfileRow? =
+        dbQuery {
+            UserProfilesTable.selectAll()
+                .where { UserProfilesTable.userId eq userId }
+                .map { it.toRow() }
+                .singleOrNull()
+        }
 
     suspend fun insert(
         userId: String,
@@ -48,21 +48,22 @@ class UserProfileDao(
         regimeAlimentaire: RegimeAlimentaire,
         niveauActivite: NiveauActivite,
         onboardingComplete: Boolean = true,
-    ): UserProfileRow = dbQuery {
-        val now = Clock.System.now()
-        UserProfilesTable.insert {
-            it[UserProfilesTable.userId] = userId
-            it[UserProfilesTable.sexe] = sexe
-            it[UserProfilesTable.age] = encryptionService.encryptInt(age)
-            it[UserProfilesTable.poidsKg] = encryptionService.encryptDouble(poidsKg)
-            it[UserProfilesTable.tailleCm] = encryptionService.encryptInt(tailleCm)
-            it[UserProfilesTable.regimeAlimentaire] = regimeAlimentaire
-            it[UserProfilesTable.niveauActivite] = niveauActivite
-            it[UserProfilesTable.onboardingComplete] = onboardingComplete
-            it[UserProfilesTable.updatedAt] = now
+    ): UserProfileRow =
+        dbQuery {
+            val now = Clock.System.now()
+            UserProfilesTable.insert {
+                it[UserProfilesTable.userId] = userId
+                it[UserProfilesTable.sexe] = sexe
+                it[UserProfilesTable.age] = encryptionService.encryptInt(age)
+                it[UserProfilesTable.poidsKg] = encryptionService.encryptDouble(poidsKg)
+                it[UserProfilesTable.tailleCm] = encryptionService.encryptInt(tailleCm)
+                it[UserProfilesTable.regimeAlimentaire] = regimeAlimentaire
+                it[UserProfilesTable.niveauActivite] = niveauActivite
+                it[UserProfilesTable.onboardingComplete] = onboardingComplete
+                it[UserProfilesTable.updatedAt] = now
+            }
+            UserProfileRow(userId, sexe, age, poidsKg, tailleCm, regimeAlimentaire, niveauActivite, onboardingComplete, null, now)
         }
-        UserProfileRow(userId, sexe, age, poidsKg, tailleCm, regimeAlimentaire, niveauActivite, onboardingComplete, null, now)
-    }
 
     suspend fun update(
         userId: String,
@@ -74,34 +75,37 @@ class UserProfileDao(
         niveauActivite: NiveauActivite,
         onboardingComplete: Boolean,
         objectifPoids: ObjectifPoids?,
-    ): Boolean = dbQuery {
-        UserProfilesTable.update({ UserProfilesTable.userId eq userId }) {
-            it[UserProfilesTable.sexe] = sexe
-            it[UserProfilesTable.age] = encryptionService.encryptInt(age)
-            it[UserProfilesTable.poidsKg] = encryptionService.encryptDouble(poidsKg)
-            it[UserProfilesTable.tailleCm] = encryptionService.encryptInt(tailleCm)
-            it[UserProfilesTable.regimeAlimentaire] = regimeAlimentaire
-            it[UserProfilesTable.niveauActivite] = niveauActivite
-            it[UserProfilesTable.onboardingComplete] = onboardingComplete
-            it[UserProfilesTable.objectifPoids] = objectifPoids
-            it[UserProfilesTable.updatedAt] = Clock.System.now()
-        } > 0
-    }
+    ): Boolean =
+        dbQuery {
+            UserProfilesTable.update({ UserProfilesTable.userId eq userId }) {
+                it[UserProfilesTable.sexe] = sexe
+                it[UserProfilesTable.age] = encryptionService.encryptInt(age)
+                it[UserProfilesTable.poidsKg] = encryptionService.encryptDouble(poidsKg)
+                it[UserProfilesTable.tailleCm] = encryptionService.encryptInt(tailleCm)
+                it[UserProfilesTable.regimeAlimentaire] = regimeAlimentaire
+                it[UserProfilesTable.niveauActivite] = niveauActivite
+                it[UserProfilesTable.onboardingComplete] = onboardingComplete
+                it[UserProfilesTable.objectifPoids] = objectifPoids
+                it[UserProfilesTable.updatedAt] = Clock.System.now()
+            } > 0
+        }
 
-    suspend fun delete(userId: String): Boolean = dbQuery {
-        UserProfilesTable.deleteWhere { UserProfilesTable.userId eq userId } > 0
-    }
+    suspend fun delete(userId: String): Boolean =
+        dbQuery {
+            UserProfilesTable.deleteWhere { UserProfilesTable.userId eq userId } > 0
+        }
 
-    private fun ResultRow.toRow() = UserProfileRow(
-        userId = this[UserProfilesTable.userId],
-        sexe = this[UserProfilesTable.sexe],
-        age = encryptionService.decryptInt(this[UserProfilesTable.age]),
-        poidsKg = encryptionService.decryptDouble(this[UserProfilesTable.poidsKg]),
-        tailleCm = encryptionService.decryptInt(this[UserProfilesTable.tailleCm]),
-        regimeAlimentaire = this[UserProfilesTable.regimeAlimentaire],
-        niveauActivite = this[UserProfilesTable.niveauActivite],
-        onboardingComplete = this[UserProfilesTable.onboardingComplete],
-        objectifPoids = this[UserProfilesTable.objectifPoids],
-        updatedAt = this[UserProfilesTable.updatedAt],
-    )
+    private fun ResultRow.toRow() =
+        UserProfileRow(
+            userId = this[UserProfilesTable.userId],
+            sexe = this[UserProfilesTable.sexe],
+            age = encryptionService.decryptInt(this[UserProfilesTable.age]),
+            poidsKg = encryptionService.decryptDouble(this[UserProfilesTable.poidsKg]),
+            tailleCm = encryptionService.decryptInt(this[UserProfilesTable.tailleCm]),
+            regimeAlimentaire = this[UserProfilesTable.regimeAlimentaire],
+            niveauActivite = this[UserProfilesTable.niveauActivite],
+            onboardingComplete = this[UserProfilesTable.onboardingComplete],
+            objectifPoids = this[UserProfilesTable.objectifPoids],
+            updatedAt = this[UserProfilesTable.updatedAt],
+        )
 }

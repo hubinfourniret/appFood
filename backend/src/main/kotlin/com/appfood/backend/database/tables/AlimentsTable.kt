@@ -11,6 +11,7 @@ object AlimentsTable : Table("aliments") {
     val codeBarres = varchar("code_barres", 50).nullable().index()
     val categorie = varchar("categorie", 100)
     val regimesCompatibles = text("regimes_compatibles")
+
     // Nutriments pour 100g
     val calories = double("calories")
     val proteines = double("proteines")

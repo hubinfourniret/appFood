@@ -29,7 +29,6 @@ class CiqualImporter(
     private val alimentDao: AlimentDao,
     private val alimentIndexer: AlimentIndexer,
 ) {
-
     private val logger = LoggerFactory.getLogger(CiqualImporter::class.java)
 
     companion object {
@@ -49,53 +48,63 @@ class CiqualImporter(
         private val PATTERN_CATEGORIE_GROUP = listOf("alim_grp_nom_fr")
 
         // Nutriment column detection: each pair is (required_pattern_1, required_pattern_2)
-        private val NUTRIMENT_PATTERNS: Map<String, List<Pair<String, String>>> = mapOf(
-            "calories" to listOf("Énergie, Règlement UE" to "(kcal", "Energie, Règlement UE" to "(kcal"),
-            "proteines" to listOf("Protéines" to "(g", "Proteines" to "(g"),
-            "glucides" to listOf("Glucides" to "(g"),
-            "lipides" to listOf("Lipides" to "(g"),
-            "fibres" to listOf("Fibres" to "(g"),
-            "sel" to listOf("Sel chlorure de sodium" to "(g"),
-            "sucres" to listOf("Sucres" to "(g"),
-            "fer" to listOf("Fer" to "(mg"),
-            "calcium" to listOf("Calcium" to "(mg"),
-            "zinc" to listOf("Zinc" to "(mg"),
-            "magnesium" to listOf("Magnésium" to "(mg", "Magnesium" to "(mg"),
-            "vitamineB12" to listOf("Vitamine B12" to "(µg", "Vitamine B12" to "(ug"),
-            "vitamineD" to listOf("Vitamine D" to "(µg", "Vitamine D" to "(ug"),
-            "vitamineC" to listOf("Vitamine C" to "(mg"),
-        )
+        private val NUTRIMENT_PATTERNS: Map<String, List<Pair<String, String>>> =
+            mapOf(
+                "calories" to listOf("Énergie, Règlement UE" to "(kcal", "Energie, Règlement UE" to "(kcal"),
+                "proteines" to listOf("Protéines" to "(g", "Proteines" to "(g"),
+                "glucides" to listOf("Glucides" to "(g"),
+                "lipides" to listOf("Lipides" to "(g"),
+                "fibres" to listOf("Fibres" to "(g"),
+                "sel" to listOf("Sel chlorure de sodium" to "(g"),
+                "sucres" to listOf("Sucres" to "(g"),
+                "fer" to listOf("Fer" to "(mg"),
+                "calcium" to listOf("Calcium" to "(mg"),
+                "zinc" to listOf("Zinc" to "(mg"),
+                "magnesium" to listOf("Magnésium" to "(mg", "Magnesium" to "(mg"),
+                "vitamineB12" to listOf("Vitamine B12" to "(µg", "Vitamine B12" to "(ug"),
+                "vitamineD" to listOf("Vitamine D" to "(µg", "Vitamine D" to "(ug"),
+                "vitamineC" to listOf("Vitamine C" to "(mg"),
+            )
 
         // Omega-3 fatty acid column patterns (ALA, EPA, DHA)
-        private val OMEGA3_PATTERNS = listOf(
-            "AG 18:3 c9,c12,c15 (n-3)",   // ALA
-            "AG 20:5 5c,8c,11c,14c,17c (n-3)", // EPA
-            "AG 22:6 4c,7c,10c,13c,16c,19c (n-3)", // DHA
-        )
+        private val OMEGA3_PATTERNS =
+            listOf(
+                "AG 18:3 c9,c12,c15 (n-3)", // ALA
+                "AG 20:5 5c,8c,11c,14c,17c (n-3)", // EPA
+                "AG 22:6 4c,7c,10c,13c,16c,19c (n-3)", // DHA
+            )
 
         // Omega-6 fatty acid column pattern (linoleic acid)
-        private val OMEGA6_PATTERNS = listOf(
-            "AG 18:2 9c,12c (n-6)", // LA
-        )
+        private val OMEGA6_PATTERNS =
+            listOf(
+                "AG 18:2 9c,12c (n-6)", // LA
+            )
 
         // -- Diet heuristic keywords (lowercased, without accents) --
 
-        private val MEAT_FISH_KEYWORDS = listOf(
-            "viande", "boeuf", "veau", "porc", "agneau", "mouton", "cheval",
-            "volaille", "poulet", "dinde", "canard", "lapin",
-            "poisson", "saumon", "thon", "sardine", "cabillaud", "merlu",
-            "crustace", "crevette", "homard", "crabe",
-            "mollusque", "moule", "huitre", "calamar",
-            "charcuterie", "jambon", "saucisse", "pate", "boudin",
-            "abats", "foie", "rognon",
-            "gibier", "chevreuil", "sanglier",
-        )
+        private val MEAT_FISH_KEYWORDS =
+            listOf(
+                "viande", "boeuf", "veau", "porc", "agneau", "mouton", "cheval",
+                "volaille", "poulet", "dinde", "canard", "lapin",
+                "poisson", "saumon", "thon", "sardine", "cabillaud", "merlu",
+                "crustace", "crevette", "homard", "crabe",
+                "mollusque", "moule", "huitre", "calamar",
+                "charcuterie", "jambon", "saucisse", "pate", "boudin",
+                "abats", "foie", "rognon",
+                "gibier", "chevreuil", "sanglier",
+            )
 
-        private val DAIRY_EGG_KEYWORDS = listOf(
-            "lait", "fromage", "yaourt", "beurre", "creme",
-            "oeuf", "egg",
-            "miel",
-        )
+        private val DAIRY_EGG_KEYWORDS =
+            listOf(
+                "lait",
+                "fromage",
+                "yaourt",
+                "beurre",
+                "creme",
+                "oeuf",
+                "egg",
+                "miel",
+            )
     }
 
     /**
@@ -150,7 +159,7 @@ class CiqualImporter(
                 alimentIndexer.indexBatch(batch)
                 indexedCount += batch.size
                 logger.info(
-                    "Meilisearch index: batch ${index + 1}/${indexBatches.size} ($indexedCount / ${result.rows.size})"
+                    "Meilisearch index: batch ${index + 1}/${indexBatches.size} ($indexedCount / ${result.rows.size})",
                 )
             } catch (e: Exception) {
                 logger.error(
@@ -182,8 +191,9 @@ class CiqualImporter(
         val reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
 
         // Read first complete CSV record (header may span multiple lines due to quoted newlines)
-        val headerRecord = readCsvRecord(reader)?.removeBomPrefix()
-            ?: throw IllegalArgumentException("Empty CSV file: no header line found")
+        val headerRecord =
+            readCsvRecord(reader)?.removeBomPrefix()
+                ?: throw IllegalArgumentException("Empty CSV file: no header line found")
 
         val headers = parseCsvLine(headerRecord)
         val columnMap = resolveColumnIndices(headers)
@@ -211,7 +221,7 @@ class CiqualImporter(
                 if (zeroCount > LOW_QUALITY_THRESHOLD) {
                     lowQualityCount++
                     logger.debug(
-                        "Record $recordNumber: aliment '${row.nom}' has $zeroCount/16 zero nutriments (low quality)"
+                        "Record $recordNumber: aliment '${row.nom}' has $zeroCount/16 zero nutriments (low quality)",
                     )
                 }
 
@@ -225,7 +235,7 @@ class CiqualImporter(
 
         logger.info(
             "Ciqual import: ${rows.size} aliments parsed, $skippedLines lines skipped, " +
-                "$lowQualityCount low-quality aliments (from $recordNumber data records)"
+                "$lowQualityCount low-quality aliments (from $recordNumber data records)",
         )
 
         return ImportResult(
@@ -258,17 +268,20 @@ class CiqualImporter(
     )
 
     private fun resolveColumnIndices(headers: List<String>): ColumnMap {
-        val sourceIdIdx = findColumnIndex(headers, PATTERN_SOURCE_ID)
-            ?: findFirstNumericColumnIndex(headers)
-            ?: throw IllegalArgumentException("Cannot find alim_code column in CSV header")
+        val sourceIdIdx =
+            findColumnIndex(headers, PATTERN_SOURCE_ID)
+                ?: findFirstNumericColumnIndex(headers)
+                ?: throw IllegalArgumentException("Cannot find alim_code column in CSV header")
 
-        val nomIdx = findColumnIndex(headers, PATTERN_NOM)
-            ?: throw IllegalArgumentException("Cannot find alim_nom_fr column in CSV header")
+        val nomIdx =
+            findColumnIndex(headers, PATTERN_NOM)
+                ?: throw IllegalArgumentException("Cannot find alim_nom_fr column in CSV header")
 
         // Prefer sous-groupe, fall back to groupe
-        val categorieIdx = findColumnIndex(headers, PATTERN_CATEGORIE_SUB)
-            ?: findColumnIndex(headers, PATTERN_CATEGORIE_GROUP)
-            ?: throw IllegalArgumentException("Cannot find category column in CSV header")
+        val categorieIdx =
+            findColumnIndex(headers, PATTERN_CATEGORIE_SUB)
+                ?: findColumnIndex(headers, PATTERN_CATEGORIE_GROUP)
+                ?: throw IllegalArgumentException("Cannot find category column in CSV header")
 
         val nutrimentIndices = mutableMapOf<String, Int>()
         for ((nutriment, patterns) in NUTRIMENT_PATTERNS) {
@@ -280,16 +293,18 @@ class CiqualImporter(
             }
         }
 
-        val omega3Indices = OMEGA3_PATTERNS.mapNotNull { pattern ->
-            headers.indexOfFirst { it.contains(pattern) }.takeIf { it >= 0 }
-        }
+        val omega3Indices =
+            OMEGA3_PATTERNS.mapNotNull { pattern ->
+                headers.indexOfFirst { it.contains(pattern) }.takeIf { it >= 0 }
+            }
         if (omega3Indices.isEmpty()) {
             logger.warn("No omega-3 fatty acid columns found — omega3 will be 0.0 for all aliments")
         }
 
-        val omega6Indices = OMEGA6_PATTERNS.mapNotNull { pattern ->
-            headers.indexOfFirst { it.contains(pattern) }.takeIf { it >= 0 }
-        }
+        val omega6Indices =
+            OMEGA6_PATTERNS.mapNotNull { pattern ->
+                headers.indexOfFirst { it.contains(pattern) }.takeIf { it >= 0 }
+            }
         if (omega6Indices.isEmpty()) {
             logger.warn("No omega-6 fatty acid columns found — omega6 will be 0.0 for all aliments")
         }
@@ -304,7 +319,10 @@ class CiqualImporter(
         )
     }
 
-    private fun findColumnIndex(headers: List<String>, patterns: List<String>): Int? {
+    private fun findColumnIndex(
+        headers: List<String>,
+        patterns: List<String>,
+    ): Int? {
         for (pattern in patterns) {
             val idx = headers.indexOfFirst { it.contains(pattern, ignoreCase = true) }
             if (idx >= 0) return idx
@@ -312,11 +330,15 @@ class CiqualImporter(
         return null
     }
 
-    private fun findNutrimentColumnIndex(headers: List<String>, patterns: List<Pair<String, String>>): Int? {
+    private fun findNutrimentColumnIndex(
+        headers: List<String>,
+        patterns: List<Pair<String, String>>,
+    ): Int? {
         for ((pattern1, pattern2) in patterns) {
-            val idx = headers.indexOfFirst {
-                it.contains(pattern1, ignoreCase = true) && it.contains(pattern2, ignoreCase = true)
-            }
+            val idx =
+                headers.indexOfFirst {
+                    it.contains(pattern1, ignoreCase = true) && it.contains(pattern2, ignoreCase = true)
+                }
             if (idx >= 0) return idx
         }
         return null
@@ -327,7 +349,10 @@ class CiqualImporter(
             .takeIf { it >= 0 }
     }
 
-    private fun logColumnMapping(columnMap: ColumnMap, headers: List<String>) {
+    private fun logColumnMapping(
+        columnMap: ColumnMap,
+        headers: List<String>,
+    ) {
         logger.info("Column mapping resolved:")
         logger.info("  sourceId → [${columnMap.sourceId}] '${headers[columnMap.sourceId]}'")
         logger.info("  nom → [${columnMap.nom}] '${headers[columnMap.nom]}'")
@@ -345,7 +370,11 @@ class CiqualImporter(
 
     // -- Row mapping --
 
-    private fun mapToAlimentRow(fields: List<String>, columnMap: ColumnMap, lineNumber: Int): AlimentRow {
+    private fun mapToAlimentRow(
+        fields: List<String>,
+        columnMap: ColumnMap,
+        lineNumber: Int,
+    ): AlimentRow {
         val sourceId = fields[columnMap.sourceId].trim()
         val nom = fields[columnMap.nom].trim()
         val categorie = fields[columnMap.categorie].trim()
@@ -360,14 +389,16 @@ class CiqualImporter(
         }
 
         // Omega-3 = sum of ALA + EPA + DHA
-        val omega3 = columnMap.omega3Indices.sumOf { idx ->
-            parseCiqualValue(fields[idx], nom, "omega3")
-        }
+        val omega3 =
+            columnMap.omega3Indices.sumOf { idx ->
+                parseCiqualValue(fields[idx], nom, "omega3")
+            }
 
         // Omega-6 = linoleic acid (LA)
-        val omega6 = columnMap.omega6Indices.sumOf { idx ->
-            parseCiqualValue(fields[idx], nom, "omega6")
-        }
+        val omega6 =
+            columnMap.omega6Indices.sumOf { idx ->
+                parseCiqualValue(fields[idx], nom, "omega6")
+            }
 
         val regimesCompatibles = detectRegimesCompatibles(categorie)
         val regimesJson = JsonArray(regimesCompatibles.map { JsonPrimitive(it.name) }).toString()
@@ -407,7 +438,11 @@ class CiqualImporter(
      * Handles special markers: "-", "traces", "N/A", "< X", empty, and French decimal comma.
      * Any non-parseable value defaults to 0.0 with a warning.
      */
-    internal fun parseCiqualValue(raw: String, alimentName: String, nutrimentName: String): Double {
+    internal fun parseCiqualValue(
+        raw: String,
+        alimentName: String,
+        nutrimentName: String,
+    ): Double {
         val trimmed = raw.trim()
 
         // Special Ciqual markers → 0.0
@@ -426,7 +461,7 @@ class CiqualImporter(
         } catch (e: NumberFormatException) {
             logger.warn(
                 "Cannot parse value '$raw' for nutriment '$nutrimentName' " +
-                    "in aliment '$alimentName' — defaulting to 0.0"
+                    "in aliment '$alimentName' — defaulting to 0.0",
             )
             0.0
         }

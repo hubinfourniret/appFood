@@ -22,6 +22,7 @@ import com.appfood.backend.search.MeilisearchClient
 import com.appfood.backend.security.EncryptionService
 import com.appfood.backend.service.AlimentService
 import com.appfood.backend.service.AuthService
+import com.appfood.backend.service.ConsentService
 import com.appfood.backend.service.DashboardService
 import com.appfood.backend.service.HydratationService
 import com.appfood.backend.service.JournalService
@@ -31,7 +32,6 @@ import com.appfood.backend.service.PortionService
 import com.appfood.backend.service.ProfileService
 import com.appfood.backend.service.QuotaService
 import com.appfood.backend.service.RecetteService
-import com.appfood.backend.service.ConsentService
 import com.appfood.backend.service.RecommandationService
 import com.appfood.backend.service.SupportService
 import io.ktor.client.HttpClient
@@ -56,10 +56,12 @@ fun backendModule(
     single {
         HttpClient(OkHttp) {
             install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true
-                    isLenient = true
-                })
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        isLenient = true
+                    },
+                )
             }
         }
     }

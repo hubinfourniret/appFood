@@ -1,11 +1,11 @@
 package com.appfood.backend.security
 
+import org.slf4j.LoggerFactory
 import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import org.slf4j.LoggerFactory
 
 /**
  * Service de chiffrement AES-256-GCM pour les donnees sensibles en base.
@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory
  * en mode "clair" avec un warning — adapte au developpement local uniquement.
  */
 class EncryptionService(encryptionKeyBase64: String?) {
-
     private val logger = LoggerFactory.getLogger("EncryptionService")
 
     private val secretKey: SecretKeySpec?

@@ -18,8 +18,8 @@ import com.appfood.backend.database.dao.UserProfileRow
 import com.appfood.backend.database.dao.UserRow
 import com.appfood.backend.database.tables.NiveauActivite
 import com.appfood.backend.database.tables.ObjectifPoids
-import com.appfood.backend.database.tables.Sexe
 import com.appfood.backend.database.tables.RegimeAlimentaire
+import com.appfood.backend.database.tables.Sexe
 import com.appfood.backend.plugins.ConflictException
 import com.appfood.backend.plugins.NotFoundException
 import com.appfood.backend.plugins.ValidationException
@@ -54,8 +54,9 @@ class ProfileService(
     private val logger = LoggerFactory.getLogger("ProfileService")
 
     suspend fun getUserProfile(userId: String): UserProfileData {
-        val user = userDao.findById(userId)
-            ?: throw NotFoundException("Utilisateur non trouve")
+        val user =
+            userDao.findById(userId)
+                ?: throw NotFoundException("Utilisateur non trouve")
         val profile = userProfileDao.findByUserId(userId)
         val preferences = userPreferencesDao.findByUserId(userId)
         return UserProfileData(user, profile, preferences)
@@ -90,15 +91,16 @@ class ProfileService(
         validatePoids(poidsKg)
         validateTaille(tailleCm)
 
-        val profile = userProfileDao.insert(
-            userId = userId,
-            sexe = sexe,
-            age = age,
-            poidsKg = poidsKg,
-            tailleCm = tailleCm,
-            regimeAlimentaire = regimeAlimentaire,
-            niveauActivite = niveauActivite,
-        )
+        val profile =
+            userProfileDao.insert(
+                userId = userId,
+                sexe = sexe,
+                age = age,
+                poidsKg = poidsKg,
+                tailleCm = tailleCm,
+                regimeAlimentaire = regimeAlimentaire,
+                niveauActivite = niveauActivite,
+            )
 
         logger.info("CreateProfile: profile created for userId=$userId")
         return profile
@@ -114,17 +116,21 @@ class ProfileService(
         niveauActiviteStr: String?,
         objectifPoidsStr: String?,
     ): UserProfileRow {
-        val existing = userProfileDao.findByUserId(userId)
-            ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST.")
+        val existing =
+            userProfileDao.findByUserId(userId)
+                ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST.")
 
         // Validate provided fields
         val sexe = sexeStr?.toEnumOrThrow<Sexe>("sexe") ?: existing.sexe
-        val regimeAlimentaire = regimeAlimentaireStr?.toEnumOrThrow<RegimeAlimentaire>("regimeAlimentaire")
-            ?: existing.regimeAlimentaire
-        val niveauActivite = niveauActiviteStr?.toEnumOrThrow<NiveauActivite>("niveauActivite")
-            ?: existing.niveauActivite
-        val objectifPoids = objectifPoidsStr?.toEnumOrThrow<ObjectifPoids>("objectifPoids")
-            ?: existing.objectifPoids
+        val regimeAlimentaire =
+            regimeAlimentaireStr?.toEnumOrThrow<RegimeAlimentaire>("regimeAlimentaire")
+                ?: existing.regimeAlimentaire
+        val niveauActivite =
+            niveauActiviteStr?.toEnumOrThrow<NiveauActivite>("niveauActivite")
+                ?: existing.niveauActivite
+        val objectifPoids =
+            objectifPoidsStr?.toEnumOrThrow<ObjectifPoids>("objectifPoids")
+                ?: existing.objectifPoids
 
         val newAge = age ?: existing.age
         val newPoids = poidsKg ?: existing.poidsKg
@@ -165,12 +171,13 @@ class ProfileService(
 
         if (existing == null) {
             // Create new preferences
-            val row = userPreferencesDao.insert(
-                userId = userId,
-                alimentsExclus = serializeList(alimentsExclus ?: emptyList()),
-                allergies = serializeList(allergies ?: emptyList()),
-                alimentsFavoris = serializeList(alimentsFavoris ?: emptyList()),
-            )
+            val row =
+                userPreferencesDao.insert(
+                    userId = userId,
+                    alimentsExclus = serializeList(alimentsExclus ?: emptyList()),
+                    allergies = serializeList(allergies ?: emptyList()),
+                    alimentsFavoris = serializeList(alimentsFavoris ?: emptyList()),
+                )
             logger.info("UpdatePreferences: preferences created for userId=$userId")
             return row
         } else {
@@ -197,7 +204,10 @@ class ProfileService(
         return deserializeList(prefs.alimentsFavoris)
     }
 
-    suspend fun addFavori(userId: String, alimentId: String) {
+    suspend fun addFavori(
+        userId: String,
+        alimentId: String,
+    ) {
         val prefs = userPreferencesDao.findByUserId(userId)
         if (prefs == null) {
             userPreferencesDao.insert(
@@ -219,7 +229,10 @@ class ProfileService(
         logger.info("AddFavori: alimentId=$alimentId for userId=$userId")
     }
 
-    suspend fun removeFavori(userId: String, alimentId: String) {
+    suspend fun removeFavori(
+        userId: String,
+        alimentId: String,
+    ) {
         val prefs = userPreferencesDao.findByUserId(userId) ?: return
         val current = deserializeList(prefs.alimentsFavoris).toMutableList()
         if (current.remove(alimentId)) {
@@ -272,8 +285,7 @@ class ProfileService(
     companion object {
         private val json = kotlinx.serialization.json.Json
 
-        fun serializeList(list: List<String>): String =
-            json.encodeToString(list)
+        fun serializeList(list: List<String>): String = json.encodeToString(list)
 
         fun deserializeList(jsonStr: String): List<String> =
             try {

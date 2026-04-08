@@ -19,14 +19,13 @@ fun Route.notificationRoutes() {
 
     authenticate("auth-jwt") {
         route("/api/v1/notifications") {
-
             // Routes specifiques AVANT les routes parametrees
 
             // POST /api/v1/notifications/read-all
             post("/read-all") {
                 val userId = call.userId()
                 val response = notificationService.markAllAsRead(userId)
-                call.respond(HttpStatusCode.OK, ApiResponse(data = response))
+                call.respond(HttpStatusCode.OK, response)
             }
 
             // POST /api/v1/notifications/register-token
@@ -34,7 +33,7 @@ fun Route.notificationRoutes() {
                 val userId = call.userId()
                 val request = call.receive<RegisterFcmTokenRequest>()
                 val response = notificationService.registerToken(userId, request)
-                call.respond(HttpStatusCode.OK, ApiResponse(data = response))
+                call.respond(HttpStatusCode.OK, response)
             }
 
             // PUT /api/v1/notifications/{id}/read
@@ -42,7 +41,7 @@ fun Route.notificationRoutes() {
                 val userId = call.userId()
                 val notificationId = call.parameters["id"]!!
                 val response = notificationService.markAsRead(userId, notificationId)
-                call.respond(HttpStatusCode.OK, ApiResponse(data = response))
+                call.respond(HttpStatusCode.OK, response)
             }
 
             // GET /api/v1/notifications?page={page}&size={size}&nonLuesUniquement={bool}

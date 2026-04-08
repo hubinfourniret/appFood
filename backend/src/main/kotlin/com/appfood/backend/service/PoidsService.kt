@@ -21,12 +21,17 @@ class PoidsService(
     /**
      * Retourne l'historique de poids filtre par dates optionnelles.
      */
-    suspend fun getHistory(userId: String, dateFrom: LocalDate?, dateTo: LocalDate?): PoidsListResponse {
-        val rows = if (dateFrom != null && dateTo != null) {
-            poidsHistoryDao.findByUserAndDateRange(userId, dateFrom, dateTo)
-        } else {
-            poidsHistoryDao.findByUserId(userId)
-        }
+    suspend fun getHistory(
+        userId: String,
+        dateFrom: LocalDate?,
+        dateTo: LocalDate?,
+    ): PoidsListResponse {
+        val rows =
+            if (dateFrom != null && dateTo != null) {
+                poidsHistoryDao.findByUserAndDateRange(userId, dateFrom, dateTo)
+            } else {
+                poidsHistoryDao.findByUserId(userId)
+            }
 
         val data = rows.map { it.toResponse() }
         val poidsCourant = rows.firstOrNull()?.poidsKg // Deja trie DESC par date
@@ -45,7 +50,10 @@ class PoidsService(
     /**
      * Ajoute une pesee. Detecte un changement significatif (>1kg) par rapport a la reference.
      */
-    suspend fun addPoids(userId: String, request: AddPoidsRequest): AddPoidsResponse {
+    suspend fun addPoids(
+        userId: String,
+        request: AddPoidsRequest,
+    ): AddPoidsResponse {
         val date = parseDate(request.date)
         if (request.poidsKg <= 0.0) {
             throw ValidationException("poidsKg doit etre > 0")
@@ -54,35 +62,39 @@ class PoidsService(
         val id = request.id ?: UUID.randomUUID().toString()
 
         // Trouver la reference pour detecter un changement significatif
-        val reference = poidsHistoryDao.findReference(userId)
-            ?: poidsHistoryDao.findLatest(userId)
+        val reference =
+            poidsHistoryDao.findReference(userId)
+                ?: poidsHistoryDao.findLatest(userId)
 
         val isFirst = reference == null
         val estReference = isFirst // La premiere pesee est la reference
 
-        val row = poidsHistoryDao.insert(
-            id = id,
-            userId = userId,
-            date = date,
-            poidsKg = request.poidsKg,
-            estReference = estReference,
-        )
+        val row =
+            poidsHistoryDao.insert(
+                id = id,
+                userId = userId,
+                date = date,
+                poidsKg = request.poidsKg,
+                estReference = estReference,
+            )
 
         // Detecter changement significatif (>1kg)
-        val changementSignificatif = if (reference != null) {
-            abs(request.poidsKg - reference.poidsKg) > SEUIL_CHANGEMENT_KG
-        } else {
-            false
-        }
+        val changementSignificatif =
+            if (reference != null) {
+                abs(request.poidsKg - reference.poidsKg) > SEUIL_CHANGEMENT_KG
+            } else {
+                false
+            }
 
-        val messageRecalcul = if (changementSignificatif) {
-            val diff = request.poidsKg - reference!!.poidsKg
-            val direction = if (diff > 0) "augmentation" else "diminution"
-            "Changement significatif detecte: $direction de ${"%.1f".format(abs(diff))} kg. " +
-                "Les quotas nutritionnels peuvent necessiter un recalcul."
-        } else {
-            null
-        }
+        val messageRecalcul =
+            if (changementSignificatif) {
+                val diff = request.poidsKg - reference!!.poidsKg
+                val direction = if (diff > 0) "augmentation" else "diminution"
+                "Changement significatif detecte: $direction de ${"%.1f".format(abs(diff))} kg. " +
+                    "Les quotas nutritionnels peuvent necessiter un recalcul."
+            } else {
+                null
+            }
 
         logger.info("AddPoids: userId=$userId, date=$date, poidsKg=${request.poidsKg}, changement=$changementSignificatif")
 
@@ -96,7 +108,10 @@ class PoidsService(
     /**
      * Supprime une pesee.
      */
-    suspend fun deletePoids(userId: String, poidsId: String) {
+    suspend fun deletePoids(
+        userId: String,
+        poidsId: String,
+    ) {
         val deleted = poidsHistoryDao.delete(poidsId, userId)
         if (!deleted) {
             throw NotFoundException("Pesee non trouvee: $poidsId")
@@ -104,13 +119,14 @@ class PoidsService(
         logger.info("DeletePoids: userId=$userId, poidsId=$poidsId")
     }
 
-    private fun PoidsHistoryRow.toResponse() = PoidsResponse(
-        id = id,
-        date = date.toString(),
-        poidsKg = poidsKg,
-        estReference = estReference,
-        createdAt = createdAt.toString(),
-    )
+    private fun PoidsHistoryRow.toResponse() =
+        PoidsResponse(
+            id = id,
+            date = date.toString(),
+            poidsKg = poidsKg,
+            estReference = estReference,
+            createdAt = createdAt.toString(),
+        )
 
     private fun parseDate(dateStr: String): LocalDate {
         return try {

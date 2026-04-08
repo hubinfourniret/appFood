@@ -22,19 +22,18 @@ fun Route.authRoutes() {
     route("/api/v1/auth") {
         post("/register") {
             val request = call.receive<RegisterRequest>()
-            val result = authService.register(
-                firebaseToken = request.firebaseToken,
-                email = request.email,
-                nom = request.nom,
-                prenom = request.prenom,
-            )
+            val result =
+                authService.register(
+                    firebaseToken = request.firebaseToken,
+                    email = request.email,
+                    nom = request.nom,
+                    prenom = request.prenom,
+                )
             call.respond(
                 HttpStatusCode.Created,
-                ApiResponse(
-                    data = AuthResponse(
-                        token = result.token,
-                        user = result.user.toUserResponse(onboardingComplete = false),
-                    ),
+                AuthResponse(
+                    token = result.token,
+                    user = result.user.toUserResponse(onboardingComplete = false),
                 ),
             )
         }
@@ -44,13 +43,12 @@ fun Route.authRoutes() {
             val loginResult = authService.login(firebaseToken = request.firebaseToken)
             call.respond(
                 HttpStatusCode.OK,
-                ApiResponse(
-                    data = AuthResponse(
-                        token = loginResult.token,
-                        user = loginResult.user.toUserResponse(
+                AuthResponse(
+                    token = loginResult.token,
+                    user =
+                        loginResult.user.toUserResponse(
                             onboardingComplete = loginResult.onboardingComplete,
                         ),
-                    ),
                 ),
             )
         }
@@ -65,13 +63,12 @@ fun Route.authRoutes() {
     }
 }
 
-internal fun com.appfood.backend.database.dao.UserRow.toUserResponse(
-    onboardingComplete: Boolean,
-) = UserResponse(
-    id = id,
-    email = email,
-    nom = nom,
-    prenom = prenom,
-    onboardingComplete = onboardingComplete,
-    createdAt = createdAt.toString(),
-)
+internal fun com.appfood.backend.database.dao.UserRow.toUserResponse(onboardingComplete: Boolean) =
+    UserResponse(
+        id = id,
+        email = email,
+        nom = nom,
+        prenom = prenom,
+        onboardingComplete = onboardingComplete,
+        createdAt = createdAt.toString(),
+    )

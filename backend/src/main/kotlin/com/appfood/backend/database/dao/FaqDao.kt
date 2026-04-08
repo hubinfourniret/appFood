@@ -20,59 +20,65 @@ data class FaqRow(
 )
 
 class FaqDao {
-
-    suspend fun findAllActive(): List<FaqRow> = dbQuery {
-        FaqTable.selectAll()
-            .where { FaqTable.actif eq true }
-            .orderBy(FaqTable.ordre, SortOrder.ASC)
-            .map { it.toRow() }
-    }
-
-    suspend fun findAll(): List<FaqRow> = dbQuery {
-        FaqTable.selectAll()
-            .orderBy(FaqTable.ordre, SortOrder.ASC)
-            .map { it.toRow() }
-    }
-
-    suspend fun findById(id: String): FaqRow? = dbQuery {
-        FaqTable.selectAll()
-            .where { FaqTable.id eq id }
-            .map { it.toRow() }
-            .singleOrNull()
-    }
-
-    suspend fun insert(row: FaqRow): FaqRow = dbQuery {
-        FaqTable.insert {
-            it[id] = row.id
-            it[theme] = row.theme
-            it[question] = row.question
-            it[reponse] = row.reponse
-            it[ordre] = row.ordre
-            it[actif] = row.actif
+    suspend fun findAllActive(): List<FaqRow> =
+        dbQuery {
+            FaqTable.selectAll()
+                .where { FaqTable.actif eq true }
+                .orderBy(FaqTable.ordre, SortOrder.ASC)
+                .map { it.toRow() }
         }
-        row
-    }
 
-    suspend fun update(row: FaqRow): Boolean = dbQuery {
-        FaqTable.update({ FaqTable.id eq row.id }) {
-            it[theme] = row.theme
-            it[question] = row.question
-            it[reponse] = row.reponse
-            it[ordre] = row.ordre
-            it[actif] = row.actif
-        } > 0
-    }
+    suspend fun findAll(): List<FaqRow> =
+        dbQuery {
+            FaqTable.selectAll()
+                .orderBy(FaqTable.ordre, SortOrder.ASC)
+                .map { it.toRow() }
+        }
 
-    suspend fun delete(id: String): Boolean = dbQuery {
-        FaqTable.deleteWhere { FaqTable.id eq id } > 0
-    }
+    suspend fun findById(id: String): FaqRow? =
+        dbQuery {
+            FaqTable.selectAll()
+                .where { FaqTable.id eq id }
+                .map { it.toRow() }
+                .singleOrNull()
+        }
 
-    private fun ResultRow.toRow() = FaqRow(
-        id = this[FaqTable.id],
-        theme = this[FaqTable.theme],
-        question = this[FaqTable.question],
-        reponse = this[FaqTable.reponse],
-        ordre = this[FaqTable.ordre],
-        actif = this[FaqTable.actif],
-    )
+    suspend fun insert(row: FaqRow): FaqRow =
+        dbQuery {
+            FaqTable.insert {
+                it[id] = row.id
+                it[theme] = row.theme
+                it[question] = row.question
+                it[reponse] = row.reponse
+                it[ordre] = row.ordre
+                it[actif] = row.actif
+            }
+            row
+        }
+
+    suspend fun update(row: FaqRow): Boolean =
+        dbQuery {
+            FaqTable.update({ FaqTable.id eq row.id }) {
+                it[theme] = row.theme
+                it[question] = row.question
+                it[reponse] = row.reponse
+                it[ordre] = row.ordre
+                it[actif] = row.actif
+            } > 0
+        }
+
+    suspend fun delete(id: String): Boolean =
+        dbQuery {
+            FaqTable.deleteWhere { FaqTable.id eq id } > 0
+        }
+
+    private fun ResultRow.toRow() =
+        FaqRow(
+            id = this[FaqTable.id],
+            theme = this[FaqTable.theme],
+            question = this[FaqTable.question],
+            reponse = this[FaqTable.reponse],
+            ordre = this[FaqTable.ordre],
+            actif = this[FaqTable.actif],
+        )
 }

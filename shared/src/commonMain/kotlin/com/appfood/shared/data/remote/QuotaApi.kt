@@ -5,15 +5,10 @@ import com.appfood.shared.api.response.QuotaListResponse
 import com.appfood.shared.api.response.QuotaResponse
 import com.appfood.shared.api.response.QuotaStatusListResponse
 import io.ktor.client.call.body
-import kotlinx.serialization.Serializable
-
 /**
  * Client API for quota endpoints (/api/v1/quotas).
  */
 class QuotaApi(private val apiClient: ApiClient) {
-
-    @Serializable
-    private data class ApiResponseWrapper(val data: QuotaResponse)
 
     suspend fun getQuotas(): List<QuotaResponse> {
         val response: QuotaListResponse = apiClient.getRequest("/api/v1/quotas").body()
@@ -25,13 +20,11 @@ class QuotaApi(private val apiClient: ApiClient) {
     }
 
     suspend fun updateQuota(nutriment: String, request: UpdateQuotaRequest): QuotaResponse {
-        val response: ApiResponseWrapper = apiClient.putRequest("/api/v1/quotas/$nutriment", request).body()
-        return response.data
+        return apiClient.putRequest("/api/v1/quotas/$nutriment", request).body()
     }
 
     suspend fun resetQuota(nutriment: String): QuotaResponse {
-        val response: ApiResponseWrapper = apiClient.postRequest("/api/v1/quotas/$nutriment/reset", Unit).body()
-        return response.data
+        return apiClient.postRequest("/api/v1/quotas/$nutriment/reset", Unit).body()
     }
 
     suspend fun resetAllQuotas(): List<QuotaResponse> {

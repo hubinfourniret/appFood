@@ -50,20 +50,25 @@ class OpenFoodFactsClient(
      * @param pageSize Number of results per page (max 100)
      * @return List of AlimentRow mapped from OFF products
      */
-    suspend fun searchByName(query: String, page: Int = 1, pageSize: Int = DEFAULT_PAGE_SIZE): List<AlimentRow> {
+    suspend fun searchByName(
+        query: String,
+        page: Int = 1,
+        pageSize: Int = DEFAULT_PAGE_SIZE,
+    ): List<AlimentRow> {
         logger.info("Open Food Facts search: query='$query', page=$page, pageSize=$pageSize")
 
-        val response: HttpResponse = httpClient.get(SEARCH_URL) {
-            url {
-                parameters.append("search_terms", query)
-                parameters.append("search_simple", "1")
-                parameters.append("action", "process")
-                parameters.append("json", "1")
-                parameters.append("page", page.toString())
-                parameters.append("page_size", pageSize.toString())
+        val response: HttpResponse =
+            httpClient.get(SEARCH_URL) {
+                url {
+                    parameters.append("search_terms", query)
+                    parameters.append("search_simple", "1")
+                    parameters.append("action", "process")
+                    parameters.append("json", "1")
+                    parameters.append("page", page.toString())
+                    parameters.append("page_size", pageSize.toString())
+                }
+                header("User-Agent", USER_AGENT)
             }
-            header("User-Agent", USER_AGENT)
-        }
 
         if (!response.status.isSuccess()) {
             logger.error("Open Food Facts search failed: ${response.status.value}")
@@ -71,9 +76,10 @@ class OpenFoodFactsClient(
         }
 
         val searchResponse: OffSearchResponse = response.body()
-        val rows = searchResponse.products.mapNotNull { product ->
-            mapProductToAlimentRow(product)
-        }
+        val rows =
+            searchResponse.products.mapNotNull { product ->
+                mapProductToAlimentRow(product)
+            }
 
         logger.info("Open Food Facts search: ${rows.size} products mapped from ${searchResponse.products.size} results")
 
@@ -102,9 +108,10 @@ class OpenFoodFactsClient(
         }
 
         // Fetch from Open Food Facts API
-        val response: HttpResponse = httpClient.get("$PRODUCT_URL/$barcode") {
-            header("User-Agent", USER_AGENT)
-        }
+        val response: HttpResponse =
+            httpClient.get("$PRODUCT_URL/$barcode") {
+                header("User-Agent", USER_AGENT)
+            }
 
         if (!response.status.isSuccess()) {
             logger.warn("Open Food Facts barcode lookup failed: ${response.status.value}")
@@ -138,11 +145,12 @@ class OpenFoodFactsClient(
 
         val nutriments = product.nutriments ?: return null
 
-        val categorie = product.categoriesHierarchy?.firstOrNull()
-            ?.removePrefix("en:")
-            ?.replace("-", " ")
-            ?: product.categories?.split(",")?.firstOrNull()?.trim()
-            ?: "Autres"
+        val categorie =
+            product.categoriesHierarchy?.firstOrNull()
+                ?.removePrefix("en:")
+                ?.replace("-", " ")
+                ?: product.categories?.split(",")?.firstOrNull()?.trim()
+                ?: "Autres"
 
         val regimesCompatibles = detectRegimes(product)
         val regimesJson = JsonArray(regimesCompatibles.map { JsonPrimitive(it.name) }).toString()
@@ -189,21 +197,24 @@ class OpenFoodFactsClient(
         val isNonVegetarian = vegetarianTag?.contains("en:non-vegetarian") == true
 
         return when {
-            isVegan -> listOf(
-                RegimeAlimentaire.VEGAN,
-                RegimeAlimentaire.VEGETARIEN,
-                RegimeAlimentaire.FLEXITARIEN,
-                RegimeAlimentaire.OMNIVORE,
-            )
-            isNonVegetarian || isNonVegan -> listOf(
-                RegimeAlimentaire.OMNIVORE,
-                RegimeAlimentaire.FLEXITARIEN,
-            )
-            isVegetarian -> listOf(
-                RegimeAlimentaire.VEGETARIEN,
-                RegimeAlimentaire.FLEXITARIEN,
-                RegimeAlimentaire.OMNIVORE,
-            )
+            isVegan ->
+                listOf(
+                    RegimeAlimentaire.VEGAN,
+                    RegimeAlimentaire.VEGETARIEN,
+                    RegimeAlimentaire.FLEXITARIEN,
+                    RegimeAlimentaire.OMNIVORE,
+                )
+            isNonVegetarian || isNonVegan ->
+                listOf(
+                    RegimeAlimentaire.OMNIVORE,
+                    RegimeAlimentaire.FLEXITARIEN,
+                )
+            isVegetarian ->
+                listOf(
+                    RegimeAlimentaire.VEGETARIEN,
+                    RegimeAlimentaire.FLEXITARIEN,
+                    RegimeAlimentaire.OMNIVORE,
+                )
             else -> {
                 // Fallback conservateur : sans tags, on ne peut pas garantir vegan/vegetarien
                 listOf(

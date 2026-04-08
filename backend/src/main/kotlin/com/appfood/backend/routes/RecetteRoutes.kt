@@ -27,7 +27,6 @@ fun Route.recetteRoutes() {
 
     authenticate("auth-jwt") {
         route("/api/v1/recettes") {
-
             // GET /api/v1/recettes — liste avec filtres, pagination, search
             get {
                 val regime = call.request.queryParameters["regime"]
@@ -37,14 +36,15 @@ fun Route.recetteRoutes() {
                 val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
                 val size = call.request.queryParameters["size"]?.toIntOrNull() ?: 20
 
-                val (recettes, total) = recetteService.listRecettes(
-                    regime = regime,
-                    typeRepas = typeRepas,
-                    sort = sort,
-                    query = query,
-                    page = page,
-                    size = size,
-                )
+                val (recettes, total) =
+                    recetteService.listRecettes(
+                        regime = regime,
+                        typeRepas = typeRepas,
+                        sort = sort,
+                        query = query,
+                        page = page,
+                        size = size,
+                    )
 
                 call.respond(
                     HttpStatusCode.OK,
@@ -118,32 +118,34 @@ private fun RecetteWithIngredients.toDetailResponse(): RecetteDetailResponse {
         nbPortions = recette.nbPortions,
         regimesCompatibles = recette.regimesCompatibles.split(",").filter { it.isNotBlank() },
         typeRepas = recette.typeRepas.split(",").filter { it.isNotBlank() },
-        ingredients = ingredients.map {
-            IngredientResponse(
-                alimentId = it.alimentId,
-                alimentNom = it.alimentNom,
-                quantiteGrammes = it.quantiteGrammes,
-            )
-        },
+        ingredients =
+            ingredients.map {
+                IngredientResponse(
+                    alimentId = it.alimentId,
+                    alimentNom = it.alimentNom,
+                    quantiteGrammes = it.quantiteGrammes,
+                )
+            },
         etapes = recette.etapes.split("|||").filter { it.isNotBlank() },
-        nutrimentsTotaux = NutrimentValuesResponse(
-            calories = recette.calories,
-            proteines = recette.proteines,
-            glucides = recette.glucides,
-            lipides = recette.lipides,
-            fibres = recette.fibres,
-            sel = recette.sel,
-            sucres = recette.sucres,
-            fer = recette.fer,
-            calcium = recette.calcium,
-            zinc = recette.zinc,
-            magnesium = recette.magnesium,
-            vitamineB12 = recette.vitamineB12,
-            vitamineD = recette.vitamineD,
-            vitamineC = recette.vitamineC,
-            omega3 = recette.omega3,
-            omega6 = recette.omega6,
-        ),
+        nutrimentsTotaux =
+            NutrimentValuesResponse(
+                calories = recette.calories,
+                proteines = recette.proteines,
+                glucides = recette.glucides,
+                lipides = recette.lipides,
+                fibres = recette.fibres,
+                sel = recette.sel,
+                sucres = recette.sucres,
+                fer = recette.fer,
+                calcium = recette.calcium,
+                zinc = recette.zinc,
+                magnesium = recette.magnesium,
+                vitamineB12 = recette.vitamineB12,
+                vitamineD = recette.vitamineD,
+                vitamineC = recette.vitamineC,
+                omega3 = recette.omega3,
+                omega6 = recette.omega6,
+            ),
         nutrimentsParPortion = nutrientsPerPortion(portions),
         source = recette.source.name,
         imageUrl = recette.imageUrl,

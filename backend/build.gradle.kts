@@ -9,6 +9,13 @@ application {
     mainClass.set("com.appfood.backend.ApplicationKt")
 }
 
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+        force("org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.6.2")
+    }
+}
+
 dependencies {
     // Shared KMP module (JVM target — quota calculation, models)
     implementation(project(":shared"))
@@ -29,6 +36,7 @@ dependencies {
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.kotlinDatetime)
+    implementation(libs.kotlinx.datetime)
     implementation(libs.postgresql)
     implementation(libs.flyway.core)
     implementation(libs.flyway.postgresql)

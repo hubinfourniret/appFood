@@ -13,7 +13,6 @@ fun Route.supportRoutes() {
 
     // No authentication required for FAQ
     route("/api/v1/support") {
-
         // GET /api/v1/support/faq
         get("/faq") {
             val response = supportService.getFaq()

@@ -42,7 +42,7 @@ class FirebaseAdmin(
         // To enable: add firebase-admin dependency, set GOOGLE_APPLICATION_CREDENTIALS,
         // and implement: FirebaseAuth.getInstance().verifyIdToken(idToken)
         throw IllegalStateException(
-            "Firebase Admin SDK not configured — set FIREBASE_MOCK=true for development or configure Firebase credentials"
+            "Firebase Admin SDK not configured — set FIREBASE_MOCK=true for development or configure Firebase credentials",
         )
     }
 
@@ -58,7 +58,7 @@ class FirebaseAdmin(
 
         // Real Firebase Admin SDK user deletion not yet configured.
         throw IllegalStateException(
-            "Firebase Admin SDK not configured — set FIREBASE_MOCK=true for development or configure Firebase credentials"
+            "Firebase Admin SDK not configured — set FIREBASE_MOCK=true for development or configure Firebase credentials",
         )
     }
 

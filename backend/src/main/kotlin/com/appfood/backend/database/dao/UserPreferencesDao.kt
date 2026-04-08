@@ -19,54 +19,58 @@ data class UserPreferencesRow(
 )
 
 class UserPreferencesDao {
-
-    suspend fun findByUserId(userId: String): UserPreferencesRow? = dbQuery {
-        UserPreferencesTable.selectAll()
-            .where { UserPreferencesTable.userId eq userId }
-            .map { it.toRow() }
-            .singleOrNull()
-    }
+    suspend fun findByUserId(userId: String): UserPreferencesRow? =
+        dbQuery {
+            UserPreferencesTable.selectAll()
+                .where { UserPreferencesTable.userId eq userId }
+                .map { it.toRow() }
+                .singleOrNull()
+        }
 
     suspend fun insert(
         userId: String,
         alimentsExclus: String = "[]",
         allergies: String = "[]",
         alimentsFavoris: String = "[]",
-    ): UserPreferencesRow = dbQuery {
-        val now = Clock.System.now()
-        UserPreferencesTable.insert {
-            it[UserPreferencesTable.userId] = userId
-            it[UserPreferencesTable.alimentsExclus] = alimentsExclus
-            it[UserPreferencesTable.allergies] = allergies
-            it[UserPreferencesTable.alimentsFavoris] = alimentsFavoris
-            it[UserPreferencesTable.updatedAt] = now
+    ): UserPreferencesRow =
+        dbQuery {
+            val now = Clock.System.now()
+            UserPreferencesTable.insert {
+                it[UserPreferencesTable.userId] = userId
+                it[UserPreferencesTable.alimentsExclus] = alimentsExclus
+                it[UserPreferencesTable.allergies] = allergies
+                it[UserPreferencesTable.alimentsFavoris] = alimentsFavoris
+                it[UserPreferencesTable.updatedAt] = now
+            }
+            UserPreferencesRow(userId, alimentsExclus, allergies, alimentsFavoris, now)
         }
-        UserPreferencesRow(userId, alimentsExclus, allergies, alimentsFavoris, now)
-    }
 
     suspend fun update(
         userId: String,
         alimentsExclus: String,
         allergies: String,
         alimentsFavoris: String,
-    ): Boolean = dbQuery {
-        UserPreferencesTable.update({ UserPreferencesTable.userId eq userId }) {
-            it[UserPreferencesTable.alimentsExclus] = alimentsExclus
-            it[UserPreferencesTable.allergies] = allergies
-            it[UserPreferencesTable.alimentsFavoris] = alimentsFavoris
-            it[UserPreferencesTable.updatedAt] = Clock.System.now()
-        } > 0
-    }
+    ): Boolean =
+        dbQuery {
+            UserPreferencesTable.update({ UserPreferencesTable.userId eq userId }) {
+                it[UserPreferencesTable.alimentsExclus] = alimentsExclus
+                it[UserPreferencesTable.allergies] = allergies
+                it[UserPreferencesTable.alimentsFavoris] = alimentsFavoris
+                it[UserPreferencesTable.updatedAt] = Clock.System.now()
+            } > 0
+        }
 
-    suspend fun delete(userId: String): Boolean = dbQuery {
-        UserPreferencesTable.deleteWhere { UserPreferencesTable.userId eq userId } > 0
-    }
+    suspend fun delete(userId: String): Boolean =
+        dbQuery {
+            UserPreferencesTable.deleteWhere { UserPreferencesTable.userId eq userId } > 0
+        }
 
-    private fun ResultRow.toRow() = UserPreferencesRow(
-        userId = this[UserPreferencesTable.userId],
-        alimentsExclus = this[UserPreferencesTable.alimentsExclus],
-        allergies = this[UserPreferencesTable.allergies],
-        alimentsFavoris = this[UserPreferencesTable.alimentsFavoris],
-        updatedAt = this[UserPreferencesTable.updatedAt],
-    )
+    private fun ResultRow.toRow() =
+        UserPreferencesRow(
+            userId = this[UserPreferencesTable.userId],
+            alimentsExclus = this[UserPreferencesTable.alimentsExclus],
+            allergies = this[UserPreferencesTable.allergies],
+            alimentsFavoris = this[UserPreferencesTable.alimentsFavoris],
+            updatedAt = this[UserPreferencesTable.updatedAt],
+        )
 }

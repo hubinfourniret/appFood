@@ -21,7 +21,6 @@ fun Route.poidsRoutes() {
 
     authenticate("auth-jwt") {
         route("/api/v1/poids") {
-
             // GET /api/v1/poids?dateFrom={}&dateTo={}
             get {
                 val userId = call.userId()

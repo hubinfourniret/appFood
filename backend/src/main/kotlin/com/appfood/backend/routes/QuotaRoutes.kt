@@ -32,11 +32,12 @@ fun Route.quotaRoutes() {
             get("/status") {
                 val userId = call.userId()
                 val dateStr = call.request.queryParameters["date"]
-                val date = if (dateStr != null) {
-                    parseQuotaDate(dateStr)
-                } else {
-                    todayQuotaDate()
-                }
+                val date =
+                    if (dateStr != null) {
+                        parseQuotaDate(dateStr)
+                    } else {
+                        todayQuotaDate()
+                    }
                 val statuses = quotaService.getQuotaStatus(userId, date)
                 call.respond(
                     HttpStatusCode.OK,
@@ -87,20 +88,22 @@ fun Route.quotaRoutes() {
             // POST /quotas/{nutriment}/reset — reset single
             post("/{nutriment}/reset") {
                 val userId = call.userId()
-                val nutriment = call.parameters["nutriment"]
-                    ?: throw ValidationException("Nutriment requis")
+                val nutriment =
+                    call.parameters["nutriment"]
+                        ?: throw ValidationException("Nutriment requis")
                 val quota = quotaService.resetQuota(userId, nutriment)
-                call.respond(HttpStatusCode.OK, ApiResponse(data = quota.toResponse()))
+                call.respond(HttpStatusCode.OK, quota.toResponse())
             }
 
             // PUT /quotas/{nutriment} — customize single
             put("/{nutriment}") {
                 val userId = call.userId()
-                val nutriment = call.parameters["nutriment"]
-                    ?: throw ValidationException("Nutriment requis")
+                val nutriment =
+                    call.parameters["nutriment"]
+                        ?: throw ValidationException("Nutriment requis")
                 val request = call.receive<UpdateQuotaRequest>()
                 val quota = quotaService.updateQuota(userId, nutriment, request.valeurCible)
-                call.respond(HttpStatusCode.OK, ApiResponse(data = quota.toResponse()))
+                call.respond(HttpStatusCode.OK, quota.toResponse())
             }
         }
     }
@@ -108,22 +111,24 @@ fun Route.quotaRoutes() {
 
 // --- Mapping helpers ---
 
-internal fun QuotaRow.toResponse() = QuotaResponse(
-    nutriment = nutriment.name,
-    valeurCible = valeurCible,
-    estPersonnalise = estPersonnalise,
-    valeurCalculee = valeurCalculee,
-    unite = unite,
-    updatedAt = updatedAt.toString(),
-)
+internal fun QuotaRow.toResponse() =
+    QuotaResponse(
+        nutriment = nutriment.name,
+        valeurCible = valeurCible,
+        estPersonnalise = estPersonnalise,
+        valeurCalculee = valeurCalculee,
+        unite = unite,
+        updatedAt = updatedAt.toString(),
+    )
 
-internal fun QuotaStatusResult.toResponse() = QuotaStatusResponse(
-    nutriment = nutriment.name,
-    valeurCible = valeurCible,
-    valeurConsommee = valeurConsommee,
-    pourcentage = pourcentage,
-    unite = unite,
-)
+internal fun QuotaStatusResult.toResponse() =
+    QuotaStatusResponse(
+        nutriment = nutriment.name,
+        valeurCible = valeurCible,
+        valeurConsommee = valeurConsommee,
+        pourcentage = pourcentage,
+        unite = unite,
+    )
 
 private fun parseQuotaDate(dateStr: String): LocalDate {
     return try {

@@ -19,16 +19,16 @@ fun Route.dashboardRoutes() {
 
     authenticate("auth-jwt") {
         route("/api/v1/dashboard") {
-
             // GET /api/v1/dashboard/weekly?weekOf={}
             get("/weekly") {
                 val userId = call.userId()
                 val weekOfStr = call.request.queryParameters["weekOf"]
-                val weekOf = if (weekOfStr != null) {
-                    parseDashboardDate(weekOfStr)
-                } else {
-                    todayDashboardDate()
-                }
+                val weekOf =
+                    if (weekOfStr != null) {
+                        parseDashboardDate(weekOfStr)
+                    } else {
+                        todayDashboardDate()
+                    }
 
                 val data = dashboardService.getWeeklyDashboard(userId, weekOf)
 
@@ -49,28 +49,31 @@ fun Route.dashboardRoutes() {
             get {
                 val userId = call.userId()
                 val dateStr = call.request.queryParameters["date"]
-                val date = if (dateStr != null) {
-                    parseDashboardDate(dateStr)
-                } else {
-                    todayDashboardDate()
-                }
+                val date =
+                    if (dateStr != null) {
+                        parseDashboardDate(dateStr)
+                    } else {
+                        todayDashboardDate()
+                    }
 
                 val data = dashboardService.getDashboard(userId, date)
 
-                val hydratationResponse = if (data.hydratationQuantiteMl != null && data.hydratationObjectifMl != null) {
-                    val pourcentage = if (data.hydratationObjectifMl > 0) {
-                        data.hydratationQuantiteMl.toDouble() / data.hydratationObjectifMl * 100.0
+                val hydratationResponse =
+                    if (data.hydratationQuantiteMl != null && data.hydratationObjectifMl != null) {
+                        val pourcentage =
+                            if (data.hydratationObjectifMl > 0) {
+                                data.hydratationQuantiteMl.toDouble() / data.hydratationObjectifMl * 100.0
+                            } else {
+                                0.0
+                            }
+                        HydratationDashboardResponse(
+                            quantiteMl = data.hydratationQuantiteMl,
+                            objectifMl = data.hydratationObjectifMl,
+                            pourcentage = pourcentage,
+                        )
                     } else {
-                        0.0
+                        null
                     }
-                    HydratationDashboardResponse(
-                        quantiteMl = data.hydratationQuantiteMl,
-                        objectifMl = data.hydratationObjectifMl,
-                        pourcentage = pourcentage,
-                    )
-                } else {
-                    null
-                }
 
                 call.respond(
                     HttpStatusCode.OK,

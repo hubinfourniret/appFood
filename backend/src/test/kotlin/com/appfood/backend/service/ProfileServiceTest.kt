@@ -1,16 +1,15 @@
 package com.appfood.backend.service
 
+import com.appfood.backend.database.tables.NiveauActivite
+import com.appfood.backend.database.tables.RegimeAlimentaire
+import com.appfood.backend.database.tables.Sexe
 import com.appfood.backend.plugins.ValidationException
 import com.appfood.backend.security.toEnumOrThrow
-import com.appfood.backend.database.tables.Sexe
-import com.appfood.backend.database.tables.RegimeAlimentaire
-import com.appfood.backend.database.tables.NiveauActivite
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ProfileServiceTest {
-
     @Test
     fun `should parse valid enum values`() {
         // Given / When / Then
@@ -23,9 +22,10 @@ class ProfileServiceTest {
     @Test
     fun `should throw ValidationException for invalid enum value`() {
         // Given / When / Then
-        val exception = assertFailsWith<ValidationException> {
-            "INVALID".toEnumOrThrow<Sexe>("sexe")
-        }
+        val exception =
+            assertFailsWith<ValidationException> {
+                "INVALID".toEnumOrThrow<Sexe>("sexe")
+            }
         assert(exception.message.contains("INVALID"))
         assert(exception.message.contains("sexe"))
     }

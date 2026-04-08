@@ -30,21 +30,26 @@ class ConsentService(
     /**
      * Met a jour un consentement (upsert).
      */
-    suspend fun updateConsent(userId: String, typeStr: String, request: UpdateConsentRequest): ConsentResponse {
+    suspend fun updateConsent(
+        userId: String,
+        typeStr: String,
+        request: UpdateConsentRequest,
+    ): ConsentResponse {
         val type = parseConsentType(typeStr)
 
         val now = Clock.System.now()
         val existing = consentDao.findByUserAndType(userId, type)
         val id = existing?.id ?: UUID.randomUUID().toString()
 
-        val row = ConsentRow(
-            id = id,
-            userId = userId,
-            type = type,
-            accepte = request.accepte,
-            dateConsentement = now,
-            versionPolitique = request.versionPolitique,
-        )
+        val row =
+            ConsentRow(
+                id = id,
+                userId = userId,
+                type = type,
+                accepte = request.accepte,
+                dateConsentement = now,
+                versionPolitique = request.versionPolitique,
+            )
         consentDao.upsert(row)
 
         logger.info("UpdateConsent: userId=$userId, type=$type, accepte=${request.accepte}")
@@ -55,53 +60,60 @@ class ConsentService(
     /**
      * Enregistre les consentements initiaux (onboarding) — cree les 3 types d'un coup.
      */
-    suspend fun initialConsents(userId: String, request: InitialConsentRequest): ConsentListResponse {
+    suspend fun initialConsents(
+        userId: String,
+        request: InitialConsentRequest,
+    ): ConsentListResponse {
         val now = Clock.System.now()
 
-        val consents = listOf(
-            ConsentRow(
-                id = UUID.randomUUID().toString(),
-                userId = userId,
-                type = ConsentType.ANALYTICS,
-                accepte = request.analytics,
-                dateConsentement = now,
-                versionPolitique = request.versionPolitique,
-            ),
-            ConsentRow(
-                id = UUID.randomUUID().toString(),
-                userId = userId,
-                type = ConsentType.PUBLICITE,
-                accepte = request.publicite,
-                dateConsentement = now,
-                versionPolitique = request.versionPolitique,
-            ),
-            ConsentRow(
-                id = UUID.randomUUID().toString(),
-                userId = userId,
-                type = ConsentType.AMELIORATION_SERVICE,
-                accepte = request.ameliorationService,
-                dateConsentement = now,
-                versionPolitique = request.versionPolitique,
-            ),
-        )
+        val consents =
+            listOf(
+                ConsentRow(
+                    id = UUID.randomUUID().toString(),
+                    userId = userId,
+                    type = ConsentType.ANALYTICS,
+                    accepte = request.analytics,
+                    dateConsentement = now,
+                    versionPolitique = request.versionPolitique,
+                ),
+                ConsentRow(
+                    id = UUID.randomUUID().toString(),
+                    userId = userId,
+                    type = ConsentType.PUBLICITE,
+                    accepte = request.publicite,
+                    dateConsentement = now,
+                    versionPolitique = request.versionPolitique,
+                ),
+                ConsentRow(
+                    id = UUID.randomUUID().toString(),
+                    userId = userId,
+                    type = ConsentType.AMELIORATION_SERVICE,
+                    accepte = request.ameliorationService,
+                    dateConsentement = now,
+                    versionPolitique = request.versionPolitique,
+                ),
+            )
 
         for (consent in consents) {
             consentDao.upsert(consent)
         }
 
-        logger.info("InitialConsents: userId=$userId, analytics=${request.analytics}, publicite=${request.publicite}, amelioration=${request.ameliorationService}")
+        logger.info(
+            "InitialConsents: userId=$userId, analytics=${request.analytics}, publicite=${request.publicite}, amelioration=${request.ameliorationService}",
+        )
 
         return ConsentListResponse(
             data = consents.map { it.toResponse() },
         )
     }
 
-    private fun ConsentRow.toResponse() = ConsentResponse(
-        type = type.name,
-        accepte = accepte,
-        dateConsentement = dateConsentement.toString(),
-        versionPolitique = versionPolitique,
-    )
+    private fun ConsentRow.toResponse() =
+        ConsentResponse(
+            type = type.name,
+            accepte = accepte,
+            dateConsentement = dateConsentement.toString(),
+            versionPolitique = versionPolitique,
+        )
 
     private fun parseConsentType(typeStr: String): ConsentType {
         return try {

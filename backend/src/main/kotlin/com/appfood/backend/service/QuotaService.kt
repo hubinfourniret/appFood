@@ -26,7 +26,10 @@ class QuotaService(
         return quotaDao.findByUserId(userId)
     }
 
-    suspend fun getQuotaStatus(userId: String, date: LocalDate): List<QuotaStatusResult> {
+    suspend fun getQuotaStatus(
+        userId: String,
+        date: LocalDate,
+    ): List<QuotaStatusResult> {
         val quotas = quotaDao.findByUserId(userId)
         if (quotas.isEmpty()) {
             throw NotFoundException("Aucun quota trouve. Utilisez POST /quotas/recalculate pour les generer.")
@@ -37,11 +40,12 @@ class QuotaService(
 
         return quotas.map { quota ->
             val valeurConsommee = getConsumedValue(consumed, quota.nutriment)
-            val pourcentage = if (quota.valeurCible > 0.0) {
-                valeurConsommee / quota.valeurCible * 100.0
-            } else {
-                0.0
-            }
+            val pourcentage =
+                if (quota.valeurCible > 0.0) {
+                    valeurConsommee / quota.valeurCible * 100.0
+                } else {
+                    0.0
+                }
             QuotaStatusResult(
                 nutriment = quota.nutriment,
                 valeurCible = quota.valeurCible,
@@ -52,37 +56,48 @@ class QuotaService(
         }
     }
 
-    suspend fun updateQuota(userId: String, nutrimentStr: String, valeurCible: Double): QuotaRow {
+    suspend fun updateQuota(
+        userId: String,
+        nutrimentStr: String,
+        valeurCible: Double,
+    ): QuotaRow {
         val nutriment = nutrimentStr.toEnumOrThrow<NutrimentType>("nutriment")
 
         if (valeurCible <= 0.0) {
             throw ValidationException("valeurCible doit etre > 0")
         }
 
-        val existing = quotaDao.findByUserAndNutriment(userId, nutriment)
-            ?: throw NotFoundException("Quota non trouve pour $nutrimentStr. Utilisez POST /quotas/recalculate d'abord.")
+        val existing =
+            quotaDao.findByUserAndNutriment(userId, nutriment)
+                ?: throw NotFoundException("Quota non trouve pour $nutrimentStr. Utilisez POST /quotas/recalculate d'abord.")
 
-        val updated = existing.copy(
-            valeurCible = valeurCible,
-            estPersonnalise = true,
-            updatedAt = Clock.System.now(),
-        )
+        val updated =
+            existing.copy(
+                valeurCible = valeurCible,
+                estPersonnalise = true,
+                updatedAt = Clock.System.now(),
+            )
         quotaDao.upsert(updated)
         logger.info("UpdateQuota: nutriment=$nutrimentStr, valeur=$valeurCible, userId=$userId")
         return quotaDao.findByUserAndNutriment(userId, nutriment)!!
     }
 
-    suspend fun resetQuota(userId: String, nutrimentStr: String): QuotaRow {
+    suspend fun resetQuota(
+        userId: String,
+        nutrimentStr: String,
+    ): QuotaRow {
         val nutriment = nutrimentStr.toEnumOrThrow<NutrimentType>("nutriment")
 
-        val existing = quotaDao.findByUserAndNutriment(userId, nutriment)
-            ?: throw NotFoundException("Quota non trouve pour $nutrimentStr")
+        val existing =
+            quotaDao.findByUserAndNutriment(userId, nutriment)
+                ?: throw NotFoundException("Quota non trouve pour $nutrimentStr")
 
-        val reset = existing.copy(
-            valeurCible = existing.valeurCalculee,
-            estPersonnalise = false,
-            updatedAt = Clock.System.now(),
-        )
+        val reset =
+            existing.copy(
+                valeurCible = existing.valeurCalculee,
+                estPersonnalise = false,
+                updatedAt = Clock.System.now(),
+            )
         quotaDao.upsert(reset)
         logger.info("ResetQuota: nutriment=$nutrimentStr, userId=$userId")
         return quotaDao.findByUserAndNutriment(userId, nutriment)!!
@@ -94,65 +109,70 @@ class QuotaService(
             throw NotFoundException("Aucun quota a reinitialiser")
         }
 
-        val reset = existing.map {
-            it.copy(
-                valeurCible = it.valeurCalculee,
-                estPersonnalise = false,
-                updatedAt = Clock.System.now(),
-            )
-        }
+        val reset =
+            existing.map {
+                it.copy(
+                    valeurCible = it.valeurCalculee,
+                    estPersonnalise = false,
+                    updatedAt = Clock.System.now(),
+                )
+            }
         quotaDao.upsertAll(reset)
         logger.info("ResetAllQuotas: userId=$userId")
         return quotaDao.findByUserId(userId)
     }
 
     suspend fun recalculateQuotas(userId: String): List<QuotaRow> {
-        val profile = userProfileDao.findByUserId(userId)
-            ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST /users/me/profile.")
+        val profile =
+            userProfileDao.findByUserId(userId)
+                ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST /users/me/profile.")
 
         // Delegate to the shared CalculerQuotasUseCase (single source of truth for formulas)
-        val sharedProfile = UserProfile(
-            userId = userId,
-            sexe = com.appfood.shared.model.Sexe.valueOf(profile.sexe.name),
-            age = profile.age,
-            poidsKg = profile.poidsKg,
-            tailleCm = profile.tailleCm,
-            regimeAlimentaire = com.appfood.shared.model.RegimeAlimentaire.valueOf(profile.regimeAlimentaire.name),
-            niveauActivite = com.appfood.shared.model.NiveauActivite.valueOf(profile.niveauActivite.name),
-            onboardingComplete = true,
-            objectifPoids = null,
-            updatedAt = kotlin.time.Clock.System.now(),
-        )
+        val sharedProfile =
+            UserProfile(
+                userId = userId,
+                sexe = com.appfood.shared.model.Sexe.valueOf(profile.sexe.name),
+                age = profile.age,
+                poidsKg = profile.poidsKg,
+                tailleCm = profile.tailleCm,
+                regimeAlimentaire = com.appfood.shared.model.RegimeAlimentaire.valueOf(profile.regimeAlimentaire.name),
+                niveauActivite = com.appfood.shared.model.NiveauActivite.valueOf(profile.niveauActivite.name),
+                onboardingComplete = true,
+                objectifPoids = null,
+                updatedAt = kotlin.time.Clock.System.now(),
+            )
 
         val sharedQuotas = calculerQuotasUseCase.calculerQuotas(sharedProfile)
         val now = Clock.System.now()
-        val quotas = sharedQuotas.map { q ->
-            QuotaRow(
-                userId = userId,
-                nutriment = NutrimentType.valueOf(q.nutriment.name),
-                valeurCible = q.valeurCible,
-                estPersonnalise = false,
-                valeurCalculee = q.valeurCalculee,
-                unite = q.unite,
-                updatedAt = now,
-            )
-        }
+        val quotas =
+            sharedQuotas.map { q ->
+                QuotaRow(
+                    userId = userId,
+                    nutriment = NutrimentType.valueOf(q.nutriment.name),
+                    valeurCible = q.valeurCible,
+                    estPersonnalise = false,
+                    valeurCalculee = q.valeurCalculee,
+                    unite = q.unite,
+                    updatedAt = now,
+                )
+            }
 
         // Preserve personalized quotas: if a quota was personalized, keep the user's valeurCible
         val existingQuotas = quotaDao.findByUserId(userId)
         val existingMap = existingQuotas.associateBy { it.nutriment }
 
-        val finalQuotas = quotas.map { calculated ->
-            val existing = existingMap[calculated.nutriment]
-            if (existing != null && existing.estPersonnalise) {
-                calculated.copy(
-                    valeurCible = existing.valeurCible,
-                    estPersonnalise = true,
-                )
-            } else {
-                calculated
+        val finalQuotas =
+            quotas.map { calculated ->
+                val existing = existingMap[calculated.nutriment]
+                if (existing != null && existing.estPersonnalise) {
+                    calculated.copy(
+                        valeurCible = existing.valeurCible,
+                        estPersonnalise = true,
+                    )
+                } else {
+                    calculated
+                }
             }
-        }
 
         quotaDao.upsertAll(finalQuotas)
         logger.info("RecalculateQuotas: userId=$userId, sexe=${profile.sexe}, age=${profile.age}")
@@ -182,7 +202,10 @@ class QuotaService(
         }
     }
 
-    private fun getConsumedValue(consumed: NutrientSums, nutriment: NutrimentType): Double {
+    private fun getConsumedValue(
+        consumed: NutrientSums,
+        nutriment: NutrimentType,
+    ): Double {
         return when (nutriment) {
             NutrimentType.CALORIES -> consumed.calories
             NutrimentType.PROTEINES -> consumed.proteines
@@ -211,4 +234,3 @@ data class QuotaStatusResult(
     val pourcentage: Double,
     val unite: String,
 )
-

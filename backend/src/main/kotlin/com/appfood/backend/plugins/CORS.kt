@@ -14,10 +14,11 @@ fun Application.configureCORS() {
         if (isDev) {
             anyHost()
         } else {
-            val allowedHosts = appEnv.config
-                .propertyOrNull("appfood.cors.allowedHosts")
-                ?.getList()
-                ?: emptyList()
+            val allowedHosts =
+                appEnv.config
+                    .propertyOrNull("appfood.cors.allowedHosts")
+                    ?.getList()
+                    ?: emptyList()
             allowedHosts.forEach { host ->
                 allowHost(host, schemes = listOf("https"))
             }

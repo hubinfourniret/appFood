@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk ./gradlew :backend:test --tests \"com.appfood.backend.AuthRoutesTest.should register new user successfully\" --no-daemon)",
+      "Bash(rtk ./gradlew :backend:compileKotlin --no-daemon)",
+      "Bash(rtk ./gradlew :backend:compileKotlin :shared:compileCommonMainKotlinMetadata --no-daemon)",
+      "Bash(rtk ./gradlew :backend:compileTestKotlin --no-daemon)",
+      "Bash(./gradlew :backend:compileTestKotlin --no-daemon)",
+      "Bash(rtk ./gradlew :backend:test --tests \"com.appfood.backend.AuthRoutesTest\" --no-daemon)",
+      "Bash(./gradlew :backend:test --tests \"com.appfood.backend.AuthRoutesTest\" --no-daemon)",
+      "Bash(./gradlew :backend:test --tests \"com.appfood.backend.AuthRoutesTest.should register new user successfully\" --no-daemon --info)",
+      "Bash(./gradlew :backend:dependencies --configuration runtimeClasspath --no-daemon)",
+      "Bash(xargs -I {} bash -c 'jar tf \"{}\" | grep -i \"RoutingKt\"')",
+      "Bash(xargs -I {} bash -c 'jar tf \"{}\" | grep RouteExt')",
+      "Bash(jar tf:*)",
+      "Bash(jar xf:*)",
+      "Bash(javap -c -p /tmp/koin-check/org/koin/ktor/ext/RouteExtKt.class)",
+      "WebSearch",
+      "Bash(rtk ./gradlew :backend:compileKotlin :backend:compileTestKotlin --no-daemon)",
+      "Bash(./gradlew :backend:compileKotlin --no-daemon)",
+      "Bash(rtk:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

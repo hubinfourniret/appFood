@@ -31,16 +31,17 @@ class JournalService(
     ): List<JournalEntryRow> {
         val mealType = mealTypeStr?.toEnumOrThrow<MealType>("mealType")
 
-        val entries = when {
-            dateFrom != null && dateTo != null -> {
-                if (dateFrom > dateTo) {
-                    throw ValidationException("dateFrom doit etre avant dateTo")
+        val entries =
+            when {
+                dateFrom != null && dateTo != null -> {
+                    if (dateFrom > dateTo) {
+                        throw ValidationException("dateFrom doit etre avant dateTo")
+                    }
+                    journalEntryDao.findByUserAndDateRange(userId, dateFrom, dateTo)
                 }
-                journalEntryDao.findByUserAndDateRange(userId, dateFrom, dateTo)
+                date != null -> journalEntryDao.findByUserAndDate(userId, date)
+                else -> journalEntryDao.findByUserAndDate(userId, LocalDate.Companion.parse(todayString()))
             }
-            date != null -> journalEntryDao.findByUserAndDate(userId, date)
-            else -> journalEntryDao.findByUserAndDate(userId, LocalDate.Companion.parse(todayString()))
-        }
 
         return if (mealType != null) {
             entries.filter { it.mealType == mealType }
@@ -76,40 +77,42 @@ class JournalService(
             if (quantiteGrammes == null || quantiteGrammes <= 0.0) {
                 throw ValidationException("quantiteGrammes doit etre > 0 pour un aliment")
             }
-            val aliment = alimentDao.findById(alimentId)
-                ?: throw NotFoundException("Aliment non trouve: $alimentId")
+            val aliment =
+                alimentDao.findById(alimentId)
+                    ?: throw NotFoundException("Aliment non trouve: $alimentId")
 
             val nutrients = calculateNutrientsFromAliment(aliment, quantiteGrammes)
 
-            val row = JournalEntryRow(
-                id = id,
-                userId = userId,
-                date = date,
-                mealType = mealType,
-                alimentId = alimentId,
-                recetteId = null,
-                nom = aliment.nom,
-                quantiteGrammes = quantiteGrammes,
-                nbPortions = null,
-                calories = nutrients.calories,
-                proteines = nutrients.proteines,
-                glucides = nutrients.glucides,
-                lipides = nutrients.lipides,
-                fibres = nutrients.fibres,
-                sel = nutrients.sel,
-                sucres = nutrients.sucres,
-                fer = nutrients.fer,
-                calcium = nutrients.calcium,
-                zinc = nutrients.zinc,
-                magnesium = nutrients.magnesium,
-                vitamineB12 = nutrients.vitamineB12,
-                vitamineD = nutrients.vitamineD,
-                vitamineC = nutrients.vitamineC,
-                omega3 = nutrients.omega3,
-                omega6 = nutrients.omega6,
-                createdAt = now,
-                updatedAt = now,
-            )
+            val row =
+                JournalEntryRow(
+                    id = id,
+                    userId = userId,
+                    date = date,
+                    mealType = mealType,
+                    alimentId = alimentId,
+                    recetteId = null,
+                    nom = aliment.nom,
+                    quantiteGrammes = quantiteGrammes,
+                    nbPortions = null,
+                    calories = nutrients.calories,
+                    proteines = nutrients.proteines,
+                    glucides = nutrients.glucides,
+                    lipides = nutrients.lipides,
+                    fibres = nutrients.fibres,
+                    sel = nutrients.sel,
+                    sucres = nutrients.sucres,
+                    fer = nutrients.fer,
+                    calcium = nutrients.calcium,
+                    zinc = nutrients.zinc,
+                    magnesium = nutrients.magnesium,
+                    vitamineB12 = nutrients.vitamineB12,
+                    vitamineD = nutrients.vitamineD,
+                    vitamineC = nutrients.vitamineC,
+                    omega3 = nutrients.omega3,
+                    omega6 = nutrients.omega6,
+                    createdAt = now,
+                    updatedAt = now,
+                )
             logger.info("AddEntry: aliment=$alimentId, quantity=$quantiteGrammes, userId=$userId")
             return journalEntryDao.insert(row)
         } else {
@@ -117,45 +120,48 @@ class JournalService(
             if (nbPortions == null || nbPortions <= 0.0) {
                 throw ValidationException("nbPortions doit etre > 0 pour une recette")
             }
-            val recette = recetteDao.findById(recetteId!!)
-                ?: throw NotFoundException("Recette non trouvee: $recetteId")
+            val recette =
+                recetteDao.findById(recetteId!!)
+                    ?: throw NotFoundException("Recette non trouvee: $recetteId")
 
             val nutrients = calculateNutrientsFromRecette(recette, nbPortions)
-            val quantiteGrammesCalc = if (recette.nbPortions > 0) {
-                nbPortions / recette.nbPortions * 100.0
-            } else {
-                100.0
-            }
+            val quantiteGrammesCalc =
+                if (recette.nbPortions > 0) {
+                    nbPortions / recette.nbPortions * 100.0
+                } else {
+                    100.0
+                }
 
-            val row = JournalEntryRow(
-                id = id,
-                userId = userId,
-                date = date,
-                mealType = mealType,
-                alimentId = null,
-                recetteId = recetteId,
-                nom = recette.nom,
-                quantiteGrammes = quantiteGrammesCalc,
-                nbPortions = nbPortions,
-                calories = nutrients.calories,
-                proteines = nutrients.proteines,
-                glucides = nutrients.glucides,
-                lipides = nutrients.lipides,
-                fibres = nutrients.fibres,
-                sel = nutrients.sel,
-                sucres = nutrients.sucres,
-                fer = nutrients.fer,
-                calcium = nutrients.calcium,
-                zinc = nutrients.zinc,
-                magnesium = nutrients.magnesium,
-                vitamineB12 = nutrients.vitamineB12,
-                vitamineD = nutrients.vitamineD,
-                vitamineC = nutrients.vitamineC,
-                omega3 = nutrients.omega3,
-                omega6 = nutrients.omega6,
-                createdAt = now,
-                updatedAt = now,
-            )
+            val row =
+                JournalEntryRow(
+                    id = id,
+                    userId = userId,
+                    date = date,
+                    mealType = mealType,
+                    alimentId = null,
+                    recetteId = recetteId,
+                    nom = recette.nom,
+                    quantiteGrammes = quantiteGrammesCalc,
+                    nbPortions = nbPortions,
+                    calories = nutrients.calories,
+                    proteines = nutrients.proteines,
+                    glucides = nutrients.glucides,
+                    lipides = nutrients.lipides,
+                    fibres = nutrients.fibres,
+                    sel = nutrients.sel,
+                    sucres = nutrients.sucres,
+                    fer = nutrients.fer,
+                    calcium = nutrients.calcium,
+                    zinc = nutrients.zinc,
+                    magnesium = nutrients.magnesium,
+                    vitamineB12 = nutrients.vitamineB12,
+                    vitamineD = nutrients.vitamineD,
+                    vitamineC = nutrients.vitamineC,
+                    omega3 = nutrients.omega3,
+                    omega6 = nutrients.omega6,
+                    createdAt = now,
+                    updatedAt = now,
+                )
             logger.info("AddEntry: recette=$recetteId, portions=$nbPortions, userId=$userId")
             return journalEntryDao.insert(row)
         }
@@ -168,102 +174,115 @@ class JournalService(
         nbPortions: Double?,
         mealTypeStr: String?,
     ): JournalEntryRow {
-        val existing = journalEntryDao.findById(entryId, userId)
-            ?: throw NotFoundException("Entree de journal non trouvee")
+        val existing =
+            journalEntryDao.findById(entryId, userId)
+                ?: throw NotFoundException("Entree de journal non trouvee")
 
         val newMealType = mealTypeStr?.toEnumOrThrow<MealType>("mealType") ?: existing.mealType
 
         // Recalculate nutrients if quantity changed
-        val updatedRow = if (existing.alimentId != null) {
-            val newQuantite = quantiteGrammes ?: existing.quantiteGrammes
-            if (newQuantite <= 0.0) {
-                throw ValidationException("quantiteGrammes doit etre > 0")
-            }
-            if (newQuantite != existing.quantiteGrammes) {
-                val aliment = alimentDao.findById(existing.alimentId)
-                    ?: throw NotFoundException("Aliment non trouve: ${existing.alimentId}")
-                val nutrients = calculateNutrientsFromAliment(aliment, newQuantite)
-                existing.copy(
-                    mealType = newMealType,
-                    quantiteGrammes = newQuantite,
-                    calories = nutrients.calories,
-                    proteines = nutrients.proteines,
-                    glucides = nutrients.glucides,
-                    lipides = nutrients.lipides,
-                    fibres = nutrients.fibres,
-                    sel = nutrients.sel,
-                    sucres = nutrients.sucres,
-                    fer = nutrients.fer,
-                    calcium = nutrients.calcium,
-                    zinc = nutrients.zinc,
-                    magnesium = nutrients.magnesium,
-                    vitamineB12 = nutrients.vitamineB12,
-                    vitamineD = nutrients.vitamineD,
-                    vitamineC = nutrients.vitamineC,
-                    omega3 = nutrients.omega3,
-                    omega6 = nutrients.omega6,
-                )
-            } else {
-                existing.copy(mealType = newMealType)
-            }
-        } else {
-            // Recette entry
-            val newPortions = nbPortions ?: existing.nbPortions ?: 1.0
-            if (newPortions <= 0.0) {
-                throw ValidationException("nbPortions doit etre > 0")
-            }
-            if (newPortions != existing.nbPortions) {
-                val recette = recetteDao.findById(existing.recetteId!!)
-                    ?: throw NotFoundException("Recette non trouvee: ${existing.recetteId}")
-                val nutrients = calculateNutrientsFromRecette(recette, newPortions)
-                val quantiteGrammesCalc = if (recette.nbPortions > 0) {
-                    newPortions / recette.nbPortions * 100.0
-                } else {
-                    100.0
+        val updatedRow =
+            if (existing.alimentId != null) {
+                val newQuantite = quantiteGrammes ?: existing.quantiteGrammes
+                if (newQuantite <= 0.0) {
+                    throw ValidationException("quantiteGrammes doit etre > 0")
                 }
-                existing.copy(
-                    mealType = newMealType,
-                    quantiteGrammes = quantiteGrammesCalc,
-                    nbPortions = newPortions,
-                    calories = nutrients.calories,
-                    proteines = nutrients.proteines,
-                    glucides = nutrients.glucides,
-                    lipides = nutrients.lipides,
-                    fibres = nutrients.fibres,
-                    sel = nutrients.sel,
-                    sucres = nutrients.sucres,
-                    fer = nutrients.fer,
-                    calcium = nutrients.calcium,
-                    zinc = nutrients.zinc,
-                    magnesium = nutrients.magnesium,
-                    vitamineB12 = nutrients.vitamineB12,
-                    vitamineD = nutrients.vitamineD,
-                    vitamineC = nutrients.vitamineC,
-                    omega3 = nutrients.omega3,
-                    omega6 = nutrients.omega6,
-                )
+                if (newQuantite != existing.quantiteGrammes) {
+                    val aliment =
+                        alimentDao.findById(existing.alimentId)
+                            ?: throw NotFoundException("Aliment non trouve: ${existing.alimentId}")
+                    val nutrients = calculateNutrientsFromAliment(aliment, newQuantite)
+                    existing.copy(
+                        mealType = newMealType,
+                        quantiteGrammes = newQuantite,
+                        calories = nutrients.calories,
+                        proteines = nutrients.proteines,
+                        glucides = nutrients.glucides,
+                        lipides = nutrients.lipides,
+                        fibres = nutrients.fibres,
+                        sel = nutrients.sel,
+                        sucres = nutrients.sucres,
+                        fer = nutrients.fer,
+                        calcium = nutrients.calcium,
+                        zinc = nutrients.zinc,
+                        magnesium = nutrients.magnesium,
+                        vitamineB12 = nutrients.vitamineB12,
+                        vitamineD = nutrients.vitamineD,
+                        vitamineC = nutrients.vitamineC,
+                        omega3 = nutrients.omega3,
+                        omega6 = nutrients.omega6,
+                    )
+                } else {
+                    existing.copy(mealType = newMealType)
+                }
             } else {
-                existing.copy(mealType = newMealType)
+                // Recette entry
+                val newPortions = nbPortions ?: existing.nbPortions ?: 1.0
+                if (newPortions <= 0.0) {
+                    throw ValidationException("nbPortions doit etre > 0")
+                }
+                if (newPortions != existing.nbPortions) {
+                    val recette =
+                        recetteDao.findById(existing.recetteId!!)
+                            ?: throw NotFoundException("Recette non trouvee: ${existing.recetteId}")
+                    val nutrients = calculateNutrientsFromRecette(recette, newPortions)
+                    val quantiteGrammesCalc =
+                        if (recette.nbPortions > 0) {
+                            newPortions / recette.nbPortions * 100.0
+                        } else {
+                            100.0
+                        }
+                    existing.copy(
+                        mealType = newMealType,
+                        quantiteGrammes = quantiteGrammesCalc,
+                        nbPortions = newPortions,
+                        calories = nutrients.calories,
+                        proteines = nutrients.proteines,
+                        glucides = nutrients.glucides,
+                        lipides = nutrients.lipides,
+                        fibres = nutrients.fibres,
+                        sel = nutrients.sel,
+                        sucres = nutrients.sucres,
+                        fer = nutrients.fer,
+                        calcium = nutrients.calcium,
+                        zinc = nutrients.zinc,
+                        magnesium = nutrients.magnesium,
+                        vitamineB12 = nutrients.vitamineB12,
+                        vitamineD = nutrients.vitamineD,
+                        vitamineC = nutrients.vitamineC,
+                        omega3 = nutrients.omega3,
+                        omega6 = nutrients.omega6,
+                    )
+                } else {
+                    existing.copy(mealType = newMealType)
+                }
             }
-        }
 
         journalEntryDao.update(updatedRow)
         logger.info("UpdateEntry: id=$entryId, userId=$userId")
         return journalEntryDao.findById(entryId, userId)!!
     }
 
-    suspend fun deleteEntry(userId: String, entryId: String) {
-        val exists = journalEntryDao.findById(entryId, userId)
-            ?: throw NotFoundException("Entree de journal non trouvee")
+    suspend fun deleteEntry(
+        userId: String,
+        entryId: String,
+    ) {
+        val exists =
+            journalEntryDao.findById(entryId, userId)
+                ?: throw NotFoundException("Entree de journal non trouvee")
         journalEntryDao.delete(entryId, userId)
         logger.info("DeleteEntry: id=$entryId, userId=$userId")
     }
 
-    suspend fun getDailySummary(userId: String, date: LocalDate): DailySummary {
+    suspend fun getDailySummary(
+        userId: String,
+        date: LocalDate,
+    ): DailySummary {
         val entries = journalEntryDao.findByUserAndDate(userId, date)
         val total = sumNutrients(entries)
-        val parRepas = entries.groupBy { it.mealType }
-            .mapValues { (_, rows) -> sumNutrients(rows) }
+        val parRepas =
+            entries.groupBy { it.mealType }
+                .mapValues { (_, rows) -> sumNutrients(rows) }
         return DailySummary(
             date = date,
             totalNutriments = total,
@@ -272,7 +291,10 @@ class JournalService(
         )
     }
 
-    suspend fun getWeeklySummary(userId: String, weekOf: LocalDate): WeeklySummary {
+    suspend fun getWeeklySummary(
+        userId: String,
+        weekOf: LocalDate,
+    ): WeeklySummary {
         // Compute Monday-Sunday for the given week
         val dayOfWeek = weekOf.dayOfWeek.ordinal // Monday=0
         val monday = LocalDate.fromEpochDays(weekOf.toEpochDays() - dayOfWeek)
@@ -290,11 +312,12 @@ class JournalService(
         }
 
         val joursAvecSaisie = parJour.size
-        val moyenne = if (joursAvecSaisie > 0) {
-            averageNutrients(parJour.values.toList())
-        } else {
-            NutrientSums()
-        }
+        val moyenne =
+            if (joursAvecSaisie > 0) {
+                averageNutrients(parJour.values.toList())
+            } else {
+                NutrientSums()
+            }
 
         return WeeklySummary(
             dateFrom = monday,
@@ -305,13 +328,19 @@ class JournalService(
         )
     }
 
-    suspend fun getRecentAlimentIds(userId: String, limit: Int): List<String> {
+    suspend fun getRecentAlimentIds(
+        userId: String,
+        limit: Int,
+    ): List<String> {
         return journalEntryDao.findRecentAlimentIds(userId, limit)
     }
 
     // --- Nutrient calculation helpers ---
 
-    private fun calculateNutrientsFromAliment(aliment: AlimentRow, quantiteGrammes: Double): NutrientSums {
+    private fun calculateNutrientsFromAliment(
+        aliment: AlimentRow,
+        quantiteGrammes: Double,
+    ): NutrientSums {
         val factor = quantiteGrammes / 100.0
         return NutrientSums(
             calories = aliment.calories * factor,
@@ -333,7 +362,10 @@ class JournalService(
         )
     }
 
-    private fun calculateNutrientsFromRecette(recette: RecetteRow, nbPortions: Double): NutrientSums {
+    private fun calculateNutrientsFromRecette(
+        recette: RecetteRow,
+        nbPortions: Double,
+    ): NutrientSums {
         val factor = if (recette.nbPortions > 0) nbPortions / recette.nbPortions else 1.0
         return NutrientSums(
             calories = recette.calories * factor,
@@ -381,26 +413,27 @@ class JournalService(
     private fun averageNutrients(sums: List<NutrientSums>): NutrientSums {
         if (sums.isEmpty()) return NutrientSums()
         val n = sums.size.toDouble()
-        val total = sums.fold(NutrientSums()) { acc, s ->
-            NutrientSums(
-                calories = acc.calories + s.calories,
-                proteines = acc.proteines + s.proteines,
-                glucides = acc.glucides + s.glucides,
-                lipides = acc.lipides + s.lipides,
-                fibres = acc.fibres + s.fibres,
-                sel = acc.sel + s.sel,
-                sucres = acc.sucres + s.sucres,
-                fer = acc.fer + s.fer,
-                calcium = acc.calcium + s.calcium,
-                zinc = acc.zinc + s.zinc,
-                magnesium = acc.magnesium + s.magnesium,
-                vitamineB12 = acc.vitamineB12 + s.vitamineB12,
-                vitamineD = acc.vitamineD + s.vitamineD,
-                vitamineC = acc.vitamineC + s.vitamineC,
-                omega3 = acc.omega3 + s.omega3,
-                omega6 = acc.omega6 + s.omega6,
-            )
-        }
+        val total =
+            sums.fold(NutrientSums()) { acc, s ->
+                NutrientSums(
+                    calories = acc.calories + s.calories,
+                    proteines = acc.proteines + s.proteines,
+                    glucides = acc.glucides + s.glucides,
+                    lipides = acc.lipides + s.lipides,
+                    fibres = acc.fibres + s.fibres,
+                    sel = acc.sel + s.sel,
+                    sucres = acc.sucres + s.sucres,
+                    fer = acc.fer + s.fer,
+                    calcium = acc.calcium + s.calcium,
+                    zinc = acc.zinc + s.zinc,
+                    magnesium = acc.magnesium + s.magnesium,
+                    vitamineB12 = acc.vitamineB12 + s.vitamineB12,
+                    vitamineD = acc.vitamineD + s.vitamineD,
+                    vitamineC = acc.vitamineC + s.vitamineC,
+                    omega3 = acc.omega3 + s.omega3,
+                    omega6 = acc.omega6 + s.omega6,
+                )
+            }
         return NutrientSums(
             calories = total.calories / n,
             proteines = total.proteines / n,

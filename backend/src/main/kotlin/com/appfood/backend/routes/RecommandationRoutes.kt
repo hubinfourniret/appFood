@@ -30,11 +30,12 @@ fun Route.recommandationRoutes() {
             get("/aliments") {
                 val userId = call.userId()
                 val dateStr = call.request.queryParameters["date"]
-                val date = if (dateStr != null) {
-                    parseRecoDate(dateStr)
-                } else {
-                    todayRecoDate()
-                }
+                val date =
+                    if (dateStr != null) {
+                        parseRecoDate(dateStr)
+                    } else {
+                        todayRecoDate()
+                    }
                 val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
 
                 val result = recommandationService.getRecommandationsAliments(userId, date, limit)
@@ -52,11 +53,12 @@ fun Route.recommandationRoutes() {
             get("/recettes") {
                 val userId = call.userId()
                 val dateStr = call.request.queryParameters["date"]
-                val date = if (dateStr != null) {
-                    parseRecoDate(dateStr)
-                } else {
-                    todayRecoDate()
-                }
+                val date =
+                    if (dateStr != null) {
+                        parseRecoDate(dateStr)
+                    } else {
+                        todayRecoDate()
+                    }
                 val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 5
 
                 val result = recommandationService.getRecommandationsRecettes(userId, date, limit)
@@ -76,19 +78,21 @@ fun Route.recommandationRoutes() {
 
 // --- Mapping helpers ---
 
-internal fun ScoredAliment.toResponse() = RecommandationAlimentResponse(
-    aliment = aliment.toSummaryResponse(),
-    nutrimentsCibles = nutrimentsCibles,
-    quantiteSuggereGrammes = quantiteSuggereGrammes,
-    pourcentageCouverture = pourcentageCouverture,
-)
+internal fun ScoredAliment.toResponse() =
+    RecommandationAlimentResponse(
+        aliment = aliment.toSummaryResponse(),
+        nutrimentsCibles = nutrimentsCibles,
+        quantiteSuggereGrammes = quantiteSuggereGrammes,
+        pourcentageCouverture = pourcentageCouverture,
+    )
 
 internal fun AlimentRow.toSummaryResponse(): AlimentSummaryResponse {
-    val regimes = try {
-        Json.parseToJsonElement(regimesCompatibles).jsonArray.map { it.jsonPrimitive.content }
-    } catch (e: Exception) {
-        emptyList()
-    }
+    val regimes =
+        try {
+            Json.parseToJsonElement(regimesCompatibles).jsonArray.map { it.jsonPrimitive.content }
+        } catch (e: Exception) {
+            emptyList()
+        }
     return AlimentSummaryResponse(
         id = id,
         nom = nom,
@@ -98,17 +102,18 @@ internal fun AlimentRow.toSummaryResponse(): AlimentSummaryResponse {
     )
 }
 
-internal fun ScoredRecette.toResponse() = RecommandationRecetteResponse(
-    recetteId = recette.id,
-    nom = recette.nom,
-    description = recette.description,
-    tempsPreparationMin = recette.tempsPreparationMin,
-    tempsCuissonMin = recette.tempsCuissonMin,
-    nbPortions = recette.nbPortions,
-    nutrimentsCibles = nutrimentsCibles,
-    pourcentageCouvertureGlobal = pourcentageCouvertureGlobal,
-    pourcentageCouverture = pourcentageCouverture,
-)
+internal fun ScoredRecette.toResponse() =
+    RecommandationRecetteResponse(
+        recetteId = recette.id,
+        nom = recette.nom,
+        description = recette.description,
+        tempsPreparationMin = recette.tempsPreparationMin,
+        tempsCuissonMin = recette.tempsCuissonMin,
+        nbPortions = recette.nbPortions,
+        nutrimentsCibles = nutrimentsCibles,
+        pourcentageCouvertureGlobal = pourcentageCouvertureGlobal,
+        pourcentageCouverture = pourcentageCouverture,
+    )
 
 private fun parseRecoDate(dateStr: String): LocalDate {
     return try {

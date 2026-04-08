@@ -20,14 +20,19 @@ data class FcmTokenRow(
 )
 
 class FcmTokenDao {
+    suspend fun findByUserId(userId: String): List<FcmTokenRow> =
+        dbQuery {
+            FcmTokensTable.selectAll()
+                .where { FcmTokensTable.userId eq userId }
+                .map { it.toRow() }
+        }
 
-    suspend fun findByUserId(userId: String): List<FcmTokenRow> = dbQuery {
-        FcmTokensTable.selectAll()
-            .where { FcmTokensTable.userId eq userId }
-            .map { it.toRow() }
-    }
-
-    suspend fun upsert(id: String, userId: String, token: String, platform: String) = dbQuery {
+    suspend fun upsert(
+        id: String,
+        userId: String,
+        token: String,
+        platform: String,
+    ) = dbQuery {
         val now = Clock.System.now()
         FcmTokensTable.upsert(FcmTokensTable.userId, FcmTokensTable.token) {
             it[FcmTokensTable.id] = id
@@ -39,22 +44,28 @@ class FcmTokenDao {
         }
     }
 
-    suspend fun deleteByToken(userId: String, token: String): Boolean = dbQuery {
-        FcmTokensTable.deleteWhere {
-            (FcmTokensTable.userId eq userId) and (FcmTokensTable.token eq token)
-        } > 0
-    }
+    suspend fun deleteByToken(
+        userId: String,
+        token: String,
+    ): Boolean =
+        dbQuery {
+            FcmTokensTable.deleteWhere {
+                (FcmTokensTable.userId eq userId) and (FcmTokensTable.token eq token)
+            } > 0
+        }
 
-    suspend fun deleteByUserId(userId: String): Int = dbQuery {
-        FcmTokensTable.deleteWhere { FcmTokensTable.userId eq userId }
-    }
+    suspend fun deleteByUserId(userId: String): Int =
+        dbQuery {
+            FcmTokensTable.deleteWhere { FcmTokensTable.userId eq userId }
+        }
 
-    private fun ResultRow.toRow() = FcmTokenRow(
-        id = this[FcmTokensTable.id],
-        userId = this[FcmTokensTable.userId],
-        token = this[FcmTokensTable.token],
-        platform = this[FcmTokensTable.platform],
-        createdAt = this[FcmTokensTable.createdAt],
-        updatedAt = this[FcmTokensTable.updatedAt],
-    )
+    private fun ResultRow.toRow() =
+        FcmTokenRow(
+            id = this[FcmTokensTable.id],
+            userId = this[FcmTokensTable.userId],
+            token = this[FcmTokensTable.token],
+            platform = this[FcmTokensTable.platform],
+            createdAt = this[FcmTokensTable.createdAt],
+            updatedAt = this[FcmTokensTable.updatedAt],
+        )
 }

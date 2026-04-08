@@ -2,7 +2,6 @@ package com.appfood.backend.search
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -15,17 +14,18 @@ data class SearchQuery(
     val offset: Int = 0,
 ) {
     fun toJsonString(): String {
-        val obj = buildJsonObject {
-            put("q", q)
-            put("limit", limit)
-            put("offset", offset)
-            if (!filter.isNullOrEmpty()) {
-                put("filter", JsonArray(filter.map { JsonPrimitive(it) }))
+        val obj =
+            buildJsonObject {
+                put("q", q)
+                put("limit", limit)
+                put("offset", offset)
+                if (!filter.isNullOrEmpty()) {
+                    put("filter", JsonArray(filter.map { JsonPrimitive(it) }))
+                }
+                if (!sort.isNullOrEmpty()) {
+                    put("sort", JsonArray(sort.map { JsonPrimitive(it) }))
+                }
             }
-            if (!sort.isNullOrEmpty()) {
-                put("sort", JsonArray(sort.map { JsonPrimitive(it) }))
-            }
-        }
         return obj.toString()
     }
 }

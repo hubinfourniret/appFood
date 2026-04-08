@@ -99,7 +99,7 @@ firebase-auth-android = { module = "com.google.firebase:firebase-auth" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
-koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
+koin-ktor = { module = "io.insert-koin:koin-ktor3", version.ref = "koin" }
 
 # SQLDelight
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
