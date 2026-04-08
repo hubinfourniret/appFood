@@ -1,7 +1,9 @@
 package com.appfood.shared.di
 
+import com.appfood.shared.data.impl.AlimentRepositoryImpl
 import com.appfood.shared.data.impl.DashboardRepositoryImpl
 import com.appfood.shared.data.impl.HydratationRepositoryImpl
+import com.appfood.shared.data.impl.JournalRepositoryImpl
 import com.appfood.shared.data.impl.PoidsRepositoryImpl
 import com.appfood.shared.data.impl.QuotaRepositoryImpl
 import com.appfood.shared.data.impl.RecetteRepositoryImpl
@@ -16,18 +18,23 @@ import com.appfood.shared.data.local.LocalPortionDataSource
 import com.appfood.shared.data.local.LocalQuotaDataSource
 import com.appfood.shared.data.local.LocalSyncQueueDataSource
 import com.appfood.shared.data.local.LocalUserDataSource
+import com.appfood.shared.data.remote.AlimentApi
 import com.appfood.shared.data.remote.ApiClient
 import com.appfood.shared.data.remote.AuthApi
 import com.appfood.shared.data.remote.DashboardApi
 import com.appfood.shared.data.remote.HydratationApi
+import com.appfood.shared.data.remote.JournalApi
 import com.appfood.shared.data.remote.PoidsApi
+import com.appfood.shared.data.remote.PortionApi
 import com.appfood.shared.data.remote.QuotaApi
 import com.appfood.shared.data.remote.RecetteApi
 import com.appfood.shared.data.remote.RecommandationApi
 import com.appfood.shared.data.remote.SyncApi
 import com.appfood.shared.data.remote.UserApi
+import com.appfood.shared.data.repository.AlimentRepository
 import com.appfood.shared.data.repository.DashboardRepository
 import com.appfood.shared.data.repository.HydratationRepository
+import com.appfood.shared.data.repository.JournalRepository
 import com.appfood.shared.data.repository.PoidsRepository
 import com.appfood.shared.data.repository.QuotaRepository
 import com.appfood.shared.data.repository.RecetteRepository
@@ -86,6 +93,9 @@ val sharedModule = module {
     single { PoidsApi(get()) }
     single { RecetteApi(get()) }
     single { DashboardApi(get()) }
+    single { AlimentApi(get()) }
+    single { JournalApi(get()) }
+    single { PortionApi(get()) }
 
     // Sync infrastructure
     // ConnectivityMonitor is registered in the platform-specific module (expect/actual)
@@ -114,6 +124,8 @@ val sharedModule = module {
     single<PoidsRepository> { PoidsRepositoryImpl(get(), get(), get()) }
     single<RecetteRepository> { RecetteRepositoryImpl(get()) }
     single<DashboardRepository> { DashboardRepositoryImpl(get()) }
+    single<JournalRepository> { JournalRepositoryImpl(get()) }
+    single<AlimentRepository> { AlimentRepositoryImpl(get(), get()) }
 
     // Data sources locales (SQLDelight)
     singleOf(::LocalJournalDataSource)

@@ -65,7 +65,9 @@ import com.appfood.shared.ui.recommandation.RecommandationsScreen
 import com.appfood.shared.ui.recommandation.RecommandationViewModel
 import com.appfood.shared.ui.settings.AboutScreen
 import com.appfood.shared.data.local.LocalUserDataSource
+import com.appfood.shared.data.repository.AlimentRepository
 import com.appfood.shared.data.repository.DashboardRepository
+import com.appfood.shared.data.repository.JournalRepository
 import com.appfood.shared.data.repository.QuotaRepository
 import com.appfood.shared.data.repository.RecetteRepository
 import com.appfood.shared.data.repository.RecommandationRepository
@@ -97,7 +99,16 @@ fun AppNavigation(
     val authViewModel = remember(userRepository) { AuthViewModel(userRepository) }
     val onboardingViewModel = remember(userRepository) { OnboardingViewModel(userRepository = userRepository) }
     val profilViewModel = remember(userRepository) { ProfilViewModel(userRepository = userRepository) }
-    val journalViewModel = remember { JournalViewModel().also { it.init() } }
+    val journalRepository = koinInject<JournalRepository>()
+    val alimentRepository = koinInject<AlimentRepository>()
+    val recetteRepository = koinInject<RecetteRepository>()
+    val journalViewModel = remember(journalRepository, alimentRepository, recetteRepository) {
+        JournalViewModel(
+            journalRepository = journalRepository,
+            alimentRepository = alimentRepository,
+            recetteRepository = recetteRepository,
+        ).also { it.init() }
+    }
     val dashboardRepository = koinInject<DashboardRepository>()
     val dashboardViewModel = remember(dashboardRepository) { DashboardViewModel(dashboardRepository = dashboardRepository) }
     val quotaRepository = koinInject<QuotaRepository>()
@@ -140,7 +151,6 @@ fun AppNavigation(
     val weeklyDashboardViewModel = remember(dashboardRepository) { WeeklyDashboardViewModel(dashboardRepository = dashboardRepository) }
     val disclaimerViewModel = remember { DisclaimerViewModel() }
     val consentViewModel = remember { ConsentViewModel() }
-    val recetteRepository = koinInject<RecetteRepository>()
     val recettesViewModel = remember(recetteRepository) {
         RecettesViewModel(recetteRepository).also { it.init() }
     }

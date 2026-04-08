@@ -2,10 +2,20 @@ package com.appfood.shared.ui.journal
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.request.AddJournalEntryRequest
+import com.appfood.shared.api.request.UpdateJournalEntryRequest
+import com.appfood.shared.api.response.AlimentResponse
+import com.appfood.shared.api.response.NutrimentValuesResponse
+import com.appfood.shared.data.repository.AlimentRepository
+import com.appfood.shared.data.repository.JournalRepository
+import com.appfood.shared.data.repository.RecetteRepository
 import com.appfood.shared.model.Aliment
 import com.appfood.shared.model.MealType
 import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.PortionStandard
+import com.appfood.shared.model.RegimeAlimentaire
+import com.appfood.shared.model.SourceAliment
+import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +26,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * ViewModel for the entire journal feature (JOURNAL-01, JOURNAL-03, JOURNAL-04, JOURNAL-06, PORTIONS-01).
@@ -24,16 +36,9 @@ import kotlinx.coroutines.launch
  * Use cases will be injected when created by the SHARED agent.
  */
 class JournalViewModel(
-    // TODO: Inject use cases when created by SHARED agent
-    // private val ajouterEntreeUseCase: AjouterEntreeUseCase,
-    // private val calculerApportsUseCase: CalculerApportsUseCase,
-    // private val rechercherAlimentUseCase: RechercherAlimentUseCase,
-    // private val getFavorisUseCase: GetFavorisUseCase,
-    // private val toggleFavoriUseCase: ToggleFavoriUseCase,
-    // private val getRecentsUseCase: GetRecentsUseCase,
-    // private val modifierEntreeUseCase: ModifierEntreeUseCase,
-    // private val supprimerEntreeUseCase: SupprimerEntreeUseCase,
-    // private val getPortionsUseCase: GetPortionsUseCase,
+    private val journalRepository: JournalRepository,
+    private val alimentRepository: AlimentRepository,
+    private val recetteRepository: RecetteRepository,
 ) : ViewModel() {
 
     // --- Search state ---
@@ -143,23 +148,19 @@ class JournalViewModel(
     private fun performSearch(query: String) {
         _searchState.value = SearchState.Loading
         viewModelScope.launch {
-            // TODO: Call rechercherAlimentUseCase when created by SHARED agent
-            // val result = rechercherAlimentUseCase(query)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _searchState.value = if (result.data.isEmpty()) {
-            //             SearchState.Empty
-            //         } else {
-            //             SearchState.Results(result.data)
-            //         }
-            //     }
-            //     is AppResult.Error -> {
-            //         _searchState.value = SearchState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: empty results
-            _searchState.value = SearchState.Empty
+            when (val result = alimentRepository.search(query)) {
+                is AppResult.Success -> {
+                    val aliments = result.data.data.map { it.toDomain() }
+                    _searchState.value = if (aliments.isEmpty()) {
+                        SearchState.Empty
+                    } else {
+                        SearchState.Results(aliments)
+                    }
+                }
+                is AppResult.Error -> {
+                    _searchState.value = SearchState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -195,27 +196,26 @@ class JournalViewModel(
         val mealType = _selectedMealType.value ?: return
         val aliment = _selectedAliment.value ?: return
         val grams = _quantityGrams.value
+        val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date
 
         _addEntryState.value = AddEntryState.Saving
         viewModelScope.launch {
-            // TODO: Call ajouterEntreeUseCase when created by SHARED agent
-            // val result = ajouterEntreeUseCase(
-            //     alimentId = aliment.id,
-            //     mealType = mealType,
-            //     quantiteGrammes = grams,
-            // )
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _addEntryState.value = AddEntryState.Saved
-            //         loadRecents()
-            //     }
-            //     is AppResult.Error -> {
-            //         _addEntryState.value = AddEntryState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: simulate success
-            _addEntryState.value = AddEntryState.Saved
+            val request = AddJournalEntryRequest(
+                date = today.toString(),
+                mealType = mealType.name,
+                alimentId = aliment.id,
+                nom = aliment.nom,
+                quantiteGrammes = grams,
+            )
+            when (val result = journalRepository.addEntry(request)) {
+                is AppResult.Success -> {
+                    _addEntryState.value = AddEntryState.Saved
+                    loadRecents()
+                }
+                is AppResult.Error -> {
+                    _addEntryState.value = AddEntryState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -223,14 +223,8 @@ class JournalViewModel(
 
     fun onToggleFavorite(aliment: Aliment) {
         viewModelScope.launch {
-            // TODO: Call toggleFavoriUseCase when created by SHARED agent
-            // val result = toggleFavoriUseCase(aliment.id)
-            // when (result) {
-            //     is AppResult.Success -> loadFavorites()
-            //     is AppResult.Error -> { /* show error */ }
-            // }
-
-            // Stub: toggle locally
+            // TODO: Cabler vers un endpoint toggle favori quand il sera disponible
+            // Pour l'instant, toggle local uniquement
             _favorites.update { current ->
                 if (current.any { it.id == aliment.id }) {
                     current.filter { it.id != aliment.id }
@@ -247,12 +241,21 @@ class JournalViewModel(
 
     private fun loadFavorites() {
         viewModelScope.launch {
-            // TODO: Call getFavorisUseCase when created by SHARED agent
-            // val result = getFavorisUseCase()
-            // when (result) {
-            //     is AppResult.Success -> _favorites.value = result.data
-            //     is AppResult.Error -> { /* silent fail, offline data */ }
-            // }
+            when (val result = journalRepository.getFavoris()) {
+                is AppResult.Success -> {
+                    // Convertir les JournalEntryResponse en Aliment pour l'affichage
+                    // On charge les details de chaque aliment favori
+                    val alimentIds = result.data.data.mapNotNull { it.alimentId }.distinct()
+                    val aliments = alimentIds.mapNotNull { id ->
+                        when (val alimentResult = alimentRepository.getById(id)) {
+                            is AppResult.Success -> alimentResult.data.toDomain()
+                            is AppResult.Error -> null
+                        }
+                    }
+                    _favorites.value = aliments
+                }
+                is AppResult.Error -> { /* echec silencieux, donnees offline */ }
+            }
         }
     }
 
@@ -267,12 +270,27 @@ class JournalViewModel(
 
     private fun loadRecents() {
         viewModelScope.launch {
-            // TODO: Call getRecentsUseCase when created by SHARED agent
-            // val result = getRecentsUseCase(limit = MAX_RECENTS)
-            // when (result) {
-            //     is AppResult.Success -> _recents.value = result.data
-            //     is AppResult.Error -> { /* silent fail */ }
-            // }
+            when (val result = journalRepository.getRecents(limit = MAX_RECENTS)) {
+                is AppResult.Success -> {
+                    val entries = result.data.data.mapNotNull { entry ->
+                        val alimentId = entry.alimentId ?: return@mapNotNull null
+                        val alimentResult = alimentRepository.getById(alimentId)
+                        val aliment = when (alimentResult) {
+                            is AppResult.Success -> alimentResult.data.toDomain()
+                            is AppResult.Error -> return@mapNotNull null
+                        }
+                        val mealType = runCatching { MealType.valueOf(entry.mealType) }.getOrNull()
+                            ?: return@mapNotNull null
+                        RecentEntry(
+                            aliment = aliment,
+                            quantiteGrammes = entry.quantiteGrammes,
+                            mealType = mealType,
+                        )
+                    }
+                    _recents.value = entries
+                }
+                is AppResult.Error -> { /* echec silencieux */ }
+            }
         }
     }
 
@@ -281,38 +299,31 @@ class JournalViewModel(
     fun onEditEntry(entryId: String, newQuantityGrams: Double) {
         _editState.value = EditEntryState.Saving
         viewModelScope.launch {
-            // TODO: Call modifierEntreeUseCase when created by SHARED agent
-            // val result = modifierEntreeUseCase(entryId, newQuantityGrams)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _editState.value = EditEntryState.Success
-            //     }
-            //     is AppResult.Error -> {
-            //         _editState.value = EditEntryState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: simulate success
-            _editState.value = EditEntryState.Success
+            val request = UpdateJournalEntryRequest(
+                quantiteGrammes = newQuantityGrams,
+            )
+            when (val result = journalRepository.updateEntry(entryId, request)) {
+                is AppResult.Success -> {
+                    _editState.value = EditEntryState.Success
+                }
+                is AppResult.Error -> {
+                    _editState.value = EditEntryState.Error(result.message)
+                }
+            }
         }
     }
 
     fun onDeleteEntry(entryId: String) {
         _editState.value = EditEntryState.Saving
         viewModelScope.launch {
-            // TODO: Call supprimerEntreeUseCase when created by SHARED agent
-            // val result = supprimerEntreeUseCase(entryId)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _editState.value = EditEntryState.Deleted
-            //     }
-            //     is AppResult.Error -> {
-            //         _editState.value = EditEntryState.Error(result.message)
-            //     }
-            // }
-
-            // Stub: simulate success
-            _editState.value = EditEntryState.Deleted
+            when (val result = journalRepository.deleteEntry(entryId)) {
+                is AppResult.Success -> {
+                    _editState.value = EditEntryState.Deleted
+                }
+                is AppResult.Error -> {
+                    _editState.value = EditEntryState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -333,28 +344,43 @@ class JournalViewModel(
 
     private fun performRecetteSearch(query: String) {
         viewModelScope.launch {
-            // TODO: Call recette search use case when created by SHARED agent
-            // val result = rechercherRecetteUseCase(query)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _recetteSearchResults.value = result.data.map {
-            //             RecetteSearchResult(id = it.id, nom = it.nom, tempsPreparationMin = it.tempsPreparationMin)
-            //         }
-            //     }
-            //     is AppResult.Error -> {
-            //         _recetteSearchResults.value = emptyList()
-            //     }
-            // }
-
-            // Stub: empty results
-            _recetteSearchResults.value = emptyList()
+            when (val result = recetteRepository.listRecettes(query = query)) {
+                is AppResult.Success -> {
+                    _recetteSearchResults.value = result.data.map {
+                        RecetteSearchResult(
+                            id = it.id,
+                            nom = it.nom,
+                            tempsPreparationMin = it.tempsPreparationMin,
+                        )
+                    }
+                }
+                is AppResult.Error -> {
+                    _recetteSearchResults.value = emptyList()
+                }
+            }
         }
     }
 
     fun onRecetteSelected(recetteId: String) {
         viewModelScope.launch {
-            // TODO: Navigate to recette detail or add recette portion to journal
-            // when created by SHARED agent
+            // TODO: Naviguer vers le detail recette ou ajouter une portion recette au journal
+            // Pour l'instant, on ajoute directement 1 portion au journal
+            val mealType = _selectedMealType.value ?: return@launch
+            val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val request = AddJournalEntryRequest(
+                date = today.toString(),
+                mealType = mealType.name,
+                recetteId = recetteId,
+                nbPortions = 1.0,
+            )
+            when (val result = journalRepository.addEntry(request)) {
+                is AppResult.Success -> {
+                    _addEntryState.value = AddEntryState.Saved
+                }
+                is AppResult.Error -> {
+                    _addEntryState.value = AddEntryState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -393,6 +419,55 @@ class JournalViewModel(
         private const val MAX_RECENTS = 20
     }
 }
+
+// --- Mapping helpers ---
+
+/**
+ * Convertit une AlimentResponse (API) en Aliment (domain).
+ */
+private fun AlimentResponse.toDomain(): Aliment = Aliment(
+    id = id,
+    nom = nom,
+    marque = marque,
+    source = runCatching { SourceAliment.valueOf(source) }.getOrDefault(SourceAliment.CIQUAL),
+    sourceId = sourceId,
+    codeBarres = codeBarres,
+    categorie = categorie,
+    regimesCompatibles = regimesCompatibles.mapNotNull {
+        runCatching { RegimeAlimentaire.valueOf(it) }.getOrNull()
+    },
+    nutrimentsPour100g = nutrimentsPour100g.toDomain(),
+    portionsStandard = portionsStandard.map { portion ->
+        PortionStandard(
+            id = portion.id,
+            alimentId = portion.alimentId,
+            nom = portion.nom,
+            quantiteGrammes = portion.quantiteGrammes,
+            estGenerique = portion.estGenerique,
+            estPersonnalise = portion.estPersonnalise,
+            userId = null,
+        )
+    },
+)
+
+private fun NutrimentValuesResponse.toDomain(): NutrimentValues = NutrimentValues(
+    calories = calories,
+    proteines = proteines,
+    glucides = glucides,
+    lipides = lipides,
+    fibres = fibres,
+    sel = sel,
+    sucres = sucres,
+    fer = fer,
+    calcium = calcium,
+    zinc = zinc,
+    magnesium = magnesium,
+    vitamineB12 = vitamineB12,
+    vitamineD = vitamineD,
+    vitamineC = vitamineC,
+    omega3 = omega3,
+    omega6 = omega6,
+)
 
 // --- States ---
 
