@@ -1,12 +1,15 @@
 // settings-docker.gradle.kts
-// Version simplifiee pour le build Docker : n'inclut que :backend
-// (evite les erreurs Gradle liees aux modules :shared et :androidApp absents)
+// Version simplifiee pour le build Docker : backend + shared (JVM target)
 pluginManagement {
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
     }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
 }
 
 dependencyResolutionManagement {
