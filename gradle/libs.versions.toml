@@ -19,6 +19,7 @@ exposed = "0.61.0"
 postgresql = "42.7.5"
 flyway = "11.8.2"
 ktlint = "12.2.0"
+h2 = "2.3.232"
 logback = "1.5.18"
 meilisearch = "0.14.4"
 firebase-gitlive = "2.1.0"
@@ -79,6 +80,12 @@ flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", versio
 # Search
 meilisearch-java = { module = "com.meilisearch:meilisearch-java", version.ref = "meilisearch" }
 
+# Ktor Server Test
+ktor-server-testHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+
+# H2 (test database)
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+
 # Logging
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
@@ -98,6 +105,7 @@ koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-ios = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
+sqldelight-jvm = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

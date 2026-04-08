@@ -30,6 +30,8 @@ interface UserRepository {
 
     suspend fun updatePreferences(request: UpdatePreferencesRequest): AppResult<PreferencesResponse>
 
+    suspend fun logout(): AppResult<Unit>
+
     suspend fun deleteAccount(): AppResult<Unit>
 
     suspend fun exportData(): AppResult<UserExportResponse>

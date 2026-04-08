@@ -11,6 +11,7 @@ import com.appfood.shared.api.response.ProfileResponse
 import com.appfood.shared.api.response.UserExportResponse
 import com.appfood.shared.api.response.UserProfileResponse
 import com.appfood.shared.data.local.LocalUserDataSource
+import com.appfood.shared.data.remote.ApiClient
 import com.appfood.shared.data.remote.AuthApi
 import com.appfood.shared.data.remote.UserApi
 import com.appfood.shared.data.repository.UserRepository
@@ -18,7 +19,7 @@ import com.appfood.shared.db.Local_user
 import com.appfood.shared.db.Local_user_profile
 import com.appfood.shared.db.Local_preferences
 import com.appfood.shared.util.AppResult
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Combines remote API calls with local SQLDelight cache.
@@ -28,11 +29,13 @@ class UserRepositoryImpl(
     private val authApi: AuthApi,
     private val userApi: UserApi,
     private val localUserDataSource: LocalUserDataSource,
+    private val apiClient: ApiClient,
 ) : UserRepository {
 
     override suspend fun register(request: RegisterRequest): AppResult<AuthResponse> {
         return try {
             val response = authApi.register(request)
+            apiClient.setAuthToken(response.token)
             cacheUser(response)
             AppResult.Success(response)
         } catch (e: Exception) {
@@ -43,6 +46,7 @@ class UserRepositoryImpl(
     override suspend fun login(request: LoginRequest): AppResult<AuthResponse> {
         return try {
             val response = authApi.login(request)
+            apiClient.setAuthToken(response.token)
             cacheUser(response)
             AppResult.Success(response)
         } catch (e: Exception) {
@@ -89,9 +93,22 @@ class UserRepositoryImpl(
         }
     }
 
+    override suspend fun logout(): AppResult<Unit> {
+        return try {
+            apiClient.setAuthToken(null)
+            localUserDataSource.deleteAllPreferences()
+            localUserDataSource.deleteAllProfiles()
+            localUserDataSource.deleteAll()
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(code = "LOGOUT_ERROR", message = e.message ?: "Logout failed", cause = e)
+        }
+    }
+
     override suspend fun deleteAccount(): AppResult<Unit> {
         return try {
             authApi.deleteAccount()
+            apiClient.setAuthToken(null)
             // Supprimer toutes les donnees locales : user, profil et preferences
             localUserDataSource.deleteAllPreferences()
             localUserDataSource.deleteAllProfiles()

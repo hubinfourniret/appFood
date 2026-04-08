@@ -40,6 +40,23 @@ sealed class Screen {
     // Create recette — admin only (RECETTES-03)
     @Serializable data object CreateRecette : Screen()
 
+    // About (SUPPORT-01)
+    @Serializable data object About : Screen()
+
+    // FAQ (SUPPORT-02)
+    @Serializable data object Faq : Screen()
+
+    // Legal disclaimer (UX-05)
+    @Serializable data object Disclaimer : Screen()
+
+    // Consent management (LEGAL-03)
+    @Serializable data object Consent : Screen()
+    @Serializable data object ConsentSettings : Screen()
+
+    // Legal screens (LEGAL-01 / LEGAL-02)
+    @Serializable data object PrivacyPolicy : Screen()
+    @Serializable data object TermsOfService : Screen()
+
     // Keep Auth as alias for Login (backward compatibility)
     @Serializable data object Auth : Screen()
 }

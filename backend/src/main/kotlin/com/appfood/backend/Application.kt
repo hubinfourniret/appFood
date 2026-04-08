@@ -33,6 +33,14 @@ fun Application.module() {
     val jwtIssuer = config.property("appfood.jwt.issuer").getString()
     val jwtAudience = config.property("appfood.jwt.audience").getString()
 
+    val encryptionKey = config.propertyOrNull("appfood.encryption.key")?.getString()
+    if (encryptionKey.isNullOrBlank()) {
+        environment.log.warn(
+            "ENCRYPTION_KEY non configuree — les donnees sensibles seront stockees en clair. " +
+                "Configurez la variable d'environnement ENCRYPTION_KEY (32 bytes base64) pour la production.",
+        )
+    }
+
     install(Koin) {
         modules(
             backendModule(
@@ -41,6 +49,7 @@ fun Application.module() {
                 jwtSecret = jwtSecret,
                 jwtIssuer = jwtIssuer,
                 jwtAudience = jwtAudience,
+                encryptionKeyBase64 = encryptionKey,
             ),
         )
     }

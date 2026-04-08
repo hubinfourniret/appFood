@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.appfood.shared.ui.Strings
 import com.appfood.shared.ui.auth.AuthViewModel
 import com.appfood.shared.ui.auth.ForgotPasswordScreen
@@ -27,6 +28,13 @@ import com.appfood.shared.ui.dashboard.WeeklyDashboardScreen
 import com.appfood.shared.ui.dashboard.WeeklyDashboardViewModel
 import com.appfood.shared.ui.hydratation.HydratationScreen
 import com.appfood.shared.ui.hydratation.HydratationViewModel
+import com.appfood.shared.ui.legal.ConsentScreen
+import com.appfood.shared.ui.legal.ConsentSettingsScreen
+import com.appfood.shared.ui.legal.ConsentViewModel
+import com.appfood.shared.ui.legal.DisclaimerScreen
+import com.appfood.shared.ui.legal.DisclaimerViewModel
+import com.appfood.shared.ui.legal.PrivacyPolicyScreen
+import com.appfood.shared.ui.legal.TermsOfServiceScreen
 import com.appfood.shared.ui.journal.AddEntryScreen
 import com.appfood.shared.ui.journal.JournalViewModel
 import com.appfood.shared.ui.journal.PortionSelectorScreen
@@ -47,6 +55,9 @@ import com.appfood.shared.ui.recette.RecettesListScreen
 import com.appfood.shared.ui.recette.RecettesViewModel
 import com.appfood.shared.ui.recommandation.RecommandationsScreen
 import com.appfood.shared.ui.recommandation.RecommandationViewModel
+import com.appfood.shared.ui.settings.AboutScreen
+import com.appfood.shared.ui.support.FaqScreen
+import com.appfood.shared.ui.support.FaqViewModel
 
 // Screens that show the bottom navigation bar
 private val screensWithBottomNav = setOf(
@@ -77,7 +88,10 @@ fun AppNavigation(
     val hydratationViewModel = remember { HydratationViewModel() }
     val poidsViewModel = remember { PoidsViewModel() }
     val weeklyDashboardViewModel = remember { WeeklyDashboardViewModel() }
+    val disclaimerViewModel = remember { DisclaimerViewModel() }
+    val consentViewModel = remember { ConsentViewModel() }
     val recettesViewModel = remember { RecettesViewModel().also { it.init() } }
+    val faqViewModel = remember { FaqViewModel().also { it.init() } }
 
     Scaffold(
         bottomBar = {
@@ -124,7 +138,8 @@ fun AppNavigation(
                     },
                     onLoginSuccess = { needsOnboarding ->
                         if (needsOnboarding) {
-                            navController.navigate(Screen.Onboarding) {
+                            // Consent screen first (LEGAL-03) — before any data collection
+                            navController.navigate(Screen.Consent) {
                                 popUpTo<Screen.Login> { inclusive = true }
                             }
                         } else {
@@ -152,7 +167,8 @@ fun AppNavigation(
                     },
                     onLoginSuccess = { needsOnboarding ->
                         if (needsOnboarding) {
-                            navController.navigate(Screen.Onboarding) {
+                            // Consent screen first (LEGAL-03) — before any data collection
+                            navController.navigate(Screen.Consent) {
                                 popUpTo<Screen.Auth> { inclusive = true }
                             }
                         } else {
@@ -171,7 +187,8 @@ fun AppNavigation(
                         navController.popBackStack()
                     },
                     onRegisterSuccess = {
-                        navController.navigate(Screen.Onboarding) {
+                        // Consent screen first (LEGAL-03) — before any data collection
+                        navController.navigate(Screen.Consent) {
                             popUpTo<Screen.Login> { inclusive = true }
                         }
                     },
@@ -187,13 +204,37 @@ fun AppNavigation(
                 )
             }
 
+            // Consent screen (LEGAL-03) — shown at first launch before any data collection
+            composable<Screen.Consent> {
+                ConsentScreen(
+                    viewModel = consentViewModel,
+                    onConsentConfirmed = {
+                        navController.navigate(Screen.Onboarding) {
+                            popUpTo<Screen.Consent> { inclusive = true }
+                        }
+                    },
+                )
+            }
+
             // Onboarding flow
             composable<Screen.Onboarding> {
                 OnboardingScreen(
                     viewModel = onboardingViewModel,
                     onOnboardingComplete = {
-                        navController.navigate(Screen.Dashboard) {
+                        navController.navigate(Screen.Disclaimer) {
                             popUpTo<Screen.Onboarding> { inclusive = true }
+                        }
+                    },
+                )
+            }
+
+            // Legal disclaimer (UX-05) — shown after onboarding, before dashboard
+            composable<Screen.Disclaimer> {
+                DisclaimerScreen(
+                    viewModel = disclaimerViewModel,
+                    onDisclaimerAccepted = {
+                        navController.navigate(Screen.Dashboard) {
+                            popUpTo<Screen.Disclaimer> { inclusive = true }
                         }
                     },
                 )
@@ -416,6 +457,68 @@ fun AppNavigation(
             composable<Screen.Settings> {
                 PlaceholderScreen(title = Strings.SCREEN_SETTINGS)
             }
+
+            // Consent settings (LEGAL-03) — modify consent choices from Settings
+            composable<Screen.ConsentSettings> {
+                ConsentSettingsScreen(
+                    viewModel = consentViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            // About (SUPPORT-01)
+            composable<Screen.About> {
+                AboutScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToCgu = {
+                        navController.navigate(Screen.TermsOfService) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToPrivacyPolicy = {
+                        navController.navigate(Screen.PrivacyPolicy) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToFaq = {
+                        navController.navigate(Screen.Faq) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+
+            // FAQ (SUPPORT-02)
+            composable<Screen.Faq> {
+                FaqScreen(
+                    viewModel = faqViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            // Privacy Policy (LEGAL-01)
+            composable<Screen.PrivacyPolicy> {
+                PrivacyPolicyScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            // Terms of Service (LEGAL-02)
+            composable<Screen.TermsOfService> {
+                TermsOfServiceScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
         }
     }
 }
@@ -459,6 +562,13 @@ private fun androidx.navigation.NavBackStackEntry.toScreen(): Screen? {
         route.contains("PreferencesAlimentaires") -> Screen.PreferencesAlimentaires
         route.contains("Profil") -> Screen.Profil
         route.contains("Settings") -> Screen.Settings
+        route.contains("Faq") -> Screen.Faq
+        route.contains("About") -> Screen.About
+        route.contains("Disclaimer") -> Screen.Disclaimer
+        route.contains("PrivacyPolicy") -> Screen.PrivacyPolicy
+        route.contains("TermsOfService") -> Screen.TermsOfService
+        route.contains("ConsentSettings") -> Screen.ConsentSettings
+        route.contains("Consent") -> Screen.Consent
         route.contains("Auth") -> Screen.Auth
         else -> null
     }

@@ -11,6 +11,7 @@ import com.appfood.shared.data.local.LocalHydratationDataSource
 import com.appfood.shared.data.local.LocalJournalDataSource
 import com.appfood.shared.data.local.LocalPoidsDataSource
 import com.appfood.shared.data.local.LocalSyncQueueDataSource
+import com.appfood.shared.data.local.LocalUserDataSource
 import com.appfood.shared.data.remote.SyncApi
 import com.appfood.shared.db.Local_hydratation
 import com.appfood.shared.db.Local_journal_entry
@@ -55,6 +56,7 @@ class SyncManager(
     private val localPoidsDataSource: LocalPoidsDataSource,
     private val localHydratationDataSource: LocalHydratationDataSource,
     private val syncPreferences: SyncPreferences,
+    private val localUserDataSource: LocalUserDataSource,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val json = Json { ignoreUnknownKeys = true }
@@ -250,14 +252,19 @@ class SyncManager(
         }
     }
 
-    // TODO: Passer le userId au SyncManager ou le recuperer via UserRepository
-    //       pour eviter d'ecraser le userId local avec une chaine vide.
-    //       Impact MVP faible car les requetes locales ne filtrent pas par userId pour l'instant.
+    /**
+     * Recupere le userId du cache local (premier utilisateur en base).
+     * Fallback sur chaine vide si aucun utilisateur n'est connecte.
+     */
+    private fun getCurrentUserId(): String {
+        return localUserDataSource.findAll().firstOrNull()?.id ?: ""
+    }
 
     private fun upsertJournalEntry(entry: JournalEntryResponse) {
+        val userId = getCurrentUserId()
         val localEntry = Local_journal_entry(
             id = entry.id,
-            user_id = "", // TODO: recuperer le vrai userId (voir commentaire ci-dessus)
+            user_id = userId,
             aliment_id = entry.alimentId,
             recette_id = entry.recetteId,
             nom = entry.nom,
@@ -289,9 +296,10 @@ class SyncManager(
     }
 
     private fun upsertPoidsEntry(entry: PoidsResponse) {
+        val userId = getCurrentUserId()
         val localPoids = Local_poids(
             id = entry.id,
-            user_id = "", // TODO: recuperer le vrai userId
+            user_id = userId,
             poids_kg = entry.poidsKg,
             date = entry.date,
             sync_status = SyncStatus.SYNCED.name,
@@ -301,9 +309,10 @@ class SyncManager(
     }
 
     private fun upsertHydratationEntry(entry: HydratationResponse) {
+        val userId = getCurrentUserId()
         val localHydratation = Local_hydratation(
             id = entry.id,
-            user_id = "", // TODO: recuperer le vrai userId
+            user_id = userId,
             date = entry.date,
             objectif_ml = entry.objectifMl.toDouble(),
             total_ml = entry.quantiteMl.toDouble(),
@@ -344,7 +353,7 @@ class SyncManager(
 
     private fun parseTimestampToEpochMs(timestamp: String): Long {
         return try {
-            kotlinx.datetime.Instant.parse(timestamp).toEpochMilliseconds()
+            kotlin.time.Instant.parse(timestamp).toEpochMilliseconds()
         } catch (_: Exception) {
             0L
         }

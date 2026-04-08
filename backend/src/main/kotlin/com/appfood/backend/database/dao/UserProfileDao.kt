@@ -6,6 +6,7 @@ import com.appfood.backend.database.tables.ObjectifPoids
 import com.appfood.backend.database.tables.RegimeAlimentaire
 import com.appfood.backend.database.tables.Sexe
 import com.appfood.backend.database.tables.UserProfilesTable
+import com.appfood.backend.security.EncryptionService
 import kotlinx.datetime.Clock
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -27,7 +28,9 @@ data class UserProfileRow(
     val updatedAt: kotlinx.datetime.Instant,
 )
 
-class UserProfileDao {
+class UserProfileDao(
+    private val encryptionService: EncryptionService,
+) {
 
     suspend fun findByUserId(userId: String): UserProfileRow? = dbQuery {
         UserProfilesTable.selectAll()
@@ -50,9 +53,9 @@ class UserProfileDao {
         UserProfilesTable.insert {
             it[UserProfilesTable.userId] = userId
             it[UserProfilesTable.sexe] = sexe
-            it[UserProfilesTable.age] = age
-            it[UserProfilesTable.poidsKg] = poidsKg
-            it[UserProfilesTable.tailleCm] = tailleCm
+            it[UserProfilesTable.age] = encryptionService.encryptInt(age)
+            it[UserProfilesTable.poidsKg] = encryptionService.encryptDouble(poidsKg)
+            it[UserProfilesTable.tailleCm] = encryptionService.encryptInt(tailleCm)
             it[UserProfilesTable.regimeAlimentaire] = regimeAlimentaire
             it[UserProfilesTable.niveauActivite] = niveauActivite
             it[UserProfilesTable.onboardingComplete] = onboardingComplete
@@ -74,9 +77,9 @@ class UserProfileDao {
     ): Boolean = dbQuery {
         UserProfilesTable.update({ UserProfilesTable.userId eq userId }) {
             it[UserProfilesTable.sexe] = sexe
-            it[UserProfilesTable.age] = age
-            it[UserProfilesTable.poidsKg] = poidsKg
-            it[UserProfilesTable.tailleCm] = tailleCm
+            it[UserProfilesTable.age] = encryptionService.encryptInt(age)
+            it[UserProfilesTable.poidsKg] = encryptionService.encryptDouble(poidsKg)
+            it[UserProfilesTable.tailleCm] = encryptionService.encryptInt(tailleCm)
             it[UserProfilesTable.regimeAlimentaire] = regimeAlimentaire
             it[UserProfilesTable.niveauActivite] = niveauActivite
             it[UserProfilesTable.onboardingComplete] = onboardingComplete
@@ -92,9 +95,9 @@ class UserProfileDao {
     private fun ResultRow.toRow() = UserProfileRow(
         userId = this[UserProfilesTable.userId],
         sexe = this[UserProfilesTable.sexe],
-        age = this[UserProfilesTable.age],
-        poidsKg = this[UserProfilesTable.poidsKg],
-        tailleCm = this[UserProfilesTable.tailleCm],
+        age = encryptionService.decryptInt(this[UserProfilesTable.age]),
+        poidsKg = encryptionService.decryptDouble(this[UserProfilesTable.poidsKg]),
+        tailleCm = encryptionService.decryptInt(this[UserProfilesTable.tailleCm]),
         regimeAlimentaire = this[UserProfilesTable.regimeAlimentaire],
         niveauActivite = this[UserProfilesTable.niveauActivite],
         onboardingComplete = this[UserProfilesTable.onboardingComplete],

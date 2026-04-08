@@ -4,13 +4,8 @@ import com.appfood.shared.data.repository.PoidsRepository
 import com.appfood.shared.model.HistoriquePoids
 import com.appfood.shared.util.AppResult
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
-import kotlin.time.Clock
+import kotlinx.datetime.toLocalDateTime
 
-/**
- * Enregistre une nouvelle pesee.
- * Verifie les bornes (20-500 kg).
- */
 class EnregistrerPoidsUseCase(
     private val poidsRepository: PoidsRepository,
 ) {
@@ -21,7 +16,9 @@ class EnregistrerPoidsUseCase(
                 message = "Le poids doit etre entre 20 et 500 kg",
             )
         }
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault()).toString()
+        val nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(nowMs)
+        val today = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
         return poidsRepository.addEntry(userId, today, poidsKg)
     }
 }

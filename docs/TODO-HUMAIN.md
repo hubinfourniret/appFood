@@ -9,7 +9,7 @@ Les agents ne peuvent PAS faire ces actions. Elles necessitent une intervention 
 | 🔴 Bloquant | Configurer Google Sign-In dans la console Firebase (SHA-1 Android + activer le provider) | AUTH-03 | Done |
 | 🔴 Bloquant | Configurer Apple Sign-In (Apple Developer Account + Firebase) | AUTH-05 | Todo |
 | 🔴 Bloquant | Creer un compte Railway + provisionner les services | INFRA-02 | Done (PostgreSQL + Meilisearch + backend deploye, connecte a PG) |
-| 🟡 Important | Telecharger la base Ciqual (CSV) depuis le site ANSES | DATA-01 | Todo |
+| 🟡 Important | Telecharger la base Ciqual (CSV) depuis le site ANSES | DATA-01 | Done (CiqualImporter adapte pour Ciqual 2025) |
 | 🟡 Important | Creer un compte Sentry + obtenir le DSN | INFRA-03 | Todo |
 | 🟡 Important | Creer un compte UptimeRobot | INFRA-03 | Todo |
 | 🟡 Important | Creer un utilisateur ADMIN en base (INSERT manuel) pour gerer les recettes | RECETTES-03 | Todo |
@@ -18,4 +18,5 @@ Les agents ne peuvent PAS faire ces actions. Elles necessitent une intervention 
 | 🔵 Plus tard | Creer les comptes Google Play Console et Apple Developer | Publication | Todo |
 | 🔵 Plus tard | Rediger le contenu de la FAQ | SUPPORT-02 | Todo |
 | 🔵 Plus tard | Creer 50-100 recettes vegan/vegetariennes | RECETTES-03 | Todo |
+| 🔴 Bloquant | Configurer ENCRYPTION_KEY sur Railway (`openssl rand -base64 32`) | LEGAL-04 (prod) | Todo |
 | 🔵 Plus tard | Decision produit : multi-device FCM (voir FcmTokensTable) | NOTIF-01 | Todo |

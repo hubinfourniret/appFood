@@ -44,6 +44,12 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.android)
 
+    // Ktor client (needed for ApiClient registration in androidModule)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.contentNegotiation)
+    implementation(libs.ktor.serialization.json)
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.android)

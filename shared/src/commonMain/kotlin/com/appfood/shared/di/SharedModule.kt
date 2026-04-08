@@ -15,6 +15,7 @@ import com.appfood.shared.data.local.LocalPortionDataSource
 import com.appfood.shared.data.local.LocalQuotaDataSource
 import com.appfood.shared.data.local.LocalSyncQueueDataSource
 import com.appfood.shared.data.local.LocalUserDataSource
+import com.appfood.shared.data.remote.ApiClient
 import com.appfood.shared.data.remote.AuthApi
 import com.appfood.shared.data.remote.HydratationApi
 import com.appfood.shared.data.remote.PoidsApi
@@ -65,7 +66,14 @@ val sharedModule = module {
     single { AppDatabase(get()) }
 
     // Remote API clients
-    // ApiClient must be registered in the platform-specific module
+    // ApiClient: HttpClient must be registered in the platform-specific module.
+    // ApiClient is registered here using the platform-provided HttpClient + base URL.
+    single {
+        ApiClient(
+            httpClient = get(),
+            baseUrl = getProperty("API_BASE_URL", "https://appfood-production.up.railway.app"),
+        )
+    }
     single { AuthApi(get()) }
     single { UserApi(get()) }
     single { QuotaApi(get()) }
@@ -78,7 +86,7 @@ val sharedModule = module {
     // Sync infrastructure
     // ConnectivityMonitor is registered in the platform-specific module (expect/actual)
     single<SyncPreferences> { LocalSyncPreferences() }
-    single { SyncManager(get(), get(), get(), get(), get(), get(), get()) }
+    single { SyncManager(get(), get(), get(), get(), get(), get(), get(), get()) }
 
     // Use cases (factory — new instance per injection)
     factory { CalculerQuotasUseCase() }
@@ -95,7 +103,7 @@ val sharedModule = module {
     factory { RechercherRecettesUseCase(get()) }
 
     // Repositories
-    single<UserRepository> { UserRepositoryImpl(get(), get(), get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(), get(), get()) }
     single<QuotaRepository> { QuotaRepositoryImpl(get(), get()) }
     single<RecommandationRepository> { RecommandationRepositoryImpl(get()) }
     single<HydratationRepository> { HydratationRepositoryImpl(get(), get(), get()) }

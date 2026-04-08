@@ -17,9 +17,9 @@ object UsersTable : Table("users") {
 object UserProfilesTable : Table("user_profiles") {
     val userId = varchar("user_id", 36).references(UsersTable.id)
     val sexe = enumerationByName<Sexe>("sexe", 10)
-    val age = integer("age")
-    val poidsKg = double("poids_kg")
-    val tailleCm = integer("taille_cm")
+    val age = text("age")
+    val poidsKg = text("poids_kg")
+    val tailleCm = text("taille_cm")
     val regimeAlimentaire = enumerationByName<RegimeAlimentaire>("regime_alimentaire", 20)
     val niveauActivite = enumerationByName<NiveauActivite>("niveau_activite", 20)
     val onboardingComplete = bool("onboarding_complete").default(false)

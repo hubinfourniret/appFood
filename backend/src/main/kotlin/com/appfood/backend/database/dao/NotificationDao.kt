@@ -24,12 +24,33 @@ data class NotificationRow(
 
 class NotificationDao {
 
+    suspend fun findById(id: String, userId: String): NotificationRow? = dbQuery {
+        NotificationsTable.selectAll()
+            .where { (NotificationsTable.id eq id) and (NotificationsTable.userId eq userId) }
+            .map { it.toRow() }
+            .singleOrNull()
+    }
+
     suspend fun findByUserId(userId: String, limit: Int = 50, offset: Long = 0): List<NotificationRow> = dbQuery {
         NotificationsTable.selectAll()
             .where { NotificationsTable.userId eq userId }
             .orderBy(NotificationsTable.dateEnvoi, SortOrder.DESC)
             .limit(limit).offset(offset)
             .map { it.toRow() }
+    }
+
+    suspend fun findByUserIdUnreadOnly(userId: String, limit: Int = 50, offset: Long = 0): List<NotificationRow> = dbQuery {
+        NotificationsTable.selectAll()
+            .where { (NotificationsTable.userId eq userId) and (NotificationsTable.lue eq false) }
+            .orderBy(NotificationsTable.dateEnvoi, SortOrder.DESC)
+            .limit(limit).offset(offset)
+            .map { it.toRow() }
+    }
+
+    suspend fun countByUserId(userId: String): Long = dbQuery {
+        NotificationsTable.selectAll()
+            .where { NotificationsTable.userId eq userId }
+            .count()
     }
 
     suspend fun countUnread(userId: String): Long = dbQuery {

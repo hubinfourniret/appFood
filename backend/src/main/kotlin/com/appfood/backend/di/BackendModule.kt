@@ -19,17 +19,21 @@ import com.appfood.backend.external.FirebaseAdmin
 import com.appfood.backend.external.OpenFoodFactsClient
 import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.search.MeilisearchClient
+import com.appfood.backend.security.EncryptionService
 import com.appfood.backend.service.AlimentService
 import com.appfood.backend.service.AuthService
 import com.appfood.backend.service.DashboardService
 import com.appfood.backend.service.HydratationService
 import com.appfood.backend.service.JournalService
+import com.appfood.backend.service.NotificationService
 import com.appfood.backend.service.PoidsService
 import com.appfood.backend.service.PortionService
 import com.appfood.backend.service.ProfileService
 import com.appfood.backend.service.QuotaService
 import com.appfood.backend.service.RecetteService
+import com.appfood.backend.service.ConsentService
 import com.appfood.backend.service.RecommandationService
+import com.appfood.backend.service.SupportService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -43,7 +47,11 @@ fun backendModule(
     jwtSecret: String = "",
     jwtIssuer: String = "",
     jwtAudience: String = "",
+    encryptionKeyBase64: String? = null,
 ) = module {
+    // Security — encryption for sensitive data at rest
+    single { EncryptionService(encryptionKeyBase64) }
+
     // HTTP Client
     single {
         HttpClient(OkHttp) {
@@ -86,10 +94,13 @@ fun backendModule(
     single { RecetteService(get(), get(), get()) }
     single { HydratationService(get(), get()) }
     single { PoidsService(get()) }
+    single { NotificationService(get(), get()) }
+    single { ConsentService(get()) }
+    single { SupportService(get()) }
 
     // DAOs
     single { UserDao() }
-    single { UserProfileDao() }
+    single { UserProfileDao(get()) }
     single { UserPreferencesDao() }
     single { AlimentDao() }
     single { PortionDao() }

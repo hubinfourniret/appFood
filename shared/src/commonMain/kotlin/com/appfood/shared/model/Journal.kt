@@ -1,6 +1,6 @@
 package com.appfood.shared.model
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable

@@ -13,6 +13,7 @@ import com.appfood.backend.database.dao.UserProfileDao
 import com.appfood.backend.database.dao.UserRow
 import com.appfood.backend.database.tables.Role
 import com.appfood.backend.external.FirebaseAdmin
+import com.appfood.backend.security.EncryptionService
 import com.appfood.backend.external.FirebaseTokenInfo
 import com.appfood.backend.plugins.ConflictException
 import com.appfood.backend.plugins.UnauthorizedException
@@ -32,7 +33,7 @@ class AuthServiceTest {
         val authService = AuthService(
             firebaseAdmin = firebaseAdmin,
             userDao = userDao,
-            userProfileDao = UserProfileDao(),
+            userProfileDao = UserProfileDao(EncryptionService(null)),
             userPreferencesDao = UserPreferencesDao(),
             journalEntryDao = JournalEntryDao(),
             quotaDao = QuotaDao(),

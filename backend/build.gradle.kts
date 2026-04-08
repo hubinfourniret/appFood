@@ -10,6 +10,9 @@ application {
 }
 
 dependencies {
+    // Shared KMP module (JVM target — quota calculation, models)
+    implementation(project(":shared"))
+
     // Ktor Server
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
@@ -43,4 +46,6 @@ dependencies {
 
     // Test
     testImplementation(libs.kotlin.test)
+    testImplementation(libs.ktor.server.testHost)
+    testImplementation(libs.h2)
 }

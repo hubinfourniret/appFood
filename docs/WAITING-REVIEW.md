@@ -1,19 +1,30 @@
 # US en attente de validation utilisateur
 
-## [SYNC-02] — Sync auto au retour en ligne
-**Date** : 2026-03-30
-**Raison du blocage** : US critique — validation utilisateur requise
+## [LEGAL-01] — Politique de confidentialite
+**Date** : 2026-04-08
+**Raison du blocage** : US critique — contenu legal placeholder, validation utilisateur requise
 **Fichiers modifies** :
-- `shared/src/commonMain/kotlin/com/appfood/shared/sync/SyncManager.kt` (auto-sync via ConnectivityMonitor, exponential backoff)
-- `shared/src/commonMain/kotlin/com/appfood/shared/sync/SyncPreferences.kt` (interface persistence last sync timestamp)
-- `shared/src/commonMain/kotlin/com/appfood/shared/sync/LocalSyncPreferences.kt` (impl in-memory MVP)
-- `shared/src/commonMain/kotlin/com/appfood/shared/di/SharedModule.kt` (enregistrement Koin SyncPreferences + SyncManager)
+- `shared/src/commonMain/kotlin/com/appfood/shared/ui/legal/PrivacyPolicyScreen.kt`
+- `shared/src/commonMain/kotlin/com/appfood/shared/ui/Strings.kt` (sections PRIVACY_*)
+**Resume des changements** : Ecran scrollable avec 9 sections RGPD placeholder (responsable traitement, finalites, base legale, duree conservation, droits utilisateur, sous-traitants, donnees de sante, cookies, modifications). Composants reutilisables LegalSectionTitle/Body.
+**Action requise** : Valider la structure. Le contenu final sera redige par un juriste.
 
-**Resume des changements** :
-- `SyncManager.startObserving()` observe la connectivite et declenche `syncAll()` automatiquement au retour en ligne
-- `syncAll()` fait push puis pull avec retry exponential backoff (max 5 retries, max 32s delay)
-- SyncState observable (Idle, Syncing, Success, Error) pour la UI
-- `SyncPreferences` persiste le `lastSyncTimestamp` pour pull incrementiel
-- Strategie conflits : server wins (supprime de la queue locale, donnees recuperees au pull)
+## [LEGAL-02] — Conditions Generales d'Utilisation
+**Date** : 2026-04-08
+**Raison du blocage** : US critique — contenu legal placeholder, validation utilisateur requise
+**Fichiers modifies** :
+- `shared/src/commonMain/kotlin/com/appfood/shared/ui/legal/TermsOfServiceScreen.kt`
+- `shared/src/commonMain/kotlin/com/appfood/shared/ui/Strings.kt` (sections TOS_*)
+**Resume des changements** : Ecran scrollable avec 9 sections placeholder (objet du service, avertissement medical, inscription, responsabilites, propriete intellectuelle, donnees personnelles, modification/resiliation, droit applicable). Version datee.
+**Action requise** : Valider la structure. Le contenu final sera redige par un juriste.
 
-**Action requise** : L'utilisateur doit review le code et valider ou demander des modifications
+## [LEGAL-04] — Chiffrement des donnees sensibles
+**Date** : 2026-04-08
+**Raison du blocage** : US critique — chiffrement coeur, validation utilisateur requise
+**Fichiers modifies** :
+- `backend/src/main/kotlin/com/appfood/backend/security/EncryptionService.kt` (AES-256-GCM)
+- `backend/src/main/kotlin/com/appfood/backend/database/dao/UserProfileDao.kt` (chiffrement transparent)
+- `backend/src/main/resources/db/migration/V6__encrypt_sensitive_profile_columns.sql`
+- `backend/src/main/resources/application.conf` (section encryption)
+**Resume des changements** : Chiffrement AES-256-GCM des champs sensibles (poids, taille, age) dans UserProfileDao. Cle via variable d'env ENCRYPTION_KEY. Mode clair avec warning en dev local. Migration Flyway convertit les colonnes INTEGER/DOUBLE en TEXT.
+**Action requise** : Valider l'approche de chiffrement. Configurer ENCRYPTION_KEY sur Railway (`openssl rand -base64 32`).

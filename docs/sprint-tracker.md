@@ -159,4 +159,72 @@ Corrections appliquees suite a l'audit des 4 epics (INFRA, DATA, AUTH, PROFIL) :
 - Feedback succes via successMessage StateFlow
 - Stub TODO pour ajout effectif au journal (use case a connecter)
 
+## Audit post-Sprint 3 (2026-04-08)
+
+### Corrections P0 appliquees (bugs critiques)
+
+| Correction | Fichiers | Impact |
+|-----------|---------|--------|
+| AuthResponse : champ `token` manquant cote shared | AuthResponses.kt, UserRepositoryImpl.kt | Auth cassee — client ne recuperait pas le JWT |
+| ApiClient non enregistre dans Koin | SharedModule.kt, AppFoodApplication.kt, androidApp/build.gradle.kts | Crash runtime NoBeanDefFoundException |
+| SyncManager userId = "" apres pull | SyncManager.kt, SharedModule.kt | Corruption donnees — entries sans userId |
+| Import `toRoute` manquant | AppNavigation.kt | Erreur compilation pre-existante |
+| RecommandationAlimentResponse : shared attendait AlimentResponse, backend envoyait AlimentSummaryResponse | RecommandationResponses.kt, RecommandationRepositoryImpl.kt | Crash deserialisation |
+| RecommandationRecetteResponse : shared attendait objet nested, backend envoyait champs plats | RecommandationResponses.kt, RecommandationRepositoryImpl.kt | Crash deserialisation |
+| DashboardResponse.hydratation : type mismatch (HydratationResponse vs HydratationDashboardResponse) | DashboardResponses.kt | Crash deserialisation |
+| QuotaResponse : updatedAt + total manquants cote shared | QuotaResponses.kt | Champs silencieusement ignores |
+| Logout ne nettoyait pas le token | UserRepository.kt, UserRepositoryImpl.kt | Token restait actif apres deconnexion |
+
+### Problemes connus restants (non-bloquants MVP)
+
+- Module Koin iOS absent (app iOS non testable sans Mac)
+- HttpClient sans timeout configuration
+- Token non persiste en local (perdu au redemarrage, login obligatoire)
+- 56 ViewModels stubs TODO (use cases a connecter au Sprint 4)
+- Duplication calcul quotas entre UseCase et backend Service
+- Enums dupliques backend/shared (11 enums)
+
+**Compilation** : `:shared:compileCommonMainKotlinMetadata` ✅ | `:backend:compileKotlin` ✅
+
+## Sprint 4 (Legal + Support + Qualite + UX) — EN COURS
+
+### Batch 1 — TERMINE
+
+| US-ID | Titre | Agents | Statut | Review | Bloquant |
+|-------|-------|--------|--------|--------|----------|
+| UX-02 | Etats vides | MOBILE | Done | - | UX-01 |
+| UX-03 | Etats de chargement | MOBILE | Done | - | UX-01 |
+| UX-04 | Gestion erreurs utilisateur | MOBILE | Done | - | UX-01 |
+| UX-05 | Disclaimer legal | MOBILE | Done | - | AUTH-01 |
+| LEGAL-01 | Politique de confidentialite | MOBILE | Done | ⚠️ Waiting User | - |
+| LEGAL-02 | CGU | MOBILE | Done | ⚠️ Waiting User | - |
+| LEGAL-03 | Gestion consentement | MOBILE | Done | - | AUTH-01 |
+| SUPPORT-01 | Page A propos | MOBILE | Done | - | UX-01 |
+| NOTIF-01 | Config FCM (endpoints) | BACKEND | Done | - | SETUP-02 |
+| LEGAL-04 | Chiffrement donnees sensibles | BACKEND | Done | ⚠️ Waiting User | SETUP-03 |
+| QUALITE-01 | Tests unitaires logique metier | SHARED | Done | - | QUOTAS-01, RECO-01 |
+| QUALITE-02 | Tests integration API | BACKEND | Done | - | INFRA-01 |
+| Consents endpoints | Endpoints consentements + FAQ | BACKEND | Done | - | - |
+
+### Notes Sprint 4 Batch 1
+- LEGAL-01/02 : contenu placeholder, a remplacer par contenu juriste
+- LEGAL-04 : AES-256-GCM, cle via ENCRYPTION_KEY env var, mode clair en dev
+- QUALITE-01 : 68 tests (CalculerQuotas 27, RecoAliment 20, RecoRecette 21)
+- QUALITE-02 : 32 tests integration (Auth 10, Journal 9, Quota 7, Dashboard 6)
+- Compilation corrigee : imports Icons Material → texte simple (Compose Multiplatform)
+- Navigation : Login → Consent → Onboarding → Disclaimer → Dashboard
+
+### Batch 2 — TERMINE
+
+| US-ID | Titre | Agents | Statut | Review | Bloquant |
+|-------|-------|--------|--------|--------|----------|
+| SUPPORT-02 | FAQ integree | BACKEND + MOBILE | Done | - | SUPPORT-01 |
+
+### Notes Sprint 4 Batch 2
+- FaqScreen avec 5 themes, items expandables, contenu placeholder statique
+- Lien "Contacter le support" → mailto:support@appfood.fr
+- Cable depuis AboutScreen
+
+**Compilation** : `:shared` ✅ | `:backend` ✅
+
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked

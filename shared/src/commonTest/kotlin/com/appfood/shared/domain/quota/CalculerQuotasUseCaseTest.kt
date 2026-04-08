@@ -356,6 +356,209 @@ class CalculerQuotasUseCaseTest {
         }
     }
 
+    // --- Specific profile scenarios from QUALITE-01 ---
+
+    @Test
+    fun `should return around 2000 kcal for homme 30 ans omnivore sedentaire`() {
+        // Given — homme 30 ans, 75kg, 175cm, sedentaire, omnivore
+        val profile = buildProfile(
+            sexe = Sexe.HOMME,
+            age = 30,
+            poidsKg = 75.0,
+            tailleCm = 175,
+            regime = RegimeAlimentaire.OMNIVORE,
+            activite = NiveauActivite.SEDENTAIRE,
+        )
+
+        // When
+        val result = useCase.execute(profile)
+
+        // Then
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+        val calories = result.data.findByNutriment(NutrimentType.CALORIES).valeurCible
+        // MB = (10*75) + (6.25*175) - (5*30) + 5 = 750 + 1093.75 - 150 + 5 = 1698.75
+        // DET = 1698.75 * 1.2 = 2038.5
+        assertApprox(2039.0, calories, 1.0, "Calories homme sedentaire")
+        assertTrue(calories in 1900.0..2200.0, "Calories should be around 2000 kcal: $calories")
+    }
+
+    @Test
+    fun `should apply vegan coefficients for femme 25 ans vegan active`() {
+        // Given — femme 25 ans, 60kg, 165cm, vegan, active
+        val profile = buildProfile(
+            sexe = Sexe.FEMME,
+            age = 25,
+            poidsKg = 60.0,
+            tailleCm = 165,
+            regime = RegimeAlimentaire.VEGAN,
+            activite = NiveauActivite.ACTIF,
+        )
+
+        // When
+        val result = useCase.execute(profile)
+
+        // Then
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+        val quotas = result.data
+
+        // Fer base femme adulte = 16.0, x1.8 (vegan) = 28.8
+        val fer = quotas.findByNutriment(NutrimentType.FER).valeurCible
+        assertApprox(28.8, fer, 1.0, "Fer vegan femme active (16 * 1.8)")
+
+        // Zinc base femme adulte = 8.0, x1.5 (vegan) = 12.0
+        val zinc = quotas.findByNutriment(NutrimentType.ZINC).valeurCible
+        assertApprox(12.0, zinc, 1.0, "Zinc vegan femme active (8 * 1.5)")
+
+        // Omega3 base femme adulte = 2.0, x1.5 (vegan) = 3.0
+        val omega3 = quotas.findByNutriment(NutrimentType.OMEGA_3).valeurCible
+        assertApprox(3.0, omega3, 0.2, "Omega3 vegan femme active (2 * 1.5)")
+
+        // Proteines should be boosted x1.1
+        val proteinesOmni = buildProfile(
+            sexe = Sexe.FEMME, age = 25, poidsKg = 60.0, tailleCm = 165,
+            regime = RegimeAlimentaire.OMNIVORE, activite = NiveauActivite.ACTIF,
+        ).let { (useCase.execute(it) as AppResult.Success).data.findByNutriment(NutrimentType.PROTEINES).valeurCible }
+        val proteinesVegan = quotas.findByNutriment(NutrimentType.PROTEINES).valeurCible
+        assertApprox(proteinesOmni * 1.1, proteinesVegan, 0.5, "Proteines vegan x1.1")
+    }
+
+    @Test
+    fun `should return calcium 1000mg for ado 16 ans`() {
+        // Given — ado 16 ans
+        val profile = buildProfile(sexe = Sexe.HOMME, age = 16)
+
+        // When
+        val result = useCase.execute(profile)
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+
+        // Then
+        assertEquals(1000.0, result.data.findByNutriment(NutrimentType.CALCIUM).valeurCible)
+    }
+
+    @Test
+    fun `should ensure proteines min 1g per kg for senior 70 ans`() {
+        // Given — senior 70 ans, 75kg
+        val profile = buildProfile(sexe = Sexe.HOMME, age = 70, poidsKg = 75.0)
+
+        // When
+        val result = useCase.execute(profile)
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+
+        // Then — proteines >= 75g (1g/kg)
+        val proteines = result.data.findByNutriment(NutrimentType.PROTEINES).valeurCible
+        assertTrue(proteines >= 75.0, "Senior proteines should be >= 1g/kg (75g): $proteines")
+    }
+
+    // --- Edge cases ---
+
+    @Test
+    fun `should handle poids zero without crash`() {
+        // Given — poids = 0 (edge case)
+        val profile = buildProfile(poidsKg = 0.0)
+
+        // When
+        val result = useCase.execute(profile)
+
+        // Then — should not crash, may return very low values
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+        val calories = result.data.findByNutriment(NutrimentType.CALORIES).valeurCible
+        // MB = (10*0) + (6.25*180) - (5*30) + 5 = 0 + 1125 - 150 + 5 = 980
+        // DET = 980 * 1.55 = 1519
+        assertTrue(calories >= 0, "Calories should not be negative: $calories")
+    }
+
+    @Test
+    fun `should handle age zero without crash`() {
+        // Given — age = 0 (edge case)
+        val profile = buildProfile(age = 0)
+
+        // When
+        val result = useCase.execute(profile)
+
+        // Then — should not crash, uses 14-18 bracket for micronutrients
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+        val calories = result.data.findByNutriment(NutrimentType.CALORIES).valeurCible
+        assertTrue(calories > 0, "Calories should be positive: $calories")
+        // age < 18 => fibres = 25
+        assertEquals(25.0, result.data.findByNutriment(NutrimentType.FIBRES).valeurCible)
+        // age < 14 => uses 14-18 bracket => calcium = 1000
+        assertEquals(1000.0, result.data.findByNutriment(NutrimentType.CALCIUM).valeurCible)
+    }
+
+    @Test
+    fun `should handle very high poids without crash`() {
+        // Given — poids = 200kg (extreme but valid)
+        val profile = buildProfile(poidsKg = 200.0)
+
+        // When
+        val result = useCase.execute(profile)
+
+        // Then
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+        val calories = result.data.findByNutriment(NutrimentType.CALORIES).valeurCible
+        assertTrue(calories > 0, "Calories should be positive for high weight: $calories")
+    }
+
+    @Test
+    fun `should apply flexitarien coefficients same as omnivore`() {
+        // Given
+        val profileOmni = buildProfile(regime = RegimeAlimentaire.OMNIVORE)
+        val profileFlexi = buildProfile(regime = RegimeAlimentaire.FLEXITARIEN)
+
+        // When
+        val resultOmni = useCase.execute(profileOmni) as AppResult.Success
+        val resultFlexi = useCase.execute(profileFlexi) as AppResult.Success
+
+        // Then — flexitarien has no special coefficients
+        val ferOmni = resultOmni.data.findByNutriment(NutrimentType.FER).valeurCible
+        val ferFlexi = resultFlexi.data.findByNutriment(NutrimentType.FER).valeurCible
+        assertEquals(ferOmni, ferFlexi, "Flexitarien fer should equal omnivore fer")
+    }
+
+    @Test
+    fun `should calculate correct calories for femme sedentaire`() {
+        // Given — femme 25 ans, 55kg, 160cm, sedentaire
+        val profile = buildProfile(
+            sexe = Sexe.FEMME,
+            age = 25,
+            poidsKg = 55.0,
+            tailleCm = 160,
+            activite = NiveauActivite.SEDENTAIRE,
+        )
+
+        // When
+        val result = useCase.execute(profile)
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+
+        // Then
+        // MB = (10*55) + (6.25*160) - (5*25) - 161 = 550 + 1000 - 125 - 161 = 1264
+        // DET = 1264 * 1.2 = 1516.8
+        val calories = result.data.findByNutriment(NutrimentType.CALORIES).valeurCible
+        assertApprox(1517.0, calories, 1.0, "Calories femme sedentaire")
+    }
+
+    @Test
+    fun `should calculate correct calories for homme tres actif`() {
+        // Given — homme 25 ans, 80kg, 180cm, tres actif
+        val profile = buildProfile(
+            sexe = Sexe.HOMME,
+            age = 25,
+            poidsKg = 80.0,
+            tailleCm = 180,
+            activite = NiveauActivite.TRES_ACTIF,
+        )
+
+        // When
+        val result = useCase.execute(profile)
+        assertIs<AppResult.Success<List<QuotaJournalier>>>(result)
+
+        // Then
+        // MB = (10*80) + (6.25*180) - (5*25) + 5 = 800 + 1125 - 125 + 5 = 1805
+        // DET = 1805 * 1.9 = 3429.5
+        val calories = result.data.findByNutriment(NutrimentType.CALORIES).valeurCible
+        assertApprox(3430.0, calories, 1.0, "Calories homme tres actif")
+    }
+
     // --- Default profile ---
 
     @Test

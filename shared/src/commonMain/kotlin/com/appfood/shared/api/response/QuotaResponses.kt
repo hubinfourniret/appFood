@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class QuotaListResponse(
     val data: List<QuotaResponse>,
+    val total: Int = 0,
 )
 
 @Serializable
@@ -14,6 +15,7 @@ data class QuotaResponse(
     val estPersonnalise: Boolean,
     val valeurCalculee: Double,
     val unite: String,
+    val updatedAt: String = "",
 )
 
 @Serializable

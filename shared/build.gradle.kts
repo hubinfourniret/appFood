@@ -17,6 +17,18 @@ kotlin {
 
     androidTarget()
 
+    // JVM target: allows the backend module to import shared logic (quota calculation, models, etc.)
+    jvm {
+        compilations.all {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    // Treat kotlin.time.Instant and kotlinx.datetime.Instant as compatible
+                    freeCompilerArgs.add("-Xexpect-actual-classes")
+                }
+            }
+        }
+    }
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -71,6 +83,11 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.sqldelight.android)
+        }
+
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.sqldelight.jvm)
         }
 
         iosMain.dependencies {

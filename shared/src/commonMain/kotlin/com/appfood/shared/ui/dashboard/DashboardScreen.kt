@@ -31,9 +31,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.appfood.shared.model.MealType
 import com.appfood.shared.ui.Strings
+import com.appfood.shared.ui.common.DashboardLoadingSkeleton
+import com.appfood.shared.ui.common.EmptyDashboardState
 import com.appfood.shared.ui.common.ErrorMessage
-import com.appfood.shared.ui.common.LoadingSkeleton
+import com.appfood.shared.ui.common.NetworkErrorMessage
 import com.appfood.shared.ui.common.NutrimentProgressBar
+import com.appfood.shared.ui.common.ServerErrorMessage
 
 /**
  * Dashboard screen (DASHBOARD-01).
@@ -94,8 +97,7 @@ private fun DashboardContent(
     ) { innerPadding ->
         when (state) {
             is DashboardState.Loading -> {
-                LoadingSkeleton(
-                    lines = 8,
+                DashboardLoadingSkeleton(
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -109,13 +111,23 @@ private fun DashboardContent(
             }
 
             is DashboardState.Success -> {
-                DashboardSuccessContent(
-                    state = state,
-                    onAddMeal = onAddMeal,
-                    onManageQuotas = onManageQuotas,
-                    onSeeRecommandations = onSeeRecommandations,
-                    modifier = Modifier.padding(innerPadding),
-                )
+                val isEmpty = state.caloriesConsommees == 0.0 &&
+                    state.repas.values.all { it == 0.0 }
+
+                if (isEmpty) {
+                    EmptyDashboardState(
+                        onAddFirstMeal = onAddMeal,
+                        modifier = Modifier.padding(innerPadding),
+                    )
+                } else {
+                    DashboardSuccessContent(
+                        state = state,
+                        onAddMeal = onAddMeal,
+                        onManageQuotas = onManageQuotas,
+                        onSeeRecommandations = onSeeRecommandations,
+                        modifier = Modifier.padding(innerPadding),
+                    )
+                }
             }
         }
     }

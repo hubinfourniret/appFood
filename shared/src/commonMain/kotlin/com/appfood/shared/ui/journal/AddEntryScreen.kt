@@ -39,7 +39,9 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import com.appfood.shared.model.MealType
 import com.appfood.shared.ui.Strings
+import com.appfood.shared.ui.common.EmptyJournalState
 import com.appfood.shared.ui.common.EmptyState
+import com.appfood.shared.ui.common.SearchNoResultsMessage
 
 // Back arrow icon
 private val BackArrowIcon: ImageVector by lazy {
@@ -200,7 +202,11 @@ private fun AddEntryContent(
                     )
 
                     if (recetteSearchResults.isEmpty() && recetteSearchQuery.isNotBlank()) {
-                        EmptyState(message = Strings.JOURNAL_RECETTE_NO_RESULTS)
+                        SearchNoResultsMessage()
+                    } else if (recetteSearchResults.isEmpty() && recetteSearchQuery.isBlank()) {
+                        EmptyState(
+                            message = Strings.JOURNAL_SEARCH_HINT,
+                        )
                     } else {
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(8.dp),

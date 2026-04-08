@@ -38,7 +38,7 @@ class CalculerQuotasUseCase {
      * Core calculation logic — pure function, no side effects.
      * Visible for testing.
      */
-    internal fun calculerQuotas(profile: UserProfile): List<QuotaJournalier> {
+    fun calculerQuotas(profile: UserProfile): List<QuotaJournalier> {
         // 1. Basal Metabolic Rate (Mifflin-St Jeor)
         val mb = calculerMetabolismeBase(profile.sexe, profile.poidsKg, profile.tailleCm, profile.age)
 
@@ -209,7 +209,7 @@ class CalculerQuotasUseCase {
         nutriment: NutrimentType,
         valeur: Double,
         unite: String,
-        now: kotlinx.datetime.Instant,
+        now: kotlin.time.Instant,
     ): QuotaJournalier = QuotaJournalier(
         userId = userId,
         nutriment = nutriment,

@@ -2,7 +2,6 @@ package com.appfood.shared.ui.journal
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,8 +37,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.appfood.shared.model.Aliment
 import com.appfood.shared.ui.Strings
+import com.appfood.shared.ui.common.EmptyFavoritesState
 import com.appfood.shared.ui.common.EmptyState
-import com.appfood.shared.ui.common.ErrorMessage
+import com.appfood.shared.ui.common.SearchErrorMessage
+import com.appfood.shared.ui.common.SearchLoadingSkeleton
+import com.appfood.shared.ui.common.SearchNoResultsMessage
 
 // Search icon
 private val SearchIcon: ImageVector by lazy {
@@ -243,18 +244,18 @@ private fun SearchAlimentContent(
                     }
                 }
 
+                // Favorites empty state (UX-02) when no search is active
+                if (favorites.isEmpty() && searchQuery.isEmpty()) {
+                    item {
+                        EmptyFavoritesState()
+                    }
+                }
+
                 // Search results
                 when (searchState) {
                     is SearchState.Loading -> {
                         item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                CircularProgressIndicator()
-                            }
+                            SearchLoadingSkeleton()
                         }
                     }
 
@@ -274,16 +275,14 @@ private fun SearchAlimentContent(
 
                     is SearchState.Empty -> {
                         item {
-                            EmptyState(
-                                message = Strings.JOURNAL_SEARCH_NO_RESULTS,
-                            )
+                            SearchNoResultsMessage()
                         }
                     }
 
                     is SearchState.Error -> {
                         item {
-                            ErrorMessage(
-                                message = searchState.message,
+                            SearchErrorMessage(
+                                onRetry = { onSearchQueryChanged(searchQuery) },
                             )
                         }
                     }

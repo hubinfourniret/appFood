@@ -10,8 +10,17 @@ data class RecommandationAlimentListResponse(
 )
 
 @Serializable
+data class AlimentSummaryResponse(
+    val id: String,
+    val nom: String,
+    val categorie: String,
+    val caloriesPour100g: Double,
+    val regimesCompatibles: List<String>,
+)
+
+@Serializable
 data class RecommandationAlimentResponse(
-    val aliment: AlimentResponse,
+    val aliment: AlimentSummaryResponse,
     val nutrimentsCibles: List<String>,
     val quantiteSuggereGrammes: Double,
     val pourcentageCouverture: Map<String, Double>,
@@ -26,7 +35,12 @@ data class RecommandationRecetteListResponse(
 
 @Serializable
 data class RecommandationRecetteResponse(
-    val recette: RecetteSummaryResponse,
+    val recetteId: String,
+    val nom: String,
+    val description: String,
+    val tempsPreparationMin: Int,
+    val tempsCuissonMin: Int,
+    val nbPortions: Int,
     val nutrimentsCibles: List<String>,
     val pourcentageCouvertureGlobal: Double,
     val pourcentageCouverture: Map<String, Double>,
