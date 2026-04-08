@@ -1,6 +1,6 @@
 # Stage 1 : Build
 # Lancer depuis la racine du projet : docker build -f backend/Dockerfile .
-FROM gradle:8.10-jdk21 AS build
+FROM gradle:8.13-jdk21 AS build
 
 WORKDIR /app
 
