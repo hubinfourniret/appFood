@@ -2,7 +2,13 @@ package com.appfood.shared.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.request.LoginRequest
+import com.appfood.shared.api.request.RegisterRequest
+import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.ui.Strings
+import com.appfood.shared.util.AppResult
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,16 +17,10 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel shared across auth screens (Login, Register, ForgotPassword).
- * Calls use cases for authentication — use cases will be created by the SHARED agent.
+ * Calls UserRepository directly for authentication operations.
  */
 class AuthViewModel(
-    // TODO: Inject use cases when created by SHARED agent
-    // private val registerUseCase: RegisterUseCase,
-    // private val loginUseCase: LoginUseCase,
-    // private val googleSignInUseCase: GoogleSignInUseCase,
-    // private val appleSignInUseCase: AppleSignInUseCase,
-    // private val resetPasswordUseCase: ResetPasswordUseCase,
-    // private val deleteAccountUseCase: DeleteAccountUseCase,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -83,23 +83,20 @@ class AuthViewModel(
 
         _state.value = AuthState.Loading
         viewModelScope.launch {
-            // TODO: Call loginUseCase when created by SHARED agent
-            // val result = loginUseCase(loginEmail.value, loginPassword.value)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _state.value = if (result.data.onboardingComplete) {
-            //             AuthState.Success(needsOnboarding = false)
-            //         } else {
-            //             AuthState.Success(needsOnboarding = true)
-            //         }
-            //     }
-            //     is AppResult.Error -> {
-            //         _state.value = AuthState.Error(result.message)
-            //     }
-            // }
+            // TODO: Remplacer par le vrai Firebase token (Firebase.auth.currentUser.getIdToken())
+            // En mode FIREBASE_MOCK=true, le backend accepte "mock:<email>"
+            val firebaseToken = "mock:${_loginEmail.value}"
 
-            // Stub: simulate success with onboarding needed
-            _state.value = AuthState.Success(needsOnboarding = true)
+            val result = userRepository.login(LoginRequest(firebaseToken = firebaseToken))
+            when (result) {
+                is AppResult.Success -> {
+                    val needsOnboarding = !result.data.user.onboardingComplete
+                    _state.value = AuthState.Success(needsOnboarding = needsOnboarding)
+                }
+                is AppResult.Error -> {
+                    _state.value = AuthState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -141,19 +138,26 @@ class AuthViewModel(
 
         _state.value = AuthState.Loading
         viewModelScope.launch {
-            // TODO: Call registerUseCase when created by SHARED agent
-            // val result = registerUseCase(registerEmail.value, registerPassword.value)
-            // when (result) {
-            //     is AppResult.Success -> {
-            //         _state.value = AuthState.Success(needsOnboarding = true)
-            //     }
-            //     is AppResult.Error -> {
-            //         _state.value = AuthState.Error(result.message)
-            //     }
-            // }
+            // TODO: Remplacer par le vrai Firebase token (Firebase.auth.currentUser.getIdToken())
+            // En mode FIREBASE_MOCK=true, le backend accepte "mock:<email>"
+            val firebaseToken = "mock:${_registerEmail.value}"
 
-            // Stub: simulate success
-            _state.value = AuthState.Success(needsOnboarding = true)
+            val result = userRepository.register(
+                RegisterRequest(
+                    firebaseToken = firebaseToken,
+                    email = _registerEmail.value,
+                    nom = null,
+                    prenom = null,
+                )
+            )
+            when (result) {
+                is AppResult.Success -> {
+                    _state.value = AuthState.Success(needsOnboarding = true)
+                }
+                is AppResult.Error -> {
+                    _state.value = AuthState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -196,15 +200,14 @@ class AuthViewModel(
 
         _state.value = AuthState.Loading
         viewModelScope.launch {
-            // TODO: Call resetPasswordUseCase when created by SHARED agent
-            // val result = resetPasswordUseCase(forgotPasswordEmail.value)
-            // when (result) {
-            //     is AppResult.Success -> _state.value = AuthState.ResetEmailSent
-            //     is AppResult.Error -> _state.value = AuthState.Error(result.message)
-            // }
-
-            // Stub: simulate success
-            _state.value = AuthState.ResetEmailSent
+            try {
+                Firebase.auth.sendPasswordResetEmail(_forgotPasswordEmail.value)
+                _state.value = AuthState.ResetEmailSent
+            } catch (e: Exception) {
+                _state.value = AuthState.Error(
+                    e.message ?: "Erreur lors de l'envoi de l'e-mail de reinitialisation"
+                )
+            }
         }
     }
 
@@ -233,8 +236,14 @@ class AuthViewModel(
     fun onDeleteAccount() {
         _state.value = AuthState.Loading
         viewModelScope.launch {
-            // TODO: Call deleteAccountUseCase when created by SHARED agent
-            _state.value = AuthState.AccountDeleted
+            when (val result = userRepository.deleteAccount()) {
+                is AppResult.Success -> {
+                    _state.value = AuthState.AccountDeleted
+                }
+                is AppResult.Error -> {
+                    _state.value = AuthState.Error(result.message)
+                }
+            }
         }
     }
 
@@ -242,8 +251,15 @@ class AuthViewModel(
 
     fun onLogout() {
         viewModelScope.launch {
-            // TODO: Call logoutUseCase (Firebase SDK signOut)
-            _state.value = AuthState.Idle
+            when (val result = userRepository.logout()) {
+                is AppResult.Success -> {
+                    _state.value = AuthState.Idle
+                }
+                is AppResult.Error -> {
+                    // Meme en cas d'erreur, on deconnecte localement
+                    _state.value = AuthState.Idle
+                }
+            }
         }
     }
 

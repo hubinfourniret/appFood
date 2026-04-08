@@ -2,10 +2,14 @@ package com.appfood.shared.ui.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.request.CreateProfileRequest
+import com.appfood.shared.api.request.UpdatePreferencesRequest
+import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.model.NiveauActivite
 import com.appfood.shared.model.RegimeAlimentaire
 import com.appfood.shared.model.Sexe
 import com.appfood.shared.ui.Strings
+import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,9 +20,7 @@ import kotlinx.coroutines.launch
  * Manages multi-step form state and calls the profile creation use case.
  */
 class OnboardingViewModel(
-    // TODO: Inject use cases when created by SHARED agent
-    // private val createProfileUseCase: CreateProfileUseCase,
-    // private val updatePreferencesUseCase: UpdatePreferencesUseCase,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     companion object {
@@ -212,30 +214,41 @@ class OnboardingViewModel(
     private fun saveProfile() {
         _state.value = OnboardingState.Saving
         viewModelScope.launch {
-            // TODO: Call createProfileUseCase when created by SHARED agent
-            // val result = createProfileUseCase(
-            //     CreateProfileRequest(
-            //         sexe = (sexe.value ?: DEFAULT_SEXE).name,
-            //         age = ageText.value.toIntOrNull() ?: DEFAULT_AGE,
-            //         poidsKg = poidsText.value.toDoubleOrNull() ?: DEFAULT_POIDS,
-            //         tailleCm = tailleText.value.toIntOrNull() ?: DEFAULT_TAILLE,
-            //         regimeAlimentaire = (regimeAlimentaire.value ?: DEFAULT_REGIME).name,
-            //         niveauActivite = (niveauActivite.value ?: DEFAULT_ACTIVITE).name,
-            //     )
-            // )
-            //
-            // If allergies/exclusions selected, also call updatePreferencesUseCase
-            // if (selectedAllergies.value.isNotEmpty() || excludedAliments.value.isNotEmpty()) {
-            //     updatePreferencesUseCase(
-            //         UpdatePreferencesRequest(
-            //             allergies = selectedAllergies.value.toList(),
-            //             alimentsExclus = excludedAliments.value,
-            //         )
-            //     )
-            // }
+            val profileRequest = CreateProfileRequest(
+                sexe = (_sexe.value ?: DEFAULT_SEXE).name,
+                age = _ageText.value.toIntOrNull() ?: DEFAULT_AGE,
+                poidsKg = _poidsText.value.toDoubleOrNull() ?: DEFAULT_POIDS,
+                tailleCm = _tailleText.value.toIntOrNull() ?: DEFAULT_TAILLE,
+                regimeAlimentaire = (_regimeAlimentaire.value ?: DEFAULT_REGIME).name,
+                niveauActivite = (_niveauActivite.value ?: DEFAULT_ACTIVITE).name,
+            )
 
-            // Stub: simulate success
-            _state.value = OnboardingState.Complete
+            when (val result = userRepository.createProfile(profileRequest)) {
+                is AppResult.Success -> {
+                    // Si des preferences alimentaires ont ete saisies, les envoyer aussi
+                    val allergies = _selectedAllergies.value
+                    val exclusions = _excludedAliments.value
+                    if (allergies.isNotEmpty() || exclusions.isNotEmpty()) {
+                        val prefsRequest = UpdatePreferencesRequest(
+                            allergies = allergies.toList(),
+                            alimentsExclus = exclusions,
+                        )
+                        when (val prefsResult = userRepository.updatePreferences(prefsRequest)) {
+                            is AppResult.Success -> {
+                                _state.value = OnboardingState.Complete
+                            }
+                            is AppResult.Error -> {
+                                _state.value = OnboardingState.Error(prefsResult.message)
+                            }
+                        }
+                    } else {
+                        _state.value = OnboardingState.Complete
+                    }
+                }
+                is AppResult.Error -> {
+                    _state.value = OnboardingState.Error(result.message)
+                }
+            }
         }
     }
 }

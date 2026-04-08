@@ -9,16 +9,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,13 +41,19 @@ import com.appfood.shared.ui.auth.AuthViewModel
 @Composable
 fun ProfilScreen(
     authViewModel: AuthViewModel,
+    profilViewModel: ProfilViewModel,
     onNavigateToEditProfil: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onLogout: () -> Unit,
     onAccountDeleted: () -> Unit,
 ) {
+    val exportState by profilViewModel.exportState.collectAsState()
+
     ProfilContent(
+        exportState = exportState,
+        onExportData = { profilViewModel.onExportData() },
+        onResetExportState = { profilViewModel.resetExportState() },
         onNavigateToEditProfil = onNavigateToEditProfil,
         onNavigateToPreferences = onNavigateToPreferences,
         onNavigateToSettings = onNavigateToSettings,
@@ -60,6 +70,9 @@ fun ProfilScreen(
 
 @Composable
 private fun ProfilContent(
+    exportState: ExportState,
+    onExportData: () -> Unit,
+    onResetExportState: () -> Unit,
     onNavigateToEditProfil: () -> Unit,
     onNavigateToPreferences: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -102,6 +115,26 @@ private fun ProfilContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Export data button
+        OutlinedButton(
+            onClick = onExportData,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            enabled = exportState !is ExportState.Loading,
+        ) {
+            if (exportState is ExportState.Loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                )
+                Spacer(modifier = Modifier.padding(start = 8.dp))
+                Text(Strings.PROFIL_EXPORT_LOADING)
+            } else {
+                Text(Strings.PROFIL_EXPORT_BUTTON)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Logout button
         Button(
             onClick = onLogout,
@@ -127,6 +160,68 @@ private fun ProfilContent(
         ) {
             Text(Strings.DELETE_ACCOUNT_BUTTON)
         }
+    }
+
+    // Export success dialog
+    if (exportState is ExportState.Success) {
+        val exportData = exportState.data
+        AlertDialog(
+            onDismissRequest = onResetExportState,
+            title = {
+                Text(Strings.PROFIL_EXPORT_SUCCESS_TITLE)
+            },
+            text = {
+                Column {
+                    Text(Strings.PROFIL_EXPORT_SUCCESS_MESSAGE)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = Strings.PROFIL_EXPORT_SUMMARY_JOURNAL + exportData.journalEntries.size,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = Strings.PROFIL_EXPORT_SUMMARY_QUOTAS + exportData.quotas.size,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = Strings.PROFIL_EXPORT_SUMMARY_POIDS + exportData.poidsHistory.size,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = Strings.PROFIL_EXPORT_SUMMARY_HYDRATATION + exportData.hydratation.size,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = Strings.PROFIL_EXPORT_SUMMARY_DATE + exportData.exportedAt,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onResetExportState) {
+                    Text(Strings.PROFIL_EXPORT_CLOSE)
+                }
+            },
+        )
+    }
+
+    // Export error dialog
+    if (exportState is ExportState.Error) {
+        AlertDialog(
+            onDismissRequest = onResetExportState,
+            title = {
+                Text(Strings.PROFIL_EXPORT_ERROR)
+            },
+            text = {
+                Text(exportState.message)
+            },
+            confirmButton = {
+                TextButton(onClick = onResetExportState) {
+                    Text(Strings.PROFIL_EXPORT_CLOSE)
+                }
+            },
+        )
     }
 
     // Delete account dialog with double confirmation (PROFIL-04)

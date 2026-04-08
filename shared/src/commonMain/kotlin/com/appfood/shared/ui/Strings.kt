@@ -196,6 +196,19 @@ object Strings {
     const val PROFIL_SETTINGS = "Parametres"
     const val PROFIL_LOGOUT = "Se deconnecter"
 
+    // Profil — Export data
+    const val PROFIL_EXPORT_BUTTON = "Exporter mes donnees"
+    const val PROFIL_EXPORT_LOADING = "Export en cours..."
+    const val PROFIL_EXPORT_SUCCESS_TITLE = "Export termine"
+    const val PROFIL_EXPORT_SUCCESS_MESSAGE = "Vos donnees ont ete exportees avec succes."
+    const val PROFIL_EXPORT_ERROR = "Erreur lors de l'export"
+    const val PROFIL_EXPORT_CLOSE = "Fermer"
+    const val PROFIL_EXPORT_SUMMARY_JOURNAL = "Entrees journal : "
+    const val PROFIL_EXPORT_SUMMARY_QUOTAS = "Quotas : "
+    const val PROFIL_EXPORT_SUMMARY_POIDS = "Historique poids : "
+    const val PROFIL_EXPORT_SUMMARY_HYDRATATION = "Hydratation : "
+    const val PROFIL_EXPORT_SUMMARY_DATE = "Exporte le : "
+
     // Journal — General
     const val JOURNAL_ADD_ENTRY_TITLE = "Ajouter un aliment"
     const val JOURNAL_BACK = "Retour"

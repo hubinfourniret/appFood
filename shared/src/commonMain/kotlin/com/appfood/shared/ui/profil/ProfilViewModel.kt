@@ -2,10 +2,13 @@ package com.appfood.shared.ui.profil
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appfood.shared.api.response.UserExportResponse
+import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.model.NiveauActivite
 import com.appfood.shared.model.RegimeAlimentaire
 import com.appfood.shared.model.Sexe
 import com.appfood.shared.ui.Strings
+import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +19,7 @@ import kotlinx.coroutines.launch
  * Manages profile editing, preferences, and account deletion.
  */
 class ProfilViewModel(
+    private val userRepository: UserRepository? = null,
     // TODO: Inject use cases when created by SHARED agent
     // private val getProfileUseCase: GetProfileUseCase,
     // private val updateProfileUseCase: UpdateProfileUseCase,
@@ -75,6 +79,10 @@ class ProfilViewModel(
     // Save state
     private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
     val saveState: StateFlow<SaveState> = _saveState.asStateFlow()
+
+    // Export state
+    private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
+    val exportState: StateFlow<ExportState> = _exportState.asStateFlow()
 
     init {
         loadProfile()
@@ -238,6 +246,30 @@ class ProfilViewModel(
     fun resetSaveState() {
         _saveState.value = SaveState.Idle
     }
+
+    // --- Export data ---
+
+    fun onExportData() {
+        val repo = userRepository ?: run {
+            _exportState.value = ExportState.Error(Strings.PROFIL_EXPORT_ERROR)
+            return
+        }
+        _exportState.value = ExportState.Loading
+        viewModelScope.launch {
+            when (val result = repo.exportData()) {
+                is AppResult.Success -> {
+                    _exportState.value = ExportState.Success(result.data)
+                }
+                is AppResult.Error -> {
+                    _exportState.value = ExportState.Error(result.message)
+                }
+            }
+        }
+    }
+
+    fun resetExportState() {
+        _exportState.value = ExportState.Idle
+    }
 }
 
 /**
@@ -257,4 +289,14 @@ sealed interface SaveState {
     data object Saving : SaveState
     data class Success(val message: String) : SaveState
     data class Error(val message: String) : SaveState
+}
+
+/**
+ * Sealed interface for data export state.
+ */
+sealed interface ExportState {
+    data object Idle : ExportState
+    data object Loading : ExportState
+    data class Success(val data: UserExportResponse) : ExportState
+    data class Error(val message: String) : ExportState
 }

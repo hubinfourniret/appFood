@@ -56,8 +56,10 @@ import com.appfood.shared.ui.recette.RecettesViewModel
 import com.appfood.shared.ui.recommandation.RecommandationsScreen
 import com.appfood.shared.ui.recommandation.RecommandationViewModel
 import com.appfood.shared.ui.settings.AboutScreen
+import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.ui.support.FaqScreen
 import com.appfood.shared.ui.support.FaqViewModel
+import org.koin.compose.koinInject
 
 // Screens that show the bottom navigation bar
 private val screensWithBottomNav = setOf(
@@ -77,9 +79,10 @@ fun AppNavigation(
     val showBottomNav = currentScreen::class in screensWithBottomNav
 
     // Shared ViewModels — created once and shared across screens
-    // TODO: Replace with koinViewModel() when Koin DI is wired for ViewModels
-    val authViewModel = remember { AuthViewModel() }
-    val onboardingViewModel = remember { OnboardingViewModel() }
+    // UserRepository injected via Koin, passed to ViewModels that need it
+    val userRepository = koinInject<UserRepository>()
+    val authViewModel = remember(userRepository) { AuthViewModel(userRepository) }
+    val onboardingViewModel = remember(userRepository) { OnboardingViewModel(userRepository = userRepository) }
     val profilViewModel = remember { ProfilViewModel() }
     val journalViewModel = remember { JournalViewModel().also { it.init() } }
     val dashboardViewModel = remember { DashboardViewModel() }
@@ -408,6 +411,7 @@ fun AppNavigation(
             composable<Screen.Profil> {
                 ProfilScreen(
                     authViewModel = authViewModel,
+                    profilViewModel = profilViewModel,
                     onNavigateToEditProfil = {
                         navController.navigate(Screen.EditProfil) {
                             launchSingleTop = true
