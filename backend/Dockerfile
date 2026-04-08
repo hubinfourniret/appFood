@@ -10,14 +10,16 @@ COPY backend/settings-docker.gradle.kts ./settings.gradle.kts
 COPY build.gradle.kts ./build.gradle.kts
 COPY gradle/libs.versions.toml ./gradle/libs.versions.toml
 
-# Copier le build du backend
+# Copier le build du backend et du shared
 COPY backend/build.gradle.kts ./backend/build.gradle.kts
+COPY shared/build.gradle.kts ./shared/build.gradle.kts
 
 # Telecharger les dependances (couche cachee si build.gradle.kts ne change pas)
 RUN gradle :backend:dependencies --no-daemon
 
 # Copier le code source
 COPY backend/src ./backend/src
+COPY shared/src ./shared/src
 
 # Build le fat JAR
 RUN gradle :backend:buildFatJar --no-daemon

@@ -18,5 +18,5 @@ Les agents ne peuvent PAS faire ces actions. Elles necessitent une intervention 
 | 🔵 Plus tard | Creer les comptes Google Play Console et Apple Developer | Publication | Todo |
 | 🔵 Plus tard | Rediger le contenu de la FAQ | SUPPORT-02 | Todo |
 | 🔵 Plus tard | Creer 50-100 recettes vegan/vegetariennes | RECETTES-03 | Todo |
-| 🔴 Bloquant | Configurer ENCRYPTION_KEY sur Railway (`openssl rand -base64 32`) | LEGAL-04 (prod) | Todo |
+| 🔴 Bloquant | Configurer ENCRYPTION_KEY sur Railway (`openssl rand -base64 32`) | LEGAL-04 (prod) | Done |
 | 🔵 Plus tard | Decision produit : multi-device FCM (voir FcmTokensTable) | NOTIF-01 | Todo |
