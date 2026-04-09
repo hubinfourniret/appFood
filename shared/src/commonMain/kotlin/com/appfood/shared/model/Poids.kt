@@ -17,6 +17,5 @@ data class HistoriquePoids(
     val estReference: Boolean,
     @Transient
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
-    @Contextual
-    val createdAt: Instant,
+    @Contextual val createdAt: Instant,
 )

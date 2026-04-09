@@ -20,8 +20,6 @@ data class JournalEntry(
     val nutrimentsCalcules: NutrimentValues,
     @Transient
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
-    @Contextual
-    val createdAt: Instant,
-    @Contextual
-    val updatedAt: Instant,
+    @Contextual val createdAt: Instant,
+    @Contextual val updatedAt: Instant,
 )

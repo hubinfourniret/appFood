@@ -262,10 +262,7 @@ class HydratationViewModel(
     }
 
     private fun formatHeure(instant: kotlin.time.Instant): String {
-        // Convert to local time and format as HH:mm
-        val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(
-            instant.toEpochMilliseconds()
-        )
+        val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(instant.toEpochMilliseconds())
         val localDateTime = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault())
         val hour = localDateTime.hour.toString().padStart(2, '0')
         val minute = localDateTime.minute.toString().padStart(2, '0')

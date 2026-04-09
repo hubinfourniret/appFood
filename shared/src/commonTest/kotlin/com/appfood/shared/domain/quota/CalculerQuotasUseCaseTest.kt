@@ -8,7 +8,7 @@ import com.appfood.shared.model.RegimeAlimentaire
 import com.appfood.shared.model.Sexe
 import com.appfood.shared.model.UserProfile
 import com.appfood.shared.util.AppResult
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -3,7 +3,6 @@ package com.appfood.shared.domain.hydratation
 import com.appfood.shared.data.repository.HydratationRepository
 import com.appfood.shared.model.HydratationJournaliere
 import com.appfood.shared.util.AppResult
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 

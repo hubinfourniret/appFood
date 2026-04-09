@@ -12,8 +12,7 @@ data class QuotaJournalier(
     val estPersonnalise: Boolean,
     val valeurCalculee: Double,
     val unite: String,
-    @Contextual
-    val updatedAt: Instant,
+    @Contextual val updatedAt: Instant,
 )
 
 // Used for dashboard display — combines quota target with consumed value

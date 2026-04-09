@@ -162,9 +162,7 @@ class PoidsViewModel(
                     lastDetectionResult?.let { detection ->
                         val ancienPoids = detection.poidsReference ?: return@let
                         val nouveauPoids = detection.poidsActuel ?: return@let
-                        val nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
-                        val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(nowMs)
-                        val today = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+                        val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
                         val event = RecalculEvent(
                             date = today,
                             ancienPoids = ancienPoids,
@@ -196,9 +194,7 @@ class PoidsViewModel(
             }
 
             // Compute date range based on selected period
-            val nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
-            val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(nowMs)
-            val today = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date
             val dateFrom = computeDateFrom(today, _selectedPeriod.value)
 
             when (val result = getHistoriquePoidsUseCase(

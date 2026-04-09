@@ -11,10 +11,8 @@ data class User(
     val nom: String?,
     val prenom: String?,
     val role: Role = Role.USER,
-    @Contextual
-    val createdAt: Instant,
-    @Contextual
-    val updatedAt: Instant,
+    @Contextual val createdAt: Instant,
+    @Contextual val updatedAt: Instant,
 )
 
 @Serializable
@@ -28,8 +26,7 @@ data class UserProfile(
     val niveauActivite: NiveauActivite,
     val onboardingComplete: Boolean,
     val objectifPoids: ObjectifPoids?,
-    @Contextual
-    val updatedAt: Instant,
+    @Contextual val updatedAt: Instant,
 )
 
 @Serializable
@@ -38,6 +35,5 @@ data class UserPreferences(
     val alimentsExclus: List<String>,
     val allergies: List<String>,
     val alimentsFavoris: List<String>,
-    @Contextual
-    val updatedAt: Instant,
+    @Contextual val updatedAt: Instant,
 )

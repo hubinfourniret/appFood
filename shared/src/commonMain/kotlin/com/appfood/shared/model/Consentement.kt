@@ -10,7 +10,6 @@ data class Consentement(
     val userId: String,
     val type: ConsentType,
     val accepte: Boolean,
-    @Contextual
-    val dateConsentement: Instant,
+    @Contextual val dateConsentement: Instant,
     val versionPolitique: String,
 )

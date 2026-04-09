@@ -17,14 +17,12 @@ data class HydratationJournaliere(
     @Transient
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
     val entrees: List<HydratationEntry>,
-    @Contextual
-    val updatedAt: Instant,
+    @Contextual val updatedAt: Instant,
 )
 
 @Serializable
 data class HydratationEntry(
     val id: String,
-    @Contextual
-    val heure: Instant,
+    @Contextual val heure: Instant,
     val quantiteMl: Int,
 )

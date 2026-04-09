@@ -13,7 +13,6 @@ import com.appfood.shared.sync.SyncManager
 import com.appfood.shared.util.AppResult
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 /**
  * Combines remote API calls with local SQLDelight cache for hydration.
@@ -36,7 +35,7 @@ class HydratationRepositoryImpl(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
+
     override suspend fun addEntry(userId: String, date: String, quantiteMl: Int): AppResult<HydratationJournaliere> {
         return try {
             val request = AddHydratationRequest(date = date, quantiteMl = quantiteMl)
@@ -102,7 +101,7 @@ class HydratationRepositoryImpl(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
+
     private fun HydratationResponse.toDomain(userId: String): HydratationJournaliere {
         return HydratationJournaliere(
             id = id,
@@ -122,7 +121,7 @@ class HydratationRepositoryImpl(
         )
     }
 
-    @OptIn(ExperimentalTime::class)
+
     private fun emptyDay(userId: String, date: String): HydratationJournaliere {
         return HydratationJournaliere(
             id = "",

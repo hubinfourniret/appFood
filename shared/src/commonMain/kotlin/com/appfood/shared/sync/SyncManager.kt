@@ -32,7 +32,6 @@ import kotlinx.serialization.json.Json
 import kotlin.time.Clock
 import kotlin.math.min
 import kotlin.math.pow
-import kotlin.time.ExperimentalTime
 
 /**
  * Sync state observable by the UI layer.
@@ -97,7 +96,7 @@ class SyncManager(
      * Lance un cycle complet de synchronisation : push d'abord, puis pull.
      * Push et pull ont chacun leur propre boucle de retry avec exponential backoff.
      */
-    @OptIn(ExperimentalTime::class)
+
     suspend fun syncAll(): AppResult<Unit> {
         _syncState.value = SyncState.Syncing
 
@@ -137,7 +136,7 @@ class SyncManager(
      * Envoie les entrees en attente vers le serveur.
      * Lit sync_queue ASC, groupe par entity_type, POST /sync/push.
      */
-    @OptIn(ExperimentalTime::class)
+
     suspend fun pushPendingEntries(): AppResult<Unit> {
         val retryableEntries = syncQueueDataSource.findRetryable(MAX_RETRIES)
         if (retryableEntries.isEmpty()) return AppResult.Success(Unit)
@@ -326,7 +325,7 @@ class SyncManager(
      * Ajoute une entree a la sync_queue pour synchronisation ulterieure.
      * Si connecte, declenche immediatement un push.
      */
-    @OptIn(ExperimentalTime::class)
+
     fun enqueue(
         entityType: String,
         entityId: String,

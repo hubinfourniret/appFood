@@ -163,6 +163,27 @@ exception<UnauthorizedException> { call, cause ->
 
 ## 4. Serialization
 
+### Date/Time — Convention STRICTE (ne pas modifier)
+
+En kotlinx-datetime 0.6.x, `kotlin.time.Instant` et `kotlinx.datetime.Instant` sont des **types differents sur JVM**.
+
+| Module | Instant | Clock | LocalDate/TimeZone |
+|--------|---------|-------|-------------------|
+| **shared/** (modeles) | `kotlin.time.Instant` + `@Contextual` | `kotlin.time.Clock` | `kotlinx.datetime.*` |
+| **backend/** (DAOs, services) | `kotlinx.datetime.Instant` | `kotlinx.datetime.Clock` | `kotlinx.datetime.*` |
+
+Le backend **force** kotlinx-datetime a 0.6.2 via `resolutionStrategy.force` dans `backend/build.gradle.kts`. Ne JAMAIS retirer ce bloc — sans lui, Gradle resout vers 0.7.1 ou les types deviennent des typealiases incompatibles avec Exposed.
+
+**Conversion obligatoire** quand on appelle des fonctions kotlinx.datetime (ex: `toLocalDateTime`) sur un `kotlin.time.Instant` :
+```kotlin
+val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(
+    kotlin.time.Clock.System.now().toEpochMilliseconds()
+)
+val today = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+```
+
+**Interdit** : migrer les modeles shared vers `kotlinx.datetime.Instant`, retirer le `resolutionStrategy.force`, ou supprimer les conversions epoch.
+
 ### kotlinx.serialization — Regles
 
 - Toutes les data classes API (request/response) sont annotees `@Serializable`

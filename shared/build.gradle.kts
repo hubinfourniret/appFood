@@ -22,7 +22,7 @@ kotlin {
         compilations.all {
             compileTaskProvider.configure {
                 compilerOptions {
-                    // Treat kotlin.time.Instant and kotlinx.datetime.Instant as compatible
+                    // Enable expect/actual classes for KMP
                     freeCompilerArgs.add("-Xexpect-actual-classes")
                 }
             }

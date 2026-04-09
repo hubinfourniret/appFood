@@ -9,6 +9,9 @@ application {
     mainClass.set("com.appfood.backend.ApplicationKt")
 }
 
+// Force kotlinx-datetime 0.6.2 — Exposed 0.61.0 requires real classes (not typealiases).
+// Without this, Gradle resolves to 0.7.1 (via shared module) where Instant/Clock become
+// typealiases to kotlin.time.*, breaking Exposed column type compatibility.
 configurations.all {
     resolutionStrategy {
         force("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")

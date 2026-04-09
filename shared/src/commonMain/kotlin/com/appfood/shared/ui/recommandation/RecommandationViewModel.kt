@@ -29,9 +29,7 @@ class RecommandationViewModel(
 
     // TODO: Inject a real user ID provider when auth session is wired
     private val currentUserId: String = "current-user"
-    private val currentDate: String get() = kotlinx.datetime.Instant.fromEpochMilliseconds(
-        kotlin.time.Clock.System.now().toEpochMilliseconds()
-    ).toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+    private val currentDate: String get() = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
 
     // --- Onglet actif ---
     private val _selectedTab = MutableStateFlow(RecommandationTab.ALIMENTS)

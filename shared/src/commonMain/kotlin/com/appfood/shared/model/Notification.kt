@@ -11,7 +11,6 @@ data class AppNotification(
     val type: NotificationType,
     val titre: String,
     val contenu: String,
-    @Contextual
-    val dateEnvoi: Instant,
+    @Contextual val dateEnvoi: Instant,
     val lue: Boolean,
 )
