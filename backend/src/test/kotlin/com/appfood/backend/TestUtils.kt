@@ -115,6 +115,7 @@ fun initTestDatabase() {
         password = "",
     )
     transaction {
+        SchemaUtils.drop(*ALL_TEST_TABLES, inBatch = true)
         SchemaUtils.create(*ALL_TEST_TABLES)
     }
 }

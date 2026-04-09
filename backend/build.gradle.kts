@@ -9,6 +9,11 @@ application {
     mainClass.set("com.appfood.backend.ApplicationKt")
 }
 
+// Align with shared module JVM target — shared is compiled with Java 21 via toolchain
+kotlin {
+    jvmToolchain(21)
+}
+
 // Force kotlinx-datetime 0.6.2 — Exposed 0.61.0 requires real classes (not typealiases).
 // Without this, Gradle resolves to 0.7.1 (via shared module) where Instant/Clock become
 // typealiases to kotlin.time.*, breaking Exposed column type compatibility.
@@ -59,4 +64,10 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.h2)
+}
+
+// Force sequential test execution — H2 in-memory databases share the Exposed
+// global connection, so parallel tests cause data isolation failures.
+tasks.withType<Test> {
+    maxParallelForks = 1
 }
