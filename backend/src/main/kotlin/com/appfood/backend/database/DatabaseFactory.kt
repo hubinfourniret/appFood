@@ -63,6 +63,18 @@ fun Application.configureDatabase() {
     val log = environment.log
     transaction {
         SchemaUtils.createMissingTablesAndColumns(*ALL_TABLES)
+
+        // V6 migration: ensure sensitive profile columns are TEXT (not INTEGER).
+        // SchemaUtils doesn't alter existing column types, so we fix them manually.
+        try {
+            exec("ALTER TABLE user_profiles ALTER COLUMN age TYPE TEXT USING age::TEXT")
+        } catch (_: Exception) { /* already TEXT */ }
+        try {
+            exec("ALTER TABLE user_profiles ALTER COLUMN poids_kg TYPE TEXT USING poids_kg::TEXT")
+        } catch (_: Exception) { /* already TEXT */ }
+        try {
+            exec("ALTER TABLE user_profiles ALTER COLUMN taille_cm TYPE TEXT USING taille_cm::TEXT")
+        } catch (_: Exception) { /* already TEXT */ }
     }
     log.info("Schema PostgreSQL verifie — tables creees/mises a jour si necessaire")
 }

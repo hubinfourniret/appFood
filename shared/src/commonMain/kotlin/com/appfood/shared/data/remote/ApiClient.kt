@@ -9,13 +9,18 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * API client wrapper around Ktor HttpClient.
@@ -42,15 +47,32 @@ class ApiClient(
     }
 
     /**
-     * Intercepte une reponse HTTP : si 401, clear le token et notifie l'UI.
+     * Intercepte une reponse HTTP :
+     * - 401 → clear le token et notifie l'UI
+     * - Tout status non-2xx → lance une ApiException avec le message du backend
      */
-    private fun interceptResponse(response: HttpResponse): HttpResponse {
+    private suspend fun interceptResponse(response: HttpResponse): HttpResponse {
         if (response.status == HttpStatusCode.Unauthorized) {
             setAuthToken(null)
             _sessionExpired.tryEmit(true)
         }
+        if (!response.status.isSuccess()) {
+            val message = try {
+                val body = response.bodyAsText()
+                val json = Json.parseToJsonElement(body).jsonObject
+                // Backend error format: {"error":{"code":"...","message":"..."}} or {"message":"..."}
+                json["error"]?.jsonObject?.get("message")?.jsonPrimitive?.content
+                    ?: json["message"]?.jsonPrimitive?.content
+                    ?: body
+            } catch (_: Exception) {
+                "Erreur ${response.status.value}"
+            }
+            throw ApiException(response.status.value, message)
+        }
         return response
     }
+
+    class ApiException(val statusCode: Int, override val message: String) : Exception(message)
 
     fun buildUrl(path: String): String = "$baseUrl$path"
 
