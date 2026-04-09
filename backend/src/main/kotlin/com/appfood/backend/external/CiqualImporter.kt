@@ -37,7 +37,7 @@ class CiqualImporter(
         private const val DECIMAL_DOT = '.'
         private const val LOW_QUALITY_THRESHOLD = 8
         private const val UPSERT_BATCH_SIZE = 500
-        private const val MEILISEARCH_BATCH_SIZE = 500
+        private const val MEILISEARCH_BATCH_SIZE = 100
 
         // -- Column patterns for nutriment mapping (Ciqual headers vary between versions) --
 
@@ -161,6 +161,10 @@ class CiqualImporter(
                 logger.info(
                     "Meilisearch index: batch ${index + 1}/${indexBatches.size} ($indexedCount / ${result.rows.size})",
                 )
+                // Pause entre batches pour laisser Meilisearch indexer sans OOM
+                if (index < indexBatches.size - 1) {
+                    kotlinx.coroutines.delay(2000)
+                }
             } catch (e: Exception) {
                 logger.error(
                     "Meilisearch indexation failed at batch ${index + 1}: ${e.message}",
