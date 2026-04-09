@@ -1,7 +1,9 @@
 package com.appfood.backend
 
 import com.appfood.backend.database.configureDatabase
+import com.appfood.backend.database.dao.AlimentDao
 import com.appfood.backend.di.backendModule
+import com.appfood.backend.external.CiqualImporter
 import com.appfood.backend.plugins.configureAuth
 import com.appfood.backend.plugins.configureCORS
 import com.appfood.backend.plugins.configureRouting
@@ -62,11 +64,34 @@ fun Application.module() {
     configureRouting()
 
     // Init Meilisearch (index + settings) au demarrage
+    // Puis import Ciqual si la base d'aliments est vide
     launch {
         try {
             configureMeilisearch(get<MeilisearchClient>())
         } catch (e: Exception) {
             environment.log.warn("Meilisearch non disponible au demarrage: ${e.message}")
+        }
+
+        // Auto-import Ciqual si aucun aliment en base
+        try {
+            val alimentDao = get<AlimentDao>()
+            val count = alimentDao.count()
+            if (count == 0L) {
+                environment.log.info("Base d'aliments vide — lancement de l'import Ciqual...")
+                val ciqualImporter = get<CiqualImporter>()
+                val csvStream = this@module.javaClass.classLoader.getResourceAsStream("data/ciqual.csv")
+                    ?: java.io.File("data/ciqual.csv").takeIf { it.exists() }?.inputStream()
+                if (csvStream != null) {
+                    val result = ciqualImporter.importAndIndex(csvStream)
+                    environment.log.info("Import Ciqual termine: ${result.rows.size} aliments importes")
+                } else {
+                    environment.log.warn("Fichier ciqual.csv introuvable — import ignore")
+                }
+            } else {
+                environment.log.info("Base d'aliments: $count aliments existants — import Ciqual ignore")
+            }
+        } catch (e: Exception) {
+            environment.log.error("Erreur lors de l'import Ciqual: ${e.message}", e)
         }
     }
 }
