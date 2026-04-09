@@ -17,7 +17,7 @@ class AlimentIndexer(
 
     companion object {
         const val INDEX_NAME = "aliments"
-        const val BATCH_SIZE = 500
+        const val BATCH_SIZE = 100
     }
 
     suspend fun indexAll() {
@@ -36,6 +36,11 @@ class AlimentIndexer(
             indexed += batch.size
             offset += BATCH_SIZE
             logger.info("Indexe $indexed / $total aliments")
+
+            // Pause entre batches pour eviter OOM Meilisearch
+            if (offset < total) {
+                kotlinx.coroutines.delay(2000)
+            }
         }
 
         logger.info("Indexation terminee : $indexed aliments indexes")

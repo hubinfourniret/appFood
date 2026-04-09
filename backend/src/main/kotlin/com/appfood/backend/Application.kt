@@ -4,6 +4,7 @@ import com.appfood.backend.database.configureDatabase
 import com.appfood.backend.database.dao.AlimentDao
 import com.appfood.backend.di.backendModule
 import com.appfood.backend.external.CiqualImporter
+import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.plugins.configureAuth
 import com.appfood.backend.plugins.configureCORS
 import com.appfood.backend.plugins.configureRouting
@@ -88,7 +89,22 @@ fun Application.module() {
                     environment.log.warn("Fichier ciqual.csv introuvable — import ignore")
                 }
             } else {
-                environment.log.info("Base d'aliments: $count aliments existants — import Ciqual ignore")
+                environment.log.info("Base d'aliments: $count aliments en PostgreSQL")
+                // Verifier que Meilisearch est aussi rempli — si l'index est vide,
+                // reindexer depuis PostgreSQL (cas: crash Meilisearch apres import DB)
+                try {
+                    val meilisearch = get<MeilisearchClient>()
+                    val testSearch = meilisearch.search("aliments", com.appfood.backend.search.SearchQuery(q = "a", limit = 1))
+                    if (testSearch.estimatedTotalHits == 0) {
+                        environment.log.info("Index Meilisearch vide — reindexation depuis PostgreSQL...")
+                        val indexer = get<AlimentIndexer>()
+                        indexer.indexAll()
+                    } else {
+                        environment.log.info("Meilisearch OK: ${testSearch.estimatedTotalHits} aliments indexes")
+                    }
+                } catch (e: Exception) {
+                    environment.log.warn("Impossible de verifier/reindexer Meilisearch: ${e.message}")
+                }
             }
         } catch (e: Exception) {
             environment.log.error("Erreur lors de l'import Ciqual: ${e.message}", e)
