@@ -52,10 +52,39 @@ class RecommandationService(
         val alimentsExclus = preferences?.let { deserializeList(it.alimentsExclus) } ?: emptyList()
         val allergies = preferences?.let { deserializeList(it.allergies) } ?: emptyList()
 
-        // Load all compatible aliments (batch load for scoring)
-        val allAliments = alimentDao.findAll(limit = 2000, offset = 0)
+        // PERF-01: SQL pre-filter - load at most ~200 candidates per deficit nutrient,
+        // pre-sorted DESC by that nutrient. Fusion deduplique par id, cap a 400 total.
+        val t0 = System.currentTimeMillis()
+        val regimeFilter = profile.regimeAlimentaire.name
+        val candidatesById = linkedMapOf<String, AlimentRow>()
+        for (deficit in deficits) {
+            val nutrientKey = nutrimentTypeToKey(deficit.nutriment) ?: continue
+            val chunk =
+                try {
+                    alimentDao.findCandidatesByNutrientDeficit(
+                        nutrient = nutrientKey,
+                        regime = regimeFilter,
+                        limit = CANDIDATE_LIMIT_PER_DEFICIT,
+                    )
+                } catch (e: Exception) {
+                    logger.warn("findCandidatesByNutrientDeficit failed for $nutrientKey: ${e.message}")
+                    emptyList()
+                }
+            for (row in chunk) {
+                if (candidatesById.size >= CANDIDATE_POOL_MAX) break
+                candidatesById.putIfAbsent(row.id, row)
+            }
+            if (candidatesById.size >= CANDIDATE_POOL_MAX) break
+        }
+        val candidates = candidatesById.values.toList()
+        logger.info(
+            "RecommandationService/aliments candidates_loaded=${candidates.size} " +
+                "deficits=${deficits.size} in=${System.currentTimeMillis() - t0}ms",
+        )
+
+        // Apply user preferences + regime + allergen filters on the reduced pool
         val compatibleAliments =
-            allAliments.filter { aliment ->
+            candidates.filter { aliment ->
                 isRegimeCompatible(aliment.regimesCompatibles, profile.regimeAlimentaire) &&
                     aliment.id !in alimentsExclus &&
                     !isAllergenExcluded(aliment.categorie, allergies)
@@ -100,10 +129,37 @@ class RecommandationService(
 
         val manquesIdentifies = deficits.map { it.nutriment.name }
 
-        // Load all published recettes
-        val allRecettes = recetteDao.findAll(limit = 500, offset = 0)
+        // PERF-01: SQL pre-filter for recettes - ~50 candidates per deficit, dedup, cap 150.
+        val t0 = System.currentTimeMillis()
+        val regimeFilter = profile.regimeAlimentaire.name
+        val candidatesById = linkedMapOf<String, RecetteRow>()
+        for (deficit in deficits) {
+            val nutrientKey = nutrimentTypeToKey(deficit.nutriment) ?: continue
+            val chunk =
+                try {
+                    recetteDao.findRecetteCandidatesByNutrientDeficit(
+                        nutrient = nutrientKey,
+                        regime = regimeFilter,
+                        limit = RECETTE_CANDIDATE_LIMIT_PER_DEFICIT,
+                    )
+                } catch (e: Exception) {
+                    logger.warn("findRecetteCandidatesByNutrientDeficit failed for $nutrientKey: ${e.message}")
+                    emptyList()
+                }
+            for (row in chunk) {
+                if (candidatesById.size >= RECETTE_CANDIDATE_POOL_MAX) break
+                candidatesById.putIfAbsent(row.id, row)
+            }
+            if (candidatesById.size >= RECETTE_CANDIDATE_POOL_MAX) break
+        }
+        val candidates = candidatesById.values.toList()
+        logger.info(
+            "RecommandationService/recettes candidates_loaded=${candidates.size} " +
+                "deficits=${deficits.size} in=${System.currentTimeMillis() - t0}ms",
+        )
+
         val compatibleRecettes =
-            allRecettes.filter { recette ->
+            candidates.filter { recette ->
                 isRegimeCompatible(recette.regimesCompatibles, profile.regimeAlimentaire)
             }
 
@@ -117,6 +173,29 @@ class RecommandationService(
             manquesIdentifies = manquesIdentifies,
             recommandations = scored.take(limit),
         )
+    }
+
+    private fun nutrimentTypeToKey(type: NutrimentType): String? {
+        return when (type) {
+            NutrimentType.PROTEINES -> "proteines"
+            NutrimentType.FER -> "fer"
+            NutrimentType.CALCIUM -> "calcium"
+            NutrimentType.VITAMINE_B12 -> "vitamineB12"
+            NutrimentType.FIBRES -> "fibres"
+            NutrimentType.ZINC -> "zinc"
+            NutrimentType.MAGNESIUM -> "magnesium"
+            NutrimentType.VITAMINE_D -> "vitamineD"
+            NutrimentType.OMEGA_3 -> "omega3"
+            NutrimentType.VITAMINE_C -> "vitamineC"
+            // Macros not targetted by candidate pre-filtering
+            NutrimentType.CALORIES,
+            NutrimentType.GLUCIDES,
+            NutrimentType.LIPIDES,
+            NutrimentType.SEL,
+            NutrimentType.SUCRES,
+            NutrimentType.OMEGA_6,
+            -> null
+        }
     }
 
     // --- Deficit identification ---
@@ -407,6 +486,12 @@ class RecommandationService(
     }
 
     companion object {
+        // PERF-01 candidate pool sizing
+        private const val CANDIDATE_LIMIT_PER_DEFICIT = 200
+        private const val CANDIDATE_POOL_MAX = 400
+        private const val RECETTE_CANDIDATE_LIMIT_PER_DEFICIT = 50
+        private const val RECETTE_CANDIDATE_POOL_MAX = 150
+
         private val ALLERGEN_PATTERNS =
             mapOf(
                 "gluten" to listOf("ble", "seigle", "orge", "avoine"),

@@ -159,8 +159,24 @@ class RecetteImporter(
             matchedIngredients.add(match to ingredientJson.quantiteGrammes)
         }
 
+        // TODO: remove debug logs after diagnosis — investigating bug 0 kcal en prod
+        logger.info("DEBUG matchedIngredients pour '${recetteJson.nom}':")
+        for ((aliment, grammes) in matchedIngredients) {
+            logger.info(
+                "  - '${aliment.nom}' (id=${aliment.id}) calories=${aliment.calories} kcal/100g, " +
+                    "${grammes}g => ${aliment.calories * grammes / 100.0} kcal " +
+                    "(proteines/100g=${aliment.proteines}, lipides/100g=${aliment.lipides})",
+            )
+        }
+
         // Agregation des nutriments : nutriment_total = sum(aliment.nutriment * g / 100)
         val totaux = computeTotaux(matchedIngredients)
+
+        // TODO: remove debug logs after diagnosis
+        logger.info(
+            "DEBUG totaux pour '${recetteJson.nom}': calories=${totaux["calories"]}, " +
+                "proteines=${totaux["proteines"]}, lipides=${totaux["lipides"]}",
+        )
 
         val row =
             RecetteRow(
@@ -196,19 +212,18 @@ class RecetteImporter(
                 updatedAt = now,
             )
 
-        recetteDao.insert(row)
-
-        for ((aliment, quantite) in matchedIngredients) {
-            recetteDao.insertIngredient(
+        val ingredientRows =
+            matchedIngredients.map { (aliment, quantite) ->
                 IngredientRow(
                     id = UUID.randomUUID().toString(),
                     recetteId = recetteId,
                     alimentId = aliment.id,
                     alimentNom = aliment.nom,
                     quantiteGrammes = quantite,
-                ),
-            )
-        }
+                )
+            }
+
+        recetteDao.insertRecetteWithIngredients(row, ingredientRows)
 
         logger.info(
             "Recette inseree : '${recetteJson.nom}' avec ${matchedIngredients.size} ingredients, " +

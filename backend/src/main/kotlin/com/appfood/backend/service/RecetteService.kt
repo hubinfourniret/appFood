@@ -41,41 +41,37 @@ class RecetteService(
         regime?.toEnumOrThrow<RegimeAlimentaire>("regime")
         typeRepas?.toEnumOrThrow<MealType>("typeRepas")
 
-        val allPublished = recetteDao.findAllPublished()
-
-        // Filter
-        var filtered = allPublished
-        if (regime != null) {
-            filtered = filtered.filter { it.regimesCompatibles.contains(regime) }
-        }
-        if (typeRepas != null) {
-            filtered = filtered.filter { it.typeRepas.contains(typeRepas) }
-        }
-        if (!query.isNullOrBlank()) {
-            val q = query.lowercase()
-            filtered = filtered.filter { it.nom.lowercase().contains(q) }
-        }
-
-        // Sort
-        val sorted =
-            when (sort) {
-                "temps_preparation" -> filtered.sortedBy { it.tempsPreparationMin }
-                "nom" -> filtered.sortedBy { it.nom.lowercase() }
-                else -> filtered // default: pertinence (insertion order for now)
-            }
-
-        val total = sorted.size
         val pageIndex = (page - 1).coerceAtLeast(0)
-        val paginated = sorted.drop(pageIndex * size).take(size)
+        val offset = pageIndex.toLong() * size
 
-        // Load ingredients for each recette
-        val result =
-            paginated.map { recette ->
-                val ingredients = recetteDao.findIngredientsByRecetteId(recette.id)
-                RecetteWithIngredients(recette, ingredients)
-            }
+        val t0 = System.currentTimeMillis()
+        val (rows, total) = recetteDao.findPublishedPaginated(
+            regime = regime,
+            typeRepas = typeRepas,
+            query = query,
+            sort = sort,
+            limit = size,
+            offset = offset,
+        )
+        logger.info("listRecettes/query=${System.currentTimeMillis() - t0}ms total=$total returned=${rows.size}")
 
-        return Pair(result, total)
+        if (rows.isEmpty()) {
+            logger.info("listRecettes/total=${System.currentTimeMillis() - t0}ms")
+            return Pair(emptyList(), total.toInt())
+        }
+
+        val t1 = System.currentTimeMillis()
+        val ingredientsByRecetteId = recetteDao.findIngredientsByRecetteIds(rows.map { it.id })
+        logger.info("listRecettes/ingredients=${System.currentTimeMillis() - t1}ms")
+
+        val result = rows.map { recette ->
+            RecetteWithIngredients(recette, ingredientsByRecetteId[recette.id] ?: emptyList())
+        }
+
+        val tTotal = System.currentTimeMillis() - t0
+        logger.info("listRecettes/total=${tTotal}ms")
+
+        return Pair(result, total.toInt())
     }
 
     suspend fun getRecetteDetail(id: String): RecetteWithIngredients {

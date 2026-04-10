@@ -16,6 +16,8 @@ import com.appfood.backend.database.tables.RecettesTable
 import com.appfood.backend.database.tables.UserPreferencesTable
 import com.appfood.backend.database.tables.UserProfilesTable
 import com.appfood.backend.database.tables.UsersTable
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -51,13 +53,25 @@ fun Application.configureDatabase() {
     val dbUser = config.property("appfood.database.user").getString()
     val dbPassword = config.property("appfood.database.password").getString()
 
-    // Connexion Exposed
-    Database.connect(
-        url = dbUrl,
-        driver = "org.postgresql.Driver",
-        user = dbUser,
-        password = dbPassword,
-    )
+    // Pool de connexions HikariCP — critique pour Railway (latence TCP+TLS+auth
+    // a chaque nouvelle connexion). Sans pool, chaque query fait ~1.8s.
+    val hikariConfig =
+        HikariConfig().apply {
+            driverClassName = "org.postgresql.Driver"
+            jdbcUrl = dbUrl
+            username = dbUser
+            password = dbPassword
+            maximumPoolSize = 10
+            minimumIdle = 2
+            connectionTimeout = 30_000
+            idleTimeout = 600_000
+            maxLifetime = 1_800_000
+            isAutoCommit = false
+            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            validate()
+        }
+    val dataSource = HikariDataSource(hikariConfig)
+    Database.connect(dataSource)
 
     // Creation des tables manquantes
     val log = environment.log

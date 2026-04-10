@@ -3,9 +3,13 @@ package com.appfood.backend.database.dao
 import com.appfood.backend.database.dbQuery
 import com.appfood.backend.database.tables.AlimentsTable
 import com.appfood.backend.database.tables.SourceAliment
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.LikePattern
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.batchUpsert
 import org.jetbrains.exposed.sql.deleteWhere
@@ -88,6 +92,58 @@ class AlimentDao {
                 .limit(limit).offset(offset)
                 .map { it.toRow() }
         }
+
+    /**
+     * PERF-01: candidates pour la recommandation, pre-filtres en SQL.
+     *
+     * Retourne au plus `limit` aliments tries par valeur DESC du nutriment cible,
+     * optionnellement filtres par regime alimentaire (CSV/JSON, match via LIKE).
+     * Si plusieurs nutriments sont en deficit, appelle cette methode plusieurs fois
+     * et fusionne cote service.
+     *
+     * @param nutrient nom logique du nutriment (proteines, fer, calcium, vitamineB12,
+     *   fibres, zinc, magnesium, vitamineD, omega3). Toute valeur inconnue retombe
+     *   sur proteines.
+     * @param regime ex: "VEGAN" ou "VEGETARIEN" - filtre LIKE sur regimes_compatibles.
+     *   Passer null pour ne pas filtrer.
+     * @param limit max 200 par defaut
+     */
+    suspend fun findCandidatesByNutrientDeficit(
+        nutrient: String,
+        regime: String?,
+        limit: Int = 200,
+    ): List<AlimentRow> =
+        dbQuery {
+            val sortColumn: Column<Double> =
+                when (nutrient) {
+                    "proteines" -> AlimentsTable.proteines
+                    "fer" -> AlimentsTable.fer
+                    "calcium" -> AlimentsTable.calcium
+                    "vitamineB12" -> AlimentsTable.vitamineB12
+                    "fibres" -> AlimentsTable.fibres
+                    "zinc" -> AlimentsTable.zinc
+                    "magnesium" -> AlimentsTable.magnesium
+                    "vitamineD" -> AlimentsTable.vitamineD
+                    "omega3" -> AlimentsTable.omega3
+                    "vitamineC" -> AlimentsTable.vitamineC
+                    else -> AlimentsTable.proteines
+                }
+            val query = AlimentsTable.selectAll()
+            if (regime != null) {
+                val pattern = LikePattern("%${escapeLike(regime)}%", '\\')
+                query.andWhere { AlimentsTable.regimesCompatibles like pattern }
+            }
+            query
+                .orderBy(sortColumn, SortOrder.DESC)
+                .limit(limit)
+                .map { it.toRow() }
+        }
+
+    private fun escapeLike(value: String): String =
+        value
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_")
 
     suspend fun count(): Long =
         dbQuery {

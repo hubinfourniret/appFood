@@ -350,7 +350,9 @@ class DashboardService(
 
     companion object {
         private const val TTL_MINUTES = 30L
-        private const val RECO_TIMEOUT_MS = 5_000L
+
+        // PERF-01: reduced from 5_000L to 2_000L after SQL pre-filtering optimization.
+        private const val RECO_TIMEOUT_MS = 2_000L
     }
 }
 

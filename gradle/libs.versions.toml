@@ -24,6 +24,7 @@ logback = "1.5.18"
 meilisearch = "0.14.4"
 firebase-gitlive = "2.1.0"
 google-services = "4.4.2"
+hikaricp = "5.1.0"
 
 [libraries]
 # Kotlin
@@ -76,6 +77,7 @@ exposed-kotlinDatetime = { module = "org.jetbrains.exposed:exposed-kotlin-dateti
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 
 # Search
 meilisearch-java = { module = "com.meilisearch:meilisearch-java", version.ref = "meilisearch" }

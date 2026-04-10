@@ -5,8 +5,14 @@ import com.appfood.backend.database.tables.IngredientsTable
 import com.appfood.backend.database.tables.RecettesTable
 import com.appfood.backend.database.tables.SourceRecette
 import kotlinx.datetime.Clock
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.LikePattern
+import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -86,6 +92,52 @@ class RecetteDao {
                 .where { RecettesTable.publie eq true }
                 .map { it.toRow() }
         }
+
+    suspend fun findPublishedPaginated(
+        regime: String?,
+        typeRepas: String?,
+        query: String?,
+        sort: String?,
+        limit: Int,
+        offset: Long,
+    ): Pair<List<RecetteRow>, Long> =
+        dbQuery {
+            val baseQuery = RecettesTable.selectAll()
+                .where { RecettesTable.publie eq true }
+
+            if (regime != null) {
+                val pattern = LikePattern("%${escapeLike(regime)}%", '\\')
+                baseQuery.andWhere { RecettesTable.regimesCompatibles like pattern }
+            }
+            if (typeRepas != null) {
+                val pattern = LikePattern("%${escapeLike(typeRepas)}%", '\\')
+                baseQuery.andWhere { RecettesTable.typeRepas like pattern }
+            }
+            if (!query.isNullOrBlank()) {
+                val pattern = LikePattern("%${escapeLike(query.lowercase())}%", '\\')
+                baseQuery.andWhere { LowerCase(RecettesTable.nom) like pattern }
+            }
+
+            val total = baseQuery.count()
+
+            when (sort) {
+                "temps_preparation" -> baseQuery.orderBy(RecettesTable.tempsPreparationMin to SortOrder.ASC)
+                "nom" -> baseQuery.orderBy(LowerCase(RecettesTable.nom) to SortOrder.ASC)
+                else -> baseQuery.orderBy(RecettesTable.createdAt to SortOrder.DESC)
+            }
+
+            val rows = baseQuery
+                .limit(limit).offset(offset)
+                .map { it.toRow() }
+
+            rows to total
+        }
+
+    private fun escapeLike(value: String): String =
+        value
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_")
 
     suspend fun insert(row: RecetteRow): RecetteRow =
         dbQuery {
@@ -171,6 +223,16 @@ class RecetteDao {
                 .map { it.toIngredientRow() }
         }
 
+    suspend fun findIngredientsByRecetteIds(recetteIds: List<String>): Map<String, List<IngredientRow>> {
+        if (recetteIds.isEmpty()) return emptyMap()
+        return dbQuery {
+            IngredientsTable.selectAll()
+                .where { IngredientsTable.recetteId inList recetteIds }
+                .map { it.toIngredientRow() }
+                .groupBy { it.recetteId }
+        }
+    }
+
     suspend fun insertIngredient(row: IngredientRow): IngredientRow =
         dbQuery {
             IngredientsTable.insert {
@@ -230,4 +292,98 @@ class RecetteDao {
             alimentNom = this[IngredientsTable.alimentNom],
             quantiteGrammes = this[IngredientsTable.quantiteGrammes],
         )
+
+    // --- PERF-01 candidates ---
+
+    /**
+     * PERF-01: candidates pour la recommandation de recettes, pre-filtres en SQL.
+     *
+     * Retourne au plus `limit` recettes publiees, triees par valeur DESC du nutriment
+     * cible, optionnellement filtrees par regime alimentaire. Analogue a
+     * AlimentDao.findCandidatesByNutrientDeficit.
+     */
+    suspend fun findRecetteCandidatesByNutrientDeficit(
+        nutrient: String,
+        regime: String?,
+        limit: Int = 50,
+    ): List<RecetteRow> =
+        dbQuery {
+            val sortColumn: Column<Double> =
+                when (nutrient) {
+                    "proteines" -> RecettesTable.proteines
+                    "fer" -> RecettesTable.fer
+                    "calcium" -> RecettesTable.calcium
+                    "vitamineB12" -> RecettesTable.vitamineB12
+                    "fibres" -> RecettesTable.fibres
+                    "zinc" -> RecettesTable.zinc
+                    "magnesium" -> RecettesTable.magnesium
+                    "vitamineD" -> RecettesTable.vitamineD
+                    "omega3" -> RecettesTable.omega3
+                    "vitamineC" -> RecettesTable.vitamineC
+                    else -> RecettesTable.proteines
+                }
+            val query = RecettesTable.selectAll()
+                .where { RecettesTable.publie eq true }
+            if (regime != null) {
+                val pattern = LikePattern("%${escapeLike(regime)}%", '\\')
+                query.andWhere { RecettesTable.regimesCompatibles like pattern }
+            }
+            query
+                .orderBy(sortColumn, SortOrder.DESC)
+                .limit(limit)
+                .map { it.toRow() }
+        }
+
+    // --- Import batch ---
+
+    /**
+     * Insere une recette et tous ses ingredients dans une seule transaction.
+     * Utilise par RecetteImporter pour eviter N+1 round-trips (1 par ingredient).
+     */
+    suspend fun insertRecetteWithIngredients(
+        recette: RecetteRow,
+        ingredients: List<IngredientRow>,
+    ) = dbQuery {
+        RecettesTable.insert {
+            it[id] = recette.id
+            it[nom] = recette.nom
+            it[description] = recette.description
+            it[tempsPreparationMin] = recette.tempsPreparationMin
+            it[tempsCuissonMin] = recette.tempsCuissonMin
+            it[nbPortions] = recette.nbPortions
+            it[regimesCompatibles] = recette.regimesCompatibles
+            it[sourceRecette] = recette.source
+            it[typeRepas] = recette.typeRepas
+            it[etapes] = recette.etapes
+            it[calories] = recette.calories
+            it[proteines] = recette.proteines
+            it[glucides] = recette.glucides
+            it[lipides] = recette.lipides
+            it[fibres] = recette.fibres
+            it[sel] = recette.sel
+            it[sucres] = recette.sucres
+            it[fer] = recette.fer
+            it[calcium] = recette.calcium
+            it[zinc] = recette.zinc
+            it[magnesium] = recette.magnesium
+            it[vitamineB12] = recette.vitamineB12
+            it[vitamineD] = recette.vitamineD
+            it[vitamineC] = recette.vitamineC
+            it[omega3] = recette.omega3
+            it[omega6] = recette.omega6
+            it[imageUrl] = recette.imageUrl
+            it[publie] = recette.publie
+            it[createdAt] = recette.createdAt
+            it[updatedAt] = recette.updatedAt
+        }
+        for (ing in ingredients) {
+            IngredientsTable.insert {
+                it[id] = ing.id
+                it[recetteId] = ing.recetteId
+                it[alimentId] = ing.alimentId
+                it[alimentNom] = ing.alimentNom
+                it[quantiteGrammes] = ing.quantiteGrammes
+            }
+        }
+    }
 }

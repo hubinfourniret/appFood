@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.flyway.core)
     implementation(libs.flyway.postgresql)
+    implementation(libs.hikaricp)
 
     // Search (Meilisearch via Ktor Client HTTP — pas de SDK Java)
     implementation(libs.ktor.client.core)

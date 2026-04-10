@@ -1857,6 +1857,40 @@ afin d'utiliser l'app confortablement le soir.
 
 ---
 
+### EPIC : PERFORMANCES — Optimisations post-MVP
+
+**PERF-01** — Optimiser RecommandationService (pre-filtre SQL au lieu du chargement memoire)
+
+En tant qu'utilisateur,
+je veux que l'ecran de dashboard et de recommandations s'affiche en moins d'une seconde meme apres un cold start du backend,
+afin de ne pas attendre devant un loader quand j'ouvre l'app le matin.
+
+**Contexte (incident 2026-04-10) :**
+Lors de l'incident de production du 10 avril 2026, le dashboard de prod retournait un `Socket timeout has expired` sur Railway. L'investigation a montre que le vrai bottleneck n'etait pas Meilisearch (suspecte initialement) mais `RecommandationService.getRecommandationsAliments` qui chargeait jusqu'a 2000 aliments et 500 recettes en memoire a chaque cache miss, puis les filtrait/scorait en O(n) cote application. Le cache 30min compense actuellement, mais chaque premier appel d'une journee reste lent (5-10s sur Railway hobby). Un fix temporaire `withTimeoutOrNull(5_000)` a ete pose en degradation gracieuse.
+
+**Criteres d'acceptation :**
+- [ ] Pre-filtrage SQL : la requete `findCandidates` doit filtrer en base par `regimeAlimentaire` et idealement par `categorie` (legumineuses, cereales completes, etc. selon les nutriments en deficit)
+- [ ] Limiter le pool candidat a ~200 aliments max via `ORDER BY` sur les nutriments en deficit (`ORDER BY proteines DESC LIMIT 200` quand le deficit est sur les proteines)
+- [ ] Index PostgreSQL ajoutes sur les colonnes nutriments les plus utilisees (proteines, fer, calcium, vitamineB12, fibres)
+- [ ] Meme logique appliquee a `getRecommandationsRecettes` (limit 500 → ~50 candidats)
+- [ ] Le cache 30min existant est conserve
+- [ ] Warmup : optionnellement, declencher un calcul de recommandations en arriere-plan pour les utilisateurs actifs au demarrage du backend
+- [ ] Latence p95 du `GET /api/v1/dashboard` < 800ms en cold cache (mesure via les logs perf existants ajoutes lors de l'incident)
+- [ ] Le timeout `withTimeoutOrNull(5_000)` peut etre reduit a `withTimeoutOrNull(2_000)` une fois l'optim validee
+- [ ] Tests de perf : ajouter un test E2E qui mesure la latence du dashboard avec ~1000 aliments seedes et asserte < 1500ms
+
+**Complexite :** M
+**Priorite :** V1.1
+**Dependances :** RECO-01, RECO-02, DASHBOARD-01
+**Agent assigne :** BACKEND
+**Notes techniques :**
+- Fichiers concernes : `backend/src/main/kotlin/com/appfood/backend/service/RecommandationService.kt`, `backend/src/main/kotlin/com/appfood/backend/database/dao/AlimentDao.kt`, `backend/src/main/resources/db/migration/V*__indexes_recommandation.sql`
+- Strategie de filtrage : se baser sur la fonction `getNutrientValueFromSums` deja existante dans `DashboardService` pour identifier les nutriments en deficit, puis traduire en `WHERE` SQL cible
+- Garder la compatibilite avec le filtrage par allergenes/exclusions (deja en memoire)
+- Voir aussi `docs/sprint-tracker.md` section "Incidents production" pour le contexte complet de l'incident 2026-04-10
+
+---
+
 ---
 
 ## Resume du backlog
@@ -1866,9 +1900,9 @@ afin d'utiliser l'app confortablement le soir.
 | Priorite | Nombre de stories |
 |----------|-------------------|
 | MVP | 48 |
-| V1.1 | 20 |
+| V1.1 | 21 |
 | V2 | 7 |
-| **TOTAL** | **75** |
+| **TOTAL** | **76** |
 
 ### Compteur par theme (MVP uniquement)
 
@@ -1895,7 +1929,8 @@ afin d'utiliser l'app confortablement le soir.
 | Design : charte graphique, mascotte, dark mode | 2 | ~10 jours |
 | Notifications avancees : bilan mi-journee, hebdo, preferences, hydratation | 4 | ~8 jours |
 | Fonctionnalites complementaires : scan code-barres, copie repas, objectif poids, export, feedback, portions perso, tests E2E, vue mensuelle | 6 | ~15 jours |
-| **TOTAL V1.1** | **20** | **~53 jours** |
+| Performances : optimisation RecommandationService (PERF-01) | 1 | ~3 jours |
+| **TOTAL V1.1** | **21** | **~56 jours** |
 
 ### Estimation globale MVP
 
