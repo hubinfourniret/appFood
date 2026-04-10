@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.batchUpsert
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -267,6 +268,19 @@ class AlimentDao {
     suspend fun delete(id: String): Boolean =
         dbQuery {
             AlimentsTable.deleteWhere { AlimentsTable.id eq id } > 0
+        }
+
+    // --- Diagnostic helpers ---
+
+    // TODO: remove after diagnostics complete (incident 2026-04-10)
+    /**
+     * Vide la table aliments. A utiliser uniquement pour le hack FORCE_REIMPORT_ALL.
+     * ATTENTION : cascade sur ingredients et journal_entries via les FK (pas de ON DELETE CASCADE —
+     * appelez d'abord JournalEntryDao.deleteAll() puis RecetteDao.truncateAll()).
+     */
+    suspend fun truncateAll() =
+        dbQuery {
+            AlimentsTable.deleteAll()
         }
 
     private fun ResultRow.toRow() =

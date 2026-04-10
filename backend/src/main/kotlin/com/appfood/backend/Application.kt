@@ -2,6 +2,7 @@ package com.appfood.backend
 
 import com.appfood.backend.database.configureDatabase
 import com.appfood.backend.database.dao.AlimentDao
+import com.appfood.backend.database.dao.JournalEntryDao
 import com.appfood.backend.database.dao.RecetteDao
 import com.appfood.backend.di.backendModule
 import com.appfood.backend.external.CiqualImporter
@@ -69,6 +70,32 @@ fun Application.module() {
     // Init Meilisearch (index + settings) au demarrage
     // Puis import Ciqual si la base d'aliments est vide
     launch {
+        // TODO: remove after recettes 0 kcal incident is closed
+        // Hack FORCE_REIMPORT_ALL : truncate complet + reimport Ciqual + recettes
+        // Active via la variable d'environnement FORCE_REIMPORT_ALL=true sur Railway
+        val forceReimport = System.getenv("FORCE_REIMPORT_ALL")?.lowercase() == "true"
+        if (forceReimport) {
+            environment.log.warn("FORCE_REIMPORT_ALL=true — TRUNCATE complet + reimport en cours")
+            try {
+                // 1) Truncate dans l'ordre des dependances FK
+                //    journal_entries.aliment_id / recette_id : pas de ON DELETE CASCADE
+                //    ingredients.recette_id : ON DELETE CASCADE (truncate recettes cascade)
+                //    ingredients.aliment_id : pas de ON DELETE CASCADE
+                get<JournalEntryDao>().deleteAll()
+                environment.log.info("FORCE_REIMPORT_ALL: journal_entries videes")
+                get<RecetteDao>().truncateAll()
+                environment.log.info("FORCE_REIMPORT_ALL: recettes + ingredients videes (cascade FK)")
+                get<AlimentDao>().truncateAll()
+                environment.log.info("FORCE_REIMPORT_ALL: aliments videes")
+                environment.log.warn(
+                    "FORCE_REIMPORT_ALL: tables videes — l'import Ciqual + recettes va se relancer automatiquement. " +
+                        "N'OUBLIE PAS de retirer la variable d'env FORCE_REIMPORT_ALL apres ce demarrage.",
+                )
+            } catch (e: Exception) {
+                environment.log.error("FORCE_REIMPORT_ALL: erreur durant le truncate: ${e.message}", e)
+            }
+        }
+
         try {
             configureMeilisearch(get<MeilisearchClient>())
         } catch (e: Exception) {
@@ -137,6 +164,56 @@ fun Application.module() {
             }
         } catch (e: Exception) {
             environment.log.error("Erreur lors de l'import des recettes: ${e.message}", e)
+        }
+
+        // TODO: remove after recettes 0 kcal incident is closed
+        // Diagnostic + auto-correction des recettes (incident 2026-04-10 : 0 kcal en prod)
+        try {
+            val recetteDao = get<RecetteDao>()
+            val sample = recetteDao.findAllPublished().firstOrNull()
+            if (sample != null) {
+                val ingredients = recetteDao.findIngredientsByRecetteId(sample.id)
+                environment.log.info(
+                    "DEBUG-RECETTE-DUMP: id=${sample.id} nom='${sample.nom}' " +
+                        "calories=${sample.calories} proteines=${sample.proteines} " +
+                        "ingredients_count=${ingredients.size} etapes_length=${sample.etapes.length} " +
+                        "etapes_preview='${sample.etapes.take(100)}'",
+                )
+
+                // Auto-correction : si la 1ere recette a 0 kcal OU pas d'ingredient OU etapes vides,
+                // on truncate + relance l'import (qui a les logs DEBUG dans RecetteImporter)
+                val isCorrupted = sample.calories == 0.0 || ingredients.isEmpty() || sample.etapes.isBlank()
+                if (isCorrupted) {
+                    environment.log.warn(
+                        "DEBUG-RECETTE-DUMP: recette '${sample.nom}' semble corrompue " +
+                            "(calories=${sample.calories}, ingredients=${ingredients.size}, " +
+                            "etapes_blank=${sample.etapes.isBlank()}) — TRUNCATE + reimport en cours...",
+                    )
+                    // Truncate ingredients + recettes
+                    recetteDao.truncateAll()
+                    environment.log.info("DEBUG-RECETTE-DUMP: tables recettes + ingredients videes")
+
+                    // Relance l'import depuis le JSON
+                    val recetteImporter = get<RecetteImporter>()
+                    val jsonStream = this@module.javaClass.classLoader.getResourceAsStream("data/recettes-initial.json")
+                        ?: java.io.File("data/recettes-initial.json").takeIf { it.exists() }?.inputStream()
+                    if (jsonStream != null) {
+                        val result = jsonStream.use { recetteImporter.importAll(it) }
+                        environment.log.info(
+                            "DEBUG-RECETTE-DUMP: reimport termine — ${result.insertedCount} inserees, " +
+                                "${result.skippedCount} ignorees, ${result.warnings.size} warnings",
+                        )
+                    } else {
+                        environment.log.error("DEBUG-RECETTE-DUMP: impossible de retrouver le JSON pour reimport")
+                    }
+                } else {
+                    environment.log.info("DEBUG-RECETTE-DUMP: recette '${sample.nom}' OK, pas de reimport necessaire")
+                }
+            } else {
+                environment.log.info("DEBUG-RECETTE-DUMP: aucune recette en base, skip dump")
+            }
+        } catch (e: Exception) {
+            environment.log.error("DEBUG-RECETTE-DUMP: erreur diagnostic recettes: ${e.message}", e)
         }
     }
 }

@@ -386,6 +386,8 @@ fun AppNavigation(
                         }
                     },
                     onEntrySaved = {
+                        // Refetch dashboard pour refleter la nouvelle entry
+                        dashboardViewModel.loadDashboard()
                         navController.popBackStack(Screen.Dashboard, inclusive = false)
                     },
                 )
@@ -412,6 +414,8 @@ fun AppNavigation(
                         navController.popBackStack()
                     },
                     onEntryValidated = {
+                        // Refetch dashboard pour refleter la nouvelle entry
+                        dashboardViewModel.loadDashboard()
                         navController.popBackStack(Screen.Dashboard, inclusive = false)
                     },
                 )

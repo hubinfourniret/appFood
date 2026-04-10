@@ -92,11 +92,14 @@ fun AddEntryScreen(
         }
     }
 
-    // Navigate on save success (online or offline)
+    // Navigate on save success (online or offline).
+    // IMPORTANT : on declenche la nav AVANT le reset pour eviter une race
+    // (reset remet le state a SelectMeal => re-trigger ce LaunchedEffect avec un state qui n'est plus Saved).
     LaunchedEffect(addEntryState) {
-        if (addEntryState is AddEntryState.Saved || addEntryState is AddEntryState.SavedOffline) {
-            viewModel.resetAddEntryFlow()
+        val current = addEntryState
+        if (current is AddEntryState.Saved || current is AddEntryState.SavedOffline) {
             onEntrySaved()
+            viewModel.resetAddEntryFlow()
         }
     }
 

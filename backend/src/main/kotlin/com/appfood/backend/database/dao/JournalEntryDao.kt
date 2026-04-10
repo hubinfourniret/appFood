@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -202,6 +203,16 @@ class JournalEntryDao {
     suspend fun deleteByUserId(userId: String): Int =
         dbQuery {
             JournalEntriesTable.deleteWhere { JournalEntriesTable.userId eq userId }
+        }
+
+    // TODO: remove after diagnostics complete (incident 2026-04-10)
+    /**
+     * Supprime toutes les entrees de journal de tous les utilisateurs.
+     * A utiliser uniquement pour le hack FORCE_REIMPORT_ALL.
+     */
+    suspend fun deleteAll() =
+        dbQuery {
+            JournalEntriesTable.deleteAll()
         }
 
     private fun ResultRow.toRow() =

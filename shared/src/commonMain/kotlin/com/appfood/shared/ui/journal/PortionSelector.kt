@@ -30,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,6 +99,17 @@ fun PortionSelectorScreen(
     val nutritionPreview by viewModel.nutritionPreview.collectAsState()
 
     val aliment = selectedAliment ?: return
+
+    // Navigate on save success (online or offline).
+    // IMPORTANT : on declenche la nav AVANT le reset, sinon le reset remet
+    // le state a SelectMeal et on perd l'evenement.
+    LaunchedEffect(addEntryState) {
+        val current = addEntryState
+        if (current is AddEntryState.Saved || current is AddEntryState.SavedOffline) {
+            onEntryValidated()
+            viewModel.resetAddEntryFlow()
+        }
+    }
 
     PortionSelectorContent(
         aliment = aliment,

@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.andWhere
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -386,4 +387,16 @@ class RecetteDao {
             }
         }
     }
+
+    // --- Diagnostic helpers ---
+
+    /**
+     * Vide les tables ingredients + recettes. A utiliser uniquement pour le hack
+     * de diagnostic recettes corrompues (incident 2026-04-10).
+     */
+    suspend fun truncateAll() =
+        dbQuery {
+            IngredientsTable.deleteAll()
+            RecettesTable.deleteAll()
+        }
 }
