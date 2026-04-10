@@ -239,8 +239,7 @@ class JournalViewModel(
                     loadRecents()
                 }
                 is AppResult.Error -> {
-                    // Entry is already enqueued for sync — mark as saved
-                    // so the user is not blocked. SyncManager will retry later.
+                    println("JournalViewModel.onValidateEntry error: ${result.code} ${result.message}")
                     _addEntryState.value = AddEntryState.SavedOffline
                 }
             }

@@ -1,0 +1,804 @@
+[
+  {
+    "nom": "Curry de lentilles corail au lait de coco",
+    "description": "Un curry onctueux et reconfortant, riche en proteines vegetales",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 25,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Lentilles corail crues", "quantiteGrammes": 200.0 },
+      { "nom": "Lait de coco", "quantiteGrammes": 400.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 100.0 },
+      { "nom": "Ail cru", "quantiteGrammes": 10.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 },
+      { "nom": "Tomate concassee", "quantiteGrammes": 200.0 },
+      { "nom": "Curcuma poudre", "quantiteGrammes": 3.0 },
+      { "nom": "Cumin poudre", "quantiteGrammes": 3.0 }
+    ],
+    "etapes": [
+      "Rincer les lentilles corail a l'eau froide",
+      "Emincer l'oignon et l'ail",
+      "Faire revenir l'oignon et l'ail dans l'huile d'olive",
+      "Ajouter les epices puis remuer 1 minute",
+      "Ajouter les lentilles, la tomate et le lait de coco",
+      "Laisser mijoter jusqu'a cuisson des lentilles"
+    ]
+  },
+  {
+    "nom": "Bol de quinoa aux pois chiches rotis",
+    "description": "Un bol complet avec quinoa, legumes croquants et pois chiches croustillants",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 25,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Quinoa cru", "quantiteGrammes": 160.0 },
+      { "nom": "Pois chiche en conserve", "quantiteGrammes": 240.0 },
+      { "nom": "Concombre cru", "quantiteGrammes": 120.0 },
+      { "nom": "Tomate crue", "quantiteGrammes": 150.0 },
+      { "nom": "Avocat cru", "quantiteGrammes": 100.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 },
+      { "nom": "Jus de citron", "quantiteGrammes": 20.0 }
+    ],
+    "etapes": [
+      "Cuire le quinoa puis laisser tiedir",
+      "Egoutter et rincer les pois chiches",
+      "Les melanger avec l'huile d'olive et les epices",
+      "Les faire rotir jusqu'a ce qu'ils soient croustillants",
+      "Couper les legumes en morceaux",
+      "Assembler le bol avec la sauce citronnee"
+    ]
+  },
+  {
+    "nom": "Pates completes aux epinards et tofu",
+    "description": "Un plat simple et riche en proteines vegetales",
+    "tempsPreparationMin": 10,
+    "tempsCuissonMin": 20,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Pates completes crues", "quantiteGrammes": 180.0 },
+      { "nom": "Tofu nature", "quantiteGrammes": 200.0 },
+      { "nom": "Epinard cru", "quantiteGrammes": 150.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 80.0 },
+      { "nom": "Ail cru", "quantiteGrammes": 10.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 }
+    ],
+    "etapes": [
+      "Cuire les pates dans l'eau salee",
+      "Couper le tofu en des",
+      "Faire revenir l'oignon et l'ail",
+      "Ajouter le tofu puis le dorer",
+      "Ajouter les epinards et laisser tomber",
+      "Melanger avec les pates egouttees"
+    ]
+  },
+  {
+    "nom": "Soupe de potimarron au gingembre",
+    "description": "Une soupe douce et parfumee, parfaite pour le soir",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 30,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Potimarron cru", "quantiteGrammes": 800.0 },
+      { "nom": "Pomme de terre crue", "quantiteGrammes": 200.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 100.0 },
+      { "nom": "Gingembre frais", "quantiteGrammes": 15.0 },
+      { "nom": "Bouillon de legumes", "quantiteGrammes": 1000.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Eplucher et couper les legumes",
+      "Faire revenir l'oignon dans l'huile",
+      "Ajouter potimarron, pomme de terre et gingembre",
+      "Couvrir avec le bouillon",
+      "Laisser cuire jusqu'a tendrete",
+      "Mixer jusqu'a texture lisse"
+    ]
+  },
+  {
+    "nom": "Overnight oats aux fruits rouges",
+    "description": "Un petit-dejeuner rapide, frais et rassasiant",
+    "tempsPreparationMin": 10,
+    "tempsCuissonMin": 0,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["PETIT_DEJEUNER", "COLLATION"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Flocons d'avoine", "quantiteGrammes": 100.0 },
+      { "nom": "Boisson soja", "quantiteGrammes": 250.0 },
+      { "nom": "Yaourt soja nature", "quantiteGrammes": 150.0 },
+      { "nom": "Fraise crue", "quantiteGrammes": 100.0 },
+      { "nom": "Myrtille crue", "quantiteGrammes": 80.0 },
+      { "nom": "Graines de chia", "quantiteGrammes": 20.0 }
+    ],
+    "etapes": [
+      "Melanger les flocons d'avoine, le soja et les graines de chia",
+      "Repartir dans deux bocaux",
+      "Ajouter le yaourt soja",
+      "Ajouter les fruits rouges",
+      "Laisser reposer au froid toute la nuit"
+    ]
+  },
+  {
+    "nom": "Salade de lentilles vertes et carottes",
+    "description": "Une salade froide nourrissante et simple a preparer",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 25,
+    "nbPortions": 3,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Lentilles vertes crues", "quantiteGrammes": 180.0 },
+      { "nom": "Carotte crue", "quantiteGrammes": 150.0 },
+      { "nom": "Oignon rouge cru", "quantiteGrammes": 50.0 },
+      { "nom": "Persil frais", "quantiteGrammes": 10.0 },
+      { "nom": "Moutarde", "quantiteGrammes": 10.0 },
+      { "nom": "Vinaigre de cidre", "quantiteGrammes": 15.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 20.0 }
+    ],
+    "etapes": [
+      "Cuire les lentilles puis les egoutter",
+      "Raper les carottes",
+      "Emincer l'oignon rouge",
+      "Preparer la vinaigrette",
+      "Melanger tous les ingredients",
+      "Laisser reposer avant de servir"
+    ]
+  },
+  {
+    "nom": "Riz saute aux legumes et edamame",
+    "description": "Un plat rapide avec des legumes et des proteines vegetales",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 20,
+    "nbPortions": 3,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Riz basmati cru", "quantiteGrammes": 180.0 },
+      { "nom": "Edamame surgele", "quantiteGrammes": 150.0 },
+      { "nom": "Carotte crue", "quantiteGrammes": 100.0 },
+      { "nom": "Courgette crue", "quantiteGrammes": 120.0 },
+      { "nom": "Sauce soja", "quantiteGrammes": 20.0 },
+      { "nom": "Huile de sesame", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Cuire le riz puis le reserver",
+      "Cuire les edamame",
+      "Couper les legumes en petits morceaux",
+      "Faire sauter les legumes dans l'huile de sesame",
+      "Ajouter le riz, les edamame et la sauce soja",
+      "Faire revenir quelques minutes"
+    ]
+  },
+  {
+    "nom": "Chili sin carne",
+    "description": "Un chili vegetal epice et riche en fibres",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 35,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Haricot rouge en conserve", "quantiteGrammes": 480.0 },
+      { "nom": "Mais doux en conserve", "quantiteGrammes": 150.0 },
+      { "nom": "Tomate concassee", "quantiteGrammes": 400.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 100.0 },
+      { "nom": "Poivron rouge cru", "quantiteGrammes": 150.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 },
+      { "nom": "Paprika poudre", "quantiteGrammes": 3.0 },
+      { "nom": "Cumin poudre", "quantiteGrammes": 3.0 }
+    ],
+    "etapes": [
+      "Faire revenir l'oignon et le poivron",
+      "Ajouter les epices",
+      "Ajouter tomate, haricots rouges et mais",
+      "Laisser mijoter jusqu'a reduction",
+      "Servir avec du riz ou seul"
+    ]
+  },
+  {
+    "nom": "Wraps de houmous et legumes grilles",
+    "description": "Des wraps frais et pratiques pour un repas rapide",
+    "tempsPreparationMin": 20,
+    "tempsCuissonMin": 15,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Tortilla de ble complet", "quantiteGrammes": 120.0 },
+      { "nom": "Houmous", "quantiteGrammes": 120.0 },
+      { "nom": "Courgette crue", "quantiteGrammes": 120.0 },
+      { "nom": "Poivron rouge cru", "quantiteGrammes": 120.0 },
+      { "nom": "Aubergine crue", "quantiteGrammes": 120.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 }
+    ],
+    "etapes": [
+      "Couper les legumes en lamelles",
+      "Les faire griller avec un peu d'huile",
+      "Tartiner les tortillas de houmous",
+      "Ajouter les legumes grilles",
+      "Rouler et couper en deux"
+    ]
+  },
+  {
+    "nom": "Smoothie banane beurre de cacahuete",
+    "description": "Un smoothie dense et energisant pour le matin",
+    "tempsPreparationMin": 5,
+    "tempsCuissonMin": 0,
+    "nbPortions": 1,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["PETIT_DEJEUNER", "COLLATION"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Banane crue", "quantiteGrammes": 120.0 },
+      { "nom": "Boisson soja", "quantiteGrammes": 250.0 },
+      { "nom": "Beurre de cacahuete", "quantiteGrammes": 30.0 },
+      { "nom": "Flocons d'avoine", "quantiteGrammes": 30.0 },
+      { "nom": "Graines de chia", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Mettre tous les ingredients dans le blender",
+      "Mixer jusqu'a texture lisse",
+      "Verser dans un grand verre",
+      "Servir immediatement"
+    ]
+  },
+  {
+    "nom": "Tofu brouille aux champignons",
+    "description": "Une alternative vegetale aux oeufs brouilles",
+    "tempsPreparationMin": 10,
+    "tempsCuissonMin": 15,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["PETIT_DEJEUNER", "DEJEUNER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Tofu nature", "quantiteGrammes": 200.0 },
+      { "nom": "Champignon de Paris cru", "quantiteGrammes": 150.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 80.0 },
+      { "nom": "Curcuma poudre", "quantiteGrammes": 2.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Emietter le tofu",
+      "Emincer les champignons et l'oignon",
+      "Faire revenir l'oignon puis les champignons",
+      "Ajouter le tofu et le curcuma",
+      "Cuire quelques minutes en remuant"
+    ]
+  },
+  {
+    "nom": "Gratin de courgettes et pommes de terre",
+    "description": "Un gratin simple et fondant, sans viande",
+    "tempsPreparationMin": 20,
+    "tempsCuissonMin": 40,
+    "nbPortions": 4,
+    "regimes": ["VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Courgette crue", "quantiteGrammes": 500.0 },
+      { "nom": "Pomme de terre crue", "quantiteGrammes": 500.0 },
+      { "nom": "Creme fraiche", "quantiteGrammes": 200.0 },
+      { "nom": "Fromage rape", "quantiteGrammes": 100.0 },
+      { "nom": "Ail cru", "quantiteGrammes": 10.0 },
+      { "nom": "Noix de muscade", "quantiteGrammes": 1.0 }
+    ],
+    "etapes": [
+      "Couper les legumes en rondelles",
+      "Frotter le plat avec l'ail",
+      "Monter le gratin en couches",
+      "Ajouter la creme et la muscade",
+      "Parsemer de fromage rape",
+      "Cuire jusqu'a ce que le dessus soit dore"
+    ]
+  },
+  {
+    "nom": "Omelette aux herbes et tomates",
+    "description": "Une omelette rapide et riche en proteines",
+    "tempsPreparationMin": 10,
+    "tempsCuissonMin": 10,
+    "nbPortions": 2,
+    "regimes": ["VEGETARIEN"],
+    "typeRepas": ["PETIT_DEJEUNER", "DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Oeuf entier cru", "quantiteGrammes": 240.0 },
+      { "nom": "Tomate crue", "quantiteGrammes": 120.0 },
+      { "nom": "Persil frais", "quantiteGrammes": 10.0 },
+      { "nom": "Ciboulette fraiche", "quantiteGrammes": 5.0 },
+      { "nom": "Beurre", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Battre les oeufs avec les herbes",
+      "Couper les tomates en petits morceaux",
+      "Faire chauffer le beurre",
+      "Verser les oeufs et ajouter les tomates",
+      "Cuire a feu doux jusqu'a prise"
+    ]
+  },
+  {
+    "nom": "Porridge pomme cannelle",
+    "description": "Un petit-dejeuner chaud, simple et rassasiant",
+    "tempsPreparationMin": 5,
+    "tempsCuissonMin": 10,
+    "nbPortions": 1,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["PETIT_DEJEUNER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Flocons d'avoine", "quantiteGrammes": 60.0 },
+      { "nom": "Boisson soja", "quantiteGrammes": 250.0 },
+      { "nom": "Pomme crue", "quantiteGrammes": 120.0 },
+      { "nom": "Cannelle poudre", "quantiteGrammes": 2.0 },
+      { "nom": "Graines de chia", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Mettre les flocons et la boisson soja dans une casserole",
+      "Cuire a feu doux en remuant",
+      "Ajouter la pomme coupee en des",
+      "Saupoudrer de cannelle",
+      "Servir chaud"
+    ]
+  },
+  {
+    "nom": "Falafels au four et sauce tahini",
+    "description": "Des boulettes de pois chiches cuites au four, avec une sauce onctueuse",
+    "tempsPreparationMin": 25,
+    "tempsCuissonMin": 25,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Pois chiche sec", "quantiteGrammes": 250.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 80.0 },
+      { "nom": "Ail cru", "quantiteGrammes": 10.0 },
+      { "nom": "Persil frais", "quantiteGrammes": 20.0 },
+      { "nom": "Tahini", "quantiteGrammes": 50.0 },
+      { "nom": "Jus de citron", "quantiteGrammes": 20.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 }
+    ],
+    "etapes": [
+      "Faire tremper les pois chiches si necessaire",
+      "Mixer pois chiches, oignon, ail et persil",
+      "Former des petites boulettes",
+      "Les cuire au four jusqu'a coloration",
+      "Melanger tahini et citron pour la sauce"
+    ]
+  },
+  {
+    "nom": "Ratatouille maison",
+    "description": "Un grand classique de legumes mijotes",
+    "tempsPreparationMin": 20,
+    "tempsCuissonMin": 45,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Aubergine crue", "quantiteGrammes": 300.0 },
+      { "nom": "Courgette crue", "quantiteGrammes": 300.0 },
+      { "nom": "Poivron rouge cru", "quantiteGrammes": 150.0 },
+      { "nom": "Tomate crue", "quantiteGrammes": 400.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 100.0 },
+      { "nom": "Ail cru", "quantiteGrammes": 10.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 20.0 }
+    ],
+    "etapes": [
+      "Couper tous les legumes en morceaux",
+      "Faire revenir l'oignon et l'ail",
+      "Ajouter les legumes un a un",
+      "Ajouter les tomates",
+      "Laisser mijoter longuement"
+    ]
+  },
+  {
+    "nom": "Poke bowl au tofu marine",
+    "description": "Un bol frais et equilibre avec tofu, riz et legumes",
+    "tempsPreparationMin": 20,
+    "tempsCuissonMin": 20,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Riz complet cru", "quantiteGrammes": 160.0 },
+      { "nom": "Tofu nature", "quantiteGrammes": 200.0 },
+      { "nom": "Concombre cru", "quantiteGrammes": 100.0 },
+      { "nom": "Carotte crue", "quantiteGrammes": 100.0 },
+      { "nom": "Avocat cru", "quantiteGrammes": 100.0 },
+      { "nom": "Sauce soja", "quantiteGrammes": 20.0 },
+      { "nom": "Graines de sesame", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Cuire le riz complet",
+      "Mariner le tofu dans la sauce soja",
+      "Couper les legumes en fines lamelles",
+      "Faire dorer le tofu",
+      "Assembler le bol et ajouter le sesame"
+    ]
+  },
+  {
+    "nom": "Pizza maison aux legumes et mozzarella",
+    "description": "Une pizza simple avec une garniture de legumes",
+    "tempsPreparationMin": 20,
+    "tempsCuissonMin": 20,
+    "nbPortions": 4,
+    "regimes": ["VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Pate a pizza", "quantiteGrammes": 300.0 },
+      { "nom": "Sauce tomate", "quantiteGrammes": 120.0 },
+      { "nom": "Mozzarella", "quantiteGrammes": 150.0 },
+      { "nom": "Courgette crue", "quantiteGrammes": 100.0 },
+      { "nom": "Poivron rouge cru", "quantiteGrammes": 100.0 },
+      { "nom": "Champignon de Paris cru", "quantiteGrammes": 100.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Etaler la pate a pizza",
+      "Etaler la sauce tomate",
+      "Ajouter la mozzarella et les legumes",
+      "Arroser d'un filet d'huile",
+      "Cuire jusqu'a ce que la pate soit doree"
+    ]
+  },
+  {
+    "nom": "Dahl de pois casses",
+    "description": "Un plat indien vegetal, rassasiant et parfume",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 35,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Pois casse sec", "quantiteGrammes": 250.0 },
+      { "nom": "Lait de coco", "quantiteGrammes": 200.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 100.0 },
+      { "nom": "Ail cru", "quantiteGrammes": 10.0 },
+      { "nom": "Gingembre frais", "quantiteGrammes": 15.0 },
+      { "nom": "Curcuma poudre", "quantiteGrammes": 3.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 }
+    ],
+    "etapes": [
+      "Rincer les pois casses",
+      "Faire revenir l'oignon, l'ail et le gingembre",
+      "Ajouter les epices",
+      "Ajouter les pois casses et couvrir d'eau",
+      "Cuire jusqu'a tendrete puis ajouter le lait de coco"
+    ]
+  },
+  {
+    "nom": "Salade de pois chiches mediterraneenne",
+    "description": "Une salade fraiche avec tomates, concombres et herbes",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 0,
+    "nbPortions": 3,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "COLLATION"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Pois chiche en conserve", "quantiteGrammes": 360.0 },
+      { "nom": "Tomate crue", "quantiteGrammes": 200.0 },
+      { "nom": "Concombre cru", "quantiteGrammes": 150.0 },
+      { "nom": "Oignon rouge cru", "quantiteGrammes": 50.0 },
+      { "nom": "Persil frais", "quantiteGrammes": 15.0 },
+      { "nom": "Jus de citron", "quantiteGrammes": 20.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 20.0 }
+    ],
+    "etapes": [
+      "Egoutter les pois chiches",
+      "Couper les legumes",
+      "Ciseler les herbes",
+      "Preparer la vinaigrette",
+      "Melanger et servir frais"
+    ]
+  },
+  {
+    "nom": "Buddha bowl aux patates douces",
+    "description": "Un bowl complet avec legumineuses, cereales et legumes rotis",
+    "tempsPreparationMin": 20,
+    "tempsCuissonMin": 35,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Patate douce crue", "quantiteGrammes": 300.0 },
+      { "nom": "Quinoa cru", "quantiteGrammes": 120.0 },
+      { "nom": "Pois chiche en conserve", "quantiteGrammes": 240.0 },
+      { "nom": "Chou rouge cru", "quantiteGrammes": 80.0 },
+      { "nom": "Avocat cru", "quantiteGrammes": 100.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 }
+    ],
+    "etapes": [
+      "Cuire le quinoa",
+      "Couper la patate douce puis la rotir",
+      "Egoutter les pois chiches",
+      "Couper le chou et l'avocat",
+      "Assembler le bowl"
+    ]
+  },
+  {
+    "nom": "Soupe de pois casses a la menthe",
+    "description": "Une soupe epaisse et fraiche, ideale en hiver",
+    "tempsPreparationMin": 10,
+    "tempsCuissonMin": 40,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Pois casse sec", "quantiteGrammes": 250.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 100.0 },
+      { "nom": "Carotte crue", "quantiteGrammes": 100.0 },
+      { "nom": "Menthe fraiche", "quantiteGrammes": 10.0 },
+      { "nom": "Bouillon de legumes", "quantiteGrammes": 1200.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Faire revenir l'oignon et la carotte",
+      "Ajouter les pois casses",
+      "Couvrir avec le bouillon",
+      "Cuire jusqu'a ce que les pois soient tendres",
+      "Mixer puis ajouter la menthe"
+    ]
+  },
+  {
+    "nom": "Taboule de quinoa",
+    "description": "Une version moderne et sans gluten du taboule",
+    "tempsPreparationMin": 20,
+    "tempsCuissonMin": 15,
+    "nbPortions": 3,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Quinoa cru", "quantiteGrammes": 180.0 },
+      { "nom": "Tomate crue", "quantiteGrammes": 200.0 },
+      { "nom": "Concombre cru", "quantiteGrammes": 150.0 },
+      { "nom": "Persil frais", "quantiteGrammes": 20.0 },
+      { "nom": "Menthe fraiche", "quantiteGrammes": 10.0 },
+      { "nom": "Jus de citron", "quantiteGrammes": 20.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 20.0 }
+    ],
+    "etapes": [
+      "Cuire le quinoa puis le laisser refroidir",
+      "Couper les legumes finement",
+      "Ciseler les herbes",
+      "Melanger avec le citron et l'huile",
+      "Servir frais"
+    ]
+  },
+  {
+    "nom": "Bolognaise de lentilles",
+    "description": "Une sauce bolognaise vegetale pour accompagner des pates",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 30,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Lentilles vertes crues", "quantiteGrammes": 200.0 },
+      { "nom": "Tomate concassee", "quantiteGrammes": 400.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 100.0 },
+      { "nom": "Carotte crue", "quantiteGrammes": 100.0 },
+      { "nom": "Ail cru", "quantiteGrammes": 10.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 }
+    ],
+    "etapes": [
+      "Faire revenir l'oignon, l'ail et la carotte",
+      "Ajouter les lentilles",
+      "Ajouter la tomate concassee",
+      "Laisser mijoter jusqu'a epaississement",
+      "Servir avec des pates"
+    ]
+  },
+  {
+    "nom": "Tartines d'avocat et graines",
+    "description": "Un petit-dejeuner simple, rapide et nourrissant",
+    "tempsPreparationMin": 5,
+    "tempsCuissonMin": 5,
+    "nbPortions": 1,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["PETIT_DEJEUNER", "COLLATION"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Pain complet", "quantiteGrammes": 80.0 },
+      { "nom": "Avocat cru", "quantiteGrammes": 100.0 },
+      { "nom": "Graines de sesame", "quantiteGrammes": 5.0 },
+      { "nom": "Graines de tournesol", "quantiteGrammes": 5.0 },
+      { "nom": "Jus de citron", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Faire griller le pain",
+      "Ecraser l'avocat avec le citron",
+      "Etaler sur les tartines",
+      "Ajouter les graines"
+    ]
+  },
+  {
+    "nom": "Couscous aux legumes",
+    "description": "Un plat convivial et plein de legumes",
+    "tempsPreparationMin": 20,
+    "tempsCuissonMin": 35,
+    "nbPortions": 4,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Semoule de ble dur crue", "quantiteGrammes": 250.0 },
+      { "nom": "Carotte crue", "quantiteGrammes": 200.0 },
+      { "nom": "Courgette crue", "quantiteGrammes": 200.0 },
+      { "nom": "Poivron rouge cru", "quantiteGrammes": 150.0 },
+      { "nom": "Pois chiche en conserve", "quantiteGrammes": 240.0 },
+      { "nom": "Bouillon de legumes", "quantiteGrammes": 1000.0 }
+    ],
+    "etapes": [
+      "Cuire les legumes dans le bouillon",
+      "Rehydrater la semoule",
+      "Ajouter les pois chiches",
+      "Assembler le plat avec la semoule"
+    ]
+  },
+  {
+    "nom": "Saute de tempeh aux brocolis",
+    "description": "Un plat riche en proteines et tres savoureux",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 20,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Tempeh", "quantiteGrammes": 200.0 },
+      { "nom": "Brocoli cru", "quantiteGrammes": 200.0 },
+      { "nom": "Carotte crue", "quantiteGrammes": 100.0 },
+      { "nom": "Sauce soja", "quantiteGrammes": 20.0 },
+      { "nom": "Huile de sesame", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Couper le tempeh en cubes",
+      "Decouper le brocoli et la carotte",
+      "Faire revenir le tempeh",
+      "Ajouter les legumes puis la sauce soja",
+      "Faire sauter jusqu'a cuisson"
+    ]
+  },
+  {
+    "nom": "Crepes vegetales a la banane",
+    "description": "Des crepes sans oeufs, simples et gourmandes",
+    "tempsPreparationMin": 10,
+    "tempsCuissonMin": 15,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["PETIT_DEJEUNER", "COLLATION"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Farine de ble", "quantiteGrammes": 120.0 },
+      { "nom": "Boisson soja", "quantiteGrammes": 250.0 },
+      { "nom": "Banane crue", "quantiteGrammes": 120.0 },
+      { "nom": "Huile de tournesol", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Melanger la farine, la boisson soja et la banane ecrasee",
+      "Laisser reposer la pate",
+      "Cuire les crepes dans une poele chaude",
+      "Servir chaudes"
+    ]
+  },
+  {
+    "nom": "Pates au pesto de roquette",
+    "description": "Des pates legeres avec un pesto maison",
+    "tempsPreparationMin": 10,
+    "tempsCuissonMin": 15,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Pates completes crues", "quantiteGrammes": 180.0 },
+      { "nom": "Roquette crue", "quantiteGrammes": 60.0 },
+      { "nom": "Noix", "quantiteGrammes": 30.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 20.0 },
+      { "nom": "Ail cru", "quantiteGrammes": 5.0 }
+    ],
+    "etapes": [
+      "Cuire les pates",
+      "Mixer la roquette, les noix, l'ail et l'huile",
+      "Melanger avec les pates egouttees",
+      "Servir immediatement"
+    ]
+  },
+  {
+    "nom": "Salade de riz complet aux legumes",
+    "description": "Une salade froide simple et pratique pour les repas rapides",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 25,
+    "nbPortions": 3,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Riz complet cru", "quantiteGrammes": 180.0 },
+      { "nom": "Tomate crue", "quantiteGrammes": 150.0 },
+      { "nom": "Concombre cru", "quantiteGrammes": 120.0 },
+      { "nom": "Mais doux en conserve", "quantiteGrammes": 120.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 15.0 },
+      { "nom": "Jus de citron", "quantiteGrammes": 15.0 }
+    ],
+    "etapes": [
+      "Cuire le riz complet",
+      "Couper les legumes",
+      "Melanger avec le mais",
+      "Ajouter l'huile et le citron",
+      "Laisser refroidir avant de servir"
+    ]
+  },
+  {
+    "nom": "Galettes de sarrasin aux champignons",
+    "description": "Une recette rustique et savoureuse",
+    "tempsPreparationMin": 15,
+    "tempsCuissonMin": 20,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["DEJEUNER", "DINER"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Farine de sarrasin", "quantiteGrammes": 120.0 },
+      { "nom": "Eau", "quantiteGrammes": 250.0 },
+      { "nom": "Champignon de Paris cru", "quantiteGrammes": 200.0 },
+      { "nom": "Oignon cru", "quantiteGrammes": 80.0 },
+      { "nom": "Huile d'olive", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Preparer la pate de sarrasin",
+      "Emincer les champignons et l'oignon",
+      "Faire revenir la garniture",
+      "Cuire les galettes",
+      "Garnir et servir"
+    ]
+  },
+  {
+    "nom": "Pudding de chia mangue",
+    "description": "Un dessert ou petit-dejeuner frais et simple",
+    "tempsPreparationMin": 10,
+    "tempsCuissonMin": 0,
+    "nbPortions": 2,
+    "regimes": ["VEGAN", "VEGETARIEN"],
+    "typeRepas": ["PETIT_DEJEUNER", "COLLATION"],
+    "imageUrl": null,
+    "ingredients": [
+      { "nom": "Graines de chia", "quantiteGrammes": 40.0 },
+      { "nom": "Boisson soja", "quantiteGrammes": 300.0 },
+      { "nom": "Mangue crue", "quantiteGrammes": 200.0 },
+      { "nom": "Sirop d'agave", "quantiteGrammes": 10.0 }
+    ],
+    "etapes": [
+      "Melanger les graines de chia avec la boisson soja",
+      "Laisser gonfler au froid",
+      "Ajouter la mangue en morceaux",
+      "Sucrer legerement si besoin"
+    ]
+  }
+]

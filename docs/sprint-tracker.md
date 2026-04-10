@@ -285,4 +285,27 @@ Tous les ViewModels ont ete cables aux repositories/use cases. Aucun stub TODO r
 - LEGAL-02 — CGU (contenu placeholder)
 - LEGAL-04 — Chiffrement AES-256-GCM (ENCRYPTION_KEY configuree sur Railway)
 
+## Incidents production
+
+### INCIDENT-2026-04-10 — Meilisearch OOM + ajout aliment + dashboard timeout
+
+**Symptomes** : Meilisearch crash OOM sur Railway. Ajout d'aliment mobile bloque en "Valider → loader infini". Dashboard renvoie `Socket timeout has expired [..., socket_timeout=unknown] ms`.
+
+**Causes racines** :
+1. Meilisearch sans limite d'indexing memory sur Railway (OOM au demarrage)
+2. HttpClient Android sans `HttpTimeout` installe → requetes infinies
+3. `DashboardService.getDashboard` n'avait pas de timeout sur les appels `RecommandationService` (lents en cold start)
+4. `RecommandationService` charge 2000 aliments en memoire a chaque cache miss (vrai bottleneck, pas Meilisearch)
+5. Tests E2E aveugles : client Ktor in-memory, pas de simulation de latence, reco en try/catch silencieux
+
+**Fixes appliques** :
+- Railway : `MEILI_MAX_INDEXING_MEMORY=256Mb`, `MEILI_MAX_INDEXING_THREADS=1`, `MEILI_LOG_LEVEL=WARN`
+- `androidApp/.../AppFoodApplication.kt` : `HttpTimeout` (req=30s/conn=15s/sock=30s)
+- `shared/.../JournalViewModel.kt` : log `result.code + message` dans onValidateEntry
+- `backend/di/BackendModule.kt` : `HttpTimeout` HttpClient interne (req=10s/conn=5s/sock=10s)
+- `backend/service/DashboardService.kt` : logs perf par etape + `withTimeoutOrNull(5_000)` sur reco avec degradation gracieuse
+- `backend/test/.../JournalPerformanceE2ETest.kt` : 3 nouveaux E2E
+
+**Suivi** : US RECO-PERF-01 a creer au backlog pour optimiser `RecommandationService` (SQL pre-filter + reduction du pool candidat).
+
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked

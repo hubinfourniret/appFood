@@ -2,8 +2,10 @@ package com.appfood.backend
 
 import com.appfood.backend.database.configureDatabase
 import com.appfood.backend.database.dao.AlimentDao
+import com.appfood.backend.database.dao.RecetteDao
 import com.appfood.backend.di.backendModule
 import com.appfood.backend.external.CiqualImporter
+import com.appfood.backend.external.RecetteImporter
 import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.plugins.configureAuth
 import com.appfood.backend.plugins.configureCORS
@@ -108,6 +110,33 @@ fun Application.module() {
             }
         } catch (e: Exception) {
             environment.log.error("Erreur lors de l'import Ciqual: ${e.message}", e)
+        }
+
+        // Auto-import des recettes curees si la base de recettes est (quasi-)vide
+        try {
+            val recetteDao = get<RecetteDao>()
+            val recettesCount = recetteDao.count()
+            if (recettesCount < 10L) {
+                environment.log.info(
+                    "Base de recettes quasi-vide ($recettesCount recettes) — lancement de l'import des recettes...",
+                )
+                val recetteImporter = get<RecetteImporter>()
+                val jsonStream = this@module.javaClass.classLoader.getResourceAsStream("data/recettes-initial.json")
+                    ?: java.io.File("data/recettes-initial.json").takeIf { it.exists() }?.inputStream()
+                if (jsonStream != null) {
+                    val result = jsonStream.use { recetteImporter.importAll(it) }
+                    environment.log.info(
+                        "Import recettes termine : ${result.insertedCount} recettes importees, " +
+                            "${result.skippedCount} ignorees, ${result.warnings.size} warnings",
+                    )
+                } else {
+                    environment.log.warn("Fichier recettes-initial.json introuvable — import recettes ignore")
+                }
+            } else {
+                environment.log.info("Base de recettes : $recettesCount recettes en PostgreSQL — import ignore")
+            }
+        } catch (e: Exception) {
+            environment.log.error("Erreur lors de l'import des recettes: ${e.message}", e)
         }
     }
 }

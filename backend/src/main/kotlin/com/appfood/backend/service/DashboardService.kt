@@ -6,6 +6,7 @@ import com.appfood.backend.routes.dto.HydratationDaySummary
 import com.appfood.backend.routes.dto.HydratationWeeklyResponse
 import com.appfood.backend.routes.dto.NutrimentValuesResponse
 import com.appfood.backend.routes.dto.WeeklySummaryResponse
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import org.slf4j.LoggerFactory
@@ -29,7 +30,10 @@ class DashboardService(
         userId: String,
         date: LocalDate,
     ): DashboardData {
+        val tStart = System.currentTimeMillis()
+
         // 1. Quota statuses
+        val t0 = System.currentTimeMillis()
         val quotasStatus =
             try {
                 quotaService.getQuotaStatus(userId, date)
@@ -37,8 +41,10 @@ class DashboardService(
                 logger.warn("No quotas found for userId=$userId, returning empty list")
                 emptyList()
             }
+        logger.info("Dashboard/$userId quotas=${System.currentTimeMillis() - t0}ms")
 
         // 2. Journal entries for the day
+        val t1 = System.currentTimeMillis()
         val journalEntries =
             journalService.getEntries(
                 userId = userId,
@@ -47,15 +53,24 @@ class DashboardService(
                 dateTo = null,
                 mealTypeStr = null,
             )
+        logger.info("Dashboard/$userId journal=${System.currentTimeMillis() - t1}ms")
 
         // 3. Hydratation (nullable)
+        val t2 = System.currentTimeMillis()
         val hydratation = hydratationDao.findByUserAndDate(userId, date)
+        logger.info("Dashboard/$userId hydratation=${System.currentTimeMillis() - t2}ms")
 
         // 4. Recommendations (cached with 30min TTL)
+        val t3 = System.currentTimeMillis()
         val cached = getCachedRecommandations(userId, date)
+        logger.info("Dashboard/$userId reco=${System.currentTimeMillis() - t3}ms")
 
         // 5. Current weight
+        val t4 = System.currentTimeMillis()
         val poidsCourant = poidsHistoryDao.findLatest(userId)?.poidsKg
+        logger.info("Dashboard/$userId poids=${System.currentTimeMillis() - t4}ms")
+
+        logger.info("Dashboard/$userId total=${System.currentTimeMillis() - tStart}ms")
 
         return DashboardData(
             date = date,
@@ -283,10 +298,15 @@ class DashboardService(
             return existing
         }
 
-        // Compute fresh recommendations
+        // Compute fresh recommendations with graceful degradation on timeout
         val alimentResult =
             try {
-                recommandationService.getRecommandationsAliments(userId, date, limit = 5)
+                withTimeoutOrNull(RECO_TIMEOUT_MS) {
+                    recommandationService.getRecommandationsAliments(userId, date, limit = 5)
+                } ?: run {
+                    logger.warn("Recommandation aliments timeout after ${RECO_TIMEOUT_MS}ms, returning empty")
+                    RecommandationAlimentResult(emptyList(), emptyList())
+                }
             } catch (e: Exception) {
                 logger.warn("Failed to compute aliment recommendations for userId=$userId: ${e.message}")
                 RecommandationAlimentResult(emptyList(), emptyList())
@@ -294,7 +314,12 @@ class DashboardService(
 
         val recetteResult =
             try {
-                recommandationService.getRecommandationsRecettes(userId, date, limit = 3)
+                withTimeoutOrNull(RECO_TIMEOUT_MS) {
+                    recommandationService.getRecommandationsRecettes(userId, date, limit = 3)
+                } ?: run {
+                    logger.warn("Recommandation recettes timeout after ${RECO_TIMEOUT_MS}ms, returning empty")
+                    RecommandationRecetteResult(emptyList(), emptyList())
+                }
             } catch (e: Exception) {
                 logger.warn("Failed to compute recette recommendations for userId=$userId: ${e.message}")
                 RecommandationRecetteResult(emptyList(), emptyList())
@@ -325,6 +350,7 @@ class DashboardService(
 
     companion object {
         private const val TTL_MINUTES = 30L
+        private const val RECO_TIMEOUT_MS = 5_000L
     }
 }
 

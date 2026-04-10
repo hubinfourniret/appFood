@@ -17,6 +17,7 @@ import com.appfood.backend.database.dao.UserProfileDao
 import com.appfood.backend.external.CiqualImporter
 import com.appfood.backend.external.FirebaseAdmin
 import com.appfood.backend.external.OpenFoodFactsClient
+import com.appfood.backend.external.RecetteImporter
 import com.appfood.backend.search.AlimentIndexer
 import com.appfood.backend.search.MeilisearchClient
 import com.appfood.backend.security.EncryptionService
@@ -36,6 +37,7 @@ import com.appfood.backend.service.RecommandationService
 import com.appfood.backend.service.SupportService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
@@ -63,6 +65,11 @@ fun backendModule(
                     },
                 )
             }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 10_000
+                connectTimeoutMillis = 5_000
+                socketTimeoutMillis = 10_000
+            }
         }
     }
 
@@ -75,6 +82,7 @@ fun backendModule(
 
     // External data sources
     single { CiqualImporter(get(), get()) }
+    single { RecetteImporter(get(), get()) }
     single { OpenFoodFactsClient(get(), get(), get()) }
 
     // Services
