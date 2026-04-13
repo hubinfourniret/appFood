@@ -95,6 +95,7 @@ class DashboardViewModel(
             quotasStatus = quotas.filter { !it.nutriment.equals("Calories", ignoreCase = true) },
             repas = repas,
             poidsCourant = response.poidsCourant,
+            hasJournalEntries = response.journalDuJour.isNotEmpty(),
         )
     }
 
@@ -157,6 +158,7 @@ sealed interface DashboardState {
         val quotasStatus: List<QuotaStatusUiModel>,
         val repas: Map<MealType, Double>,
         val poidsCourant: Double?,
+        val hasJournalEntries: Boolean = false,
         val onboardingComplete: Boolean = true,
     ) : DashboardState
     data class Error(val message: String) : DashboardState

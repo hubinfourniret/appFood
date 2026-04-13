@@ -29,7 +29,7 @@ class RecetteApi(private val apiClient: ApiClient) {
         return apiClient.getRequest(params).body()
     }
 
-    suspend fun getRecette(id: String): RecetteSummaryResponse {
+    suspend fun getRecette(id: String): RecetteDetailResponse {
         return apiClient.getRequest("/api/v1/recettes/$id").body()
     }
 

@@ -50,7 +50,18 @@ class CiqualImporter(
         // Nutriment column detection: each pair is (required_pattern_1, required_pattern_2)
         private val NUTRIMENT_PATTERNS: Map<String, List<Pair<String, String>>> =
             mapOf(
-                "calories" to listOf("Énergie, Règlement UE" to "(kcal", "Energie, Règlement UE" to "(kcal"),
+                "calories" to
+                    listOf(
+                        "Énergie, Règlement UE" to "(kcal",
+                        "Energie, Règlement UE" to "(kcal",
+                        "Énergie, Règlement" to "(kcal",
+                        "Energie, Règlement" to "(kcal",
+                        "Énergie, N x facteur Jones" to "(kcal",
+                        "Energie, N x facteur Jones" to "(kcal",
+                        "Énergie" to "(kcal",
+                        "Energie" to "(kcal",
+                        "Energy" to "(kcal",
+                    ),
                 "proteines" to listOf("Protéines" to "(g", "Proteines" to "(g"),
                 "glucides" to listOf("Glucides" to "(g"),
                 "lipides" to listOf("Lipides" to "(g"),

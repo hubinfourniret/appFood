@@ -1,6 +1,7 @@
 package com.appfood.shared.data.impl
 
 import com.appfood.shared.api.request.CreateRecetteRequest
+import com.appfood.shared.api.response.NutrimentValuesResponse
 import com.appfood.shared.api.response.RecetteDetailResponse
 import com.appfood.shared.api.response.RecetteSummaryResponse
 import com.appfood.shared.data.local.LocalRecetteDataSource
@@ -152,13 +153,32 @@ class RecetteRepositoryImpl(
                 )
             },
             etapes = etapes,
-            nutrimentsTotaux = NutrimentValues(),
+            nutrimentsTotaux = nutrimentsTotaux.toDomain(),
             imageUrl = imageUrl,
             publie = true,
             createdAt = Clock.System.now(),
             updatedAt = Clock.System.now(),
         )
     }
+
+    private fun NutrimentValuesResponse.toDomain(): NutrimentValues = NutrimentValues(
+        calories = calories,
+        proteines = proteines,
+        glucides = glucides,
+        lipides = lipides,
+        fibres = fibres,
+        sel = sel,
+        sucres = sucres,
+        fer = fer,
+        calcium = calcium,
+        zinc = zinc,
+        magnesium = magnesium,
+        vitamineB12 = vitamineB12,
+        vitamineD = vitamineD,
+        vitamineC = vitamineC,
+        omega3 = omega3,
+        omega6 = omega6,
+    )
 
     private fun RecetteSummaryResponse.toDomain(): Recette {
         return Recette(

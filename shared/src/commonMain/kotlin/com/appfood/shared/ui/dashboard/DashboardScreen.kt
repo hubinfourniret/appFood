@@ -115,8 +115,7 @@ private fun DashboardContent(
             }
 
             is DashboardState.Success -> {
-                val isEmpty = state.caloriesConsommees == 0.0 &&
-                    state.repas.values.all { it == 0.0 }
+                val isEmpty = !state.hasJournalEntries
 
                 if (isEmpty) {
                     EmptyDashboardState(
