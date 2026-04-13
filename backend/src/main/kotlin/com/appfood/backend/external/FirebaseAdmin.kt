@@ -1,21 +1,22 @@
 package com.appfood.backend.external
 
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayInputStream
 
 /**
- * Firebase token verification.
- * In dev mode (FIREBASE_MOCK=true), accepts all tokens and extracts userId from the token string.
- * In production, should verify tokens via Firebase Admin SDK.
+ * Firebase token verification and user management.
  *
- * --- Migration vers la verification reelle en production ---
- * Pour activer la verification reelle des tokens Firebase :
- * 1. Ajouter la dependance Firebase Admin SDK Java dans backend/build.gradle.kts :
- *    implementation("com.google.firebase:firebase-admin:9.4.3")
- * 2. Placer le fichier de credentials (service account JSON) sur le serveur
- * 3. Configurer la variable d'environnement GOOGLE_APPLICATION_CREDENTIALS
- *    pointant vers le chemin du fichier JSON
- * 4. Passer FIREBASE_MOCK=false dans les variables d'environnement de production
- * 5. Decommenter le code de verification reelle dans verifyToken() et deleteUser()
+ * Modes :
+ * - FIREBASE_MOCK=true (defaut) : accepte tous les tokens, extrait uid/email du token string.
+ *   Utilise pour le dev local et les tests.
+ * - FIREBASE_MOCK=false : verifie les tokens via Firebase Admin SDK.
+ *   Necessite FIREBASE_CREDENTIALS (contenu JSON du service account) ou
+ *   GOOGLE_APPLICATION_CREDENTIALS (chemin vers le fichier JSON).
  */
 data class FirebaseTokenInfo(
     val uid: String,
@@ -27,10 +28,56 @@ class FirebaseAdmin(
 ) {
     private val logger = LoggerFactory.getLogger("FirebaseAdmin")
 
+    init {
+        if (!mockEnabled) {
+            initializeFirebaseApp()
+            logger.info("Firebase Admin SDK initialise avec succes")
+        } else {
+            logger.info("Firebase Admin en mode mock (FIREBASE_MOCK=true)")
+        }
+    }
+
+    private fun initializeFirebaseApp() {
+        // Eviter la double initialisation si FirebaseApp existe deja
+        if (FirebaseApp.getApps().isNotEmpty()) {
+            logger.info("FirebaseApp deja initialise, reutilisation de l'instance existante")
+            return
+        }
+
+        val credentials = loadCredentials()
+        val options = FirebaseOptions.builder()
+            .setCredentials(credentials)
+            .build()
+        FirebaseApp.initializeApp(options)
+    }
+
+    private fun loadCredentials(): GoogleCredentials {
+        // 1) Essayer FIREBASE_CREDENTIALS (contenu JSON inline)
+        val credentialsJson = System.getenv("FIREBASE_CREDENTIALS")
+        if (!credentialsJson.isNullOrBlank() && credentialsJson.trimStart().startsWith("{")) {
+            logger.info("Chargement des credentials Firebase depuis FIREBASE_CREDENTIALS (JSON inline)")
+            return GoogleCredentials.fromStream(ByteArrayInputStream(credentialsJson.toByteArray()))
+        }
+
+        // 2) Essayer GOOGLE_APPLICATION_CREDENTIALS (chemin fichier — methode standard Google)
+        val credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        if (!credentialsPath.isNullOrBlank()) {
+            logger.info("Chargement des credentials Firebase depuis GOOGLE_APPLICATION_CREDENTIALS: $credentialsPath")
+            return GoogleCredentials.getApplicationDefault()
+        }
+
+        // 3) Aucune credentials configuree → fail-fast
+        throw IllegalStateException(
+            "Firebase Admin SDK : credentials non configurees. " +
+                "Definissez FIREBASE_CREDENTIALS (contenu JSON du service account) ou " +
+                "GOOGLE_APPLICATION_CREDENTIALS (chemin vers le fichier JSON), " +
+                "ou bien activez le mode mock avec FIREBASE_MOCK=true.",
+        )
+    }
+
     /**
      * Verifies a Firebase ID token and returns the user info.
-     * In mock mode, the token is treated as a JSON-like string: "mock-uid:email@example.com"
-     * or simply used as the uid.
+     * In mock mode, the token is treated as "uid:email" or simply "uid".
      */
     suspend fun verifyToken(idToken: String): FirebaseTokenInfo {
         if (mockEnabled) {
@@ -38,12 +85,13 @@ class FirebaseAdmin(
             return parseMockToken(idToken)
         }
 
-        // Real Firebase Admin SDK verification not yet configured.
-        // To enable: add firebase-admin dependency, set GOOGLE_APPLICATION_CREDENTIALS,
-        // and implement: FirebaseAuth.getInstance().verifyIdToken(idToken)
-        throw IllegalStateException(
-            "Firebase Admin SDK not configured — set FIREBASE_MOCK=true for development or configure Firebase credentials",
-        )
+        return try {
+            val decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken)
+            FirebaseTokenInfo(uid = decodedToken.uid, email = decodedToken.email)
+        } catch (e: FirebaseAuthException) {
+            logger.warn("Firebase token verification failed: ${e.message}")
+            throw IllegalArgumentException("Token Firebase invalide ou expire: ${e.message}", e)
+        }
     }
 
     /**
@@ -56,10 +104,13 @@ class FirebaseAdmin(
             return
         }
 
-        // Real Firebase Admin SDK user deletion not yet configured.
-        throw IllegalStateException(
-            "Firebase Admin SDK not configured — set FIREBASE_MOCK=true for development or configure Firebase credentials",
-        )
+        try {
+            FirebaseAuth.getInstance().deleteUser(uid)
+            logger.info("Firebase user deleted: $uid")
+        } catch (e: FirebaseAuthException) {
+            logger.error("Failed to delete Firebase user $uid: ${e.message}")
+            throw IllegalStateException("Erreur lors de la suppression du compte Firebase: ${e.message}", e)
+        }
     }
 
     private fun parseMockToken(token: String): FirebaseTokenInfo {

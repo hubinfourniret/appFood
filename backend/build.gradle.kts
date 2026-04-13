@@ -58,6 +58,9 @@ dependencies {
     // DI
     implementation(libs.koin.ktor)
 
+    // Firebase Admin SDK (server-side token verification)
+    implementation(libs.firebase.admin)
+
     // Logging
     implementation(libs.logback.classic)
 

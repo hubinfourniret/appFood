@@ -25,6 +25,7 @@ meilisearch = "0.14.4"
 firebase-gitlive = "2.1.0"
 google-services = "4.4.2"
 hikaricp = "5.1.0"
+firebase-admin = "9.4.3"
 
 [libraries]
 # Kotlin
@@ -96,6 +97,7 @@ firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-
 firebase-common = { module = "dev.gitlive:firebase-common", version.ref = "firebase-gitlive" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version = "33.7.0" }
 firebase-auth-android = { module = "com.google.firebase:firebase-auth" }
+firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebase-admin" }
 
 # Koin
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
