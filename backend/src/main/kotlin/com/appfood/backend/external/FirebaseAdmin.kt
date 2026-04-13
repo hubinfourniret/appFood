@@ -38,10 +38,13 @@ class FirebaseAdmin(
     }
 
     private fun initializeFirebaseApp() {
-        // Eviter la double initialisation si FirebaseApp existe deja
-        if (FirebaseApp.getApps().isNotEmpty()) {
+        // Eviter la double initialisation
+        try {
+            FirebaseApp.getInstance()
             logger.info("FirebaseApp deja initialise, reutilisation de l'instance existante")
             return
+        } catch (_: IllegalStateException) {
+            // Pas encore initialise, on continue
         }
 
         val credentials = loadCredentials()
