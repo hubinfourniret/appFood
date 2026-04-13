@@ -56,7 +56,7 @@ class SyncManager(
     private val localHydratationDataSource: LocalHydratationDataSource,
     private val syncPreferences: SyncPreferences,
     private val localUserDataSource: LocalUserDataSource,
-) {
+) : SyncEnqueuer {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -326,7 +326,7 @@ class SyncManager(
      * Si connecte, declenche immediatement un push.
      */
 
-    fun enqueue(
+    override fun enqueue(
         entityType: String,
         entityId: String,
         action: String,

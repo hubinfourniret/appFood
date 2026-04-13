@@ -15,7 +15,7 @@ import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.PortionStandard
 import com.appfood.shared.model.RegimeAlimentaire
 import com.appfood.shared.model.SourceAliment
-import com.appfood.shared.sync.SyncManager
+import com.appfood.shared.sync.SyncEnqueuer
 import com.appfood.shared.util.AppResult
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.Json
 
 /**
@@ -44,7 +44,7 @@ class JournalViewModel(
     private val journalRepository: JournalRepository,
     private val alimentRepository: AlimentRepository,
     private val recetteRepository: RecetteRepository,
-    private val syncManager: SyncManager,
+    private val syncManager: SyncEnqueuer,
 ) : ViewModel() {
 
     // --- Search state ---
@@ -207,7 +207,7 @@ class JournalViewModel(
         val mealType = _selectedMealType.value ?: return
         val aliment = _selectedAliment.value ?: return
         val grams = _quantityGrams.value
-        val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
 
         _addEntryState.value = AddEntryState.Saving
 
@@ -219,27 +219,25 @@ class JournalViewModel(
             quantiteGrammes = grams,
         )
 
-        // Offline-first: enqueue in sync_queue immediately so the entry
-        // is persisted locally even if the API call fails.
-        val payloadJson = Json.encodeToString(
-            AddJournalEntryRequest.serializer(),
-            request,
-        )
-        syncManager.enqueue(
-            entityType = "journal",
-            entityId = "${aliment.id}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}",
-            action = "CREATE",
-            payloadJson = payloadJson,
-        )
-
         viewModelScope.launch {
             when (val result = journalRepository.addEntry(request)) {
                 is AppResult.Success -> {
                     _addEntryState.value = AddEntryState.Saved
-                    loadRecents()
                 }
                 is AppResult.Error -> {
+                    // API failed — enqueue for offline sync so the entry
+                    // is persisted locally and will be synced later.
                     println("JournalViewModel.onValidateEntry error: ${result.code} ${result.message}")
+                    val payloadJson = Json.encodeToString(
+                        AddJournalEntryRequest.serializer(),
+                        request,
+                    )
+                    syncManager.enqueue(
+                        entityType = "journal",
+                        entityId = "${aliment.id}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}",
+                        action = "CREATE",
+                        payloadJson = payloadJson,
+                    )
                     _addEntryState.value = AddEntryState.SavedOffline
                 }
             }
@@ -418,7 +416,7 @@ class JournalViewModel(
             // TODO: Naviguer vers le detail recette ou ajouter une portion recette au journal
             // Pour l'instant, on ajoute directement 1 portion au journal
             val mealType = _selectedMealType.value ?: return@launch
-            val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(TimeZone.currentSystemDefault()).date
+            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
             val request = AddJournalEntryRequest(
                 date = today.toString(),
                 mealType = mealType.name,

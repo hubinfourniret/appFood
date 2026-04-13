@@ -386,9 +386,11 @@ fun AppNavigation(
                         }
                     },
                     onEntrySaved = {
-                        // Refetch dashboard pour refleter la nouvelle entry
                         dashboardViewModel.loadDashboard()
-                        navController.popBackStack(Screen.Dashboard, inclusive = false)
+                        navController.navigate(Screen.Dashboard) {
+                            popUpTo<Screen.Dashboard> { inclusive = true }
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
@@ -414,9 +416,11 @@ fun AppNavigation(
                         navController.popBackStack()
                     },
                     onEntryValidated = {
-                        // Refetch dashboard pour refleter la nouvelle entry
                         dashboardViewModel.loadDashboard()
-                        navController.popBackStack(Screen.Dashboard, inclusive = false)
+                        navController.navigate(Screen.Dashboard) {
+                            popUpTo<Screen.Dashboard> { inclusive = true }
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
