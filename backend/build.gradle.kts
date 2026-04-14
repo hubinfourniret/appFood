@@ -26,7 +26,11 @@ configurations.all {
 
 dependencies {
     // Shared KMP module (JVM target — quota calculation, models)
-    implementation(project(":shared"))
+    // Exclude dev.gitlive Firebase wrappers (mobile-only, conflict avec firebase-admin
+    // qui shadow les classes com.google.firebase.* officielles → NoSuchMethodError au runtime).
+    implementation(project(":shared")) {
+        exclude(group = "dev.gitlive")
+    }
 
     // Ktor Server
     implementation(libs.ktor.server.core)
