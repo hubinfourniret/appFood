@@ -83,9 +83,17 @@ class AuthViewModel(
 
         _state.value = AuthState.Loading
         viewModelScope.launch {
-            // TODO: Remplacer par le vrai Firebase token (Firebase.auth.currentUser.getIdToken())
-            // En mode FIREBASE_MOCK=true, le backend accepte "uid:email"
-            val firebaseToken = "mock-${_loginEmail.value.hashCode().toUInt()}:${_loginEmail.value}"
+            val firebaseToken = try {
+                Firebase.auth.signInWithEmailAndPassword(_loginEmail.value, _loginPassword.value)
+                Firebase.auth.currentUser?.getIdToken(false)
+            } catch (e: Exception) {
+                _state.value = AuthState.Error(mapFirebaseError(e))
+                return@launch
+            }
+            if (firebaseToken.isNullOrBlank()) {
+                _state.value = AuthState.Error(Strings.AUTH_ERROR_GENERIC)
+                return@launch
+            }
 
             val result = userRepository.login(LoginRequest(firebaseToken = firebaseToken))
             when (result) {
@@ -138,9 +146,17 @@ class AuthViewModel(
 
         _state.value = AuthState.Loading
         viewModelScope.launch {
-            // TODO: Remplacer par le vrai Firebase token (Firebase.auth.currentUser.getIdToken())
-            // En mode FIREBASE_MOCK=true, le backend accepte "uid:email"
-            val firebaseToken = "mock-${_registerEmail.value.hashCode().toUInt()}:${_registerEmail.value}"
+            val firebaseToken = try {
+                Firebase.auth.createUserWithEmailAndPassword(_registerEmail.value, _registerPassword.value)
+                Firebase.auth.currentUser?.getIdToken(false)
+            } catch (e: Exception) {
+                _state.value = AuthState.Error(mapFirebaseError(e))
+                return@launch
+            }
+            if (firebaseToken.isNullOrBlank()) {
+                _state.value = AuthState.Error(Strings.AUTH_ERROR_GENERIC)
+                return@launch
+            }
 
             val result = userRepository.register(
                 RegisterRequest(
@@ -152,11 +168,9 @@ class AuthViewModel(
             )
             when (result) {
                 is AppResult.Success -> {
-                    // AUTH-01 : Envoyer email de verification apres inscription
                     try {
                         Firebase.auth.currentUser?.sendEmailVerification()
                     } catch (_: Exception) {
-                        // Ne pas bloquer l'inscription si l'envoi echoue
                         println("WARNING: Echec envoi email de verification")
                     }
                     _state.value = AuthState.Success(needsOnboarding = true)
@@ -165,6 +179,23 @@ class AuthViewModel(
                     _state.value = AuthState.Error(result.message)
                 }
             }
+        }
+    }
+
+    private fun mapFirebaseError(e: Exception): String {
+        val msg = e.message.orEmpty()
+        return when {
+            msg.contains("password is invalid", ignoreCase = true) ||
+                msg.contains("INVALID_PASSWORD", ignoreCase = true) ||
+                msg.contains("invalid-credential", ignoreCase = true) -> Strings.AUTH_ERROR_INVALID_CREDENTIALS
+            msg.contains("no user record", ignoreCase = true) ||
+                msg.contains("USER_NOT_FOUND", ignoreCase = true) -> Strings.AUTH_ERROR_USER_NOT_FOUND
+            msg.contains("EMAIL_EXISTS", ignoreCase = true) ||
+                msg.contains("email address is already in use", ignoreCase = true) -> Strings.AUTH_ERROR_EMAIL_IN_USE
+            msg.contains("WEAK_PASSWORD", ignoreCase = true) ||
+                msg.contains("password should be at least", ignoreCase = true) -> Strings.AUTH_ERROR_WEAK_PASSWORD
+            msg.contains("network", ignoreCase = true) -> Strings.AUTH_ERROR_NETWORK
+            else -> e.message ?: Strings.AUTH_ERROR_GENERIC
         }
     }
 

@@ -86,6 +86,14 @@ object Strings {
     const val VALIDATION_PASSWORD_TOO_SHORT = "Le mot de passe doit contenir au moins 8 caracteres"
     const val VALIDATION_FIELD_REQUIRED = "Ce champ est requis"
 
+    // Auth — Erreurs Firebase
+    const val AUTH_ERROR_INVALID_CREDENTIALS = "E-mail ou mot de passe incorrect"
+    const val AUTH_ERROR_USER_NOT_FOUND = "Aucun compte trouve avec cette adresse e-mail"
+    const val AUTH_ERROR_EMAIL_IN_USE = "Cette adresse e-mail est deja utilisee"
+    const val AUTH_ERROR_WEAK_PASSWORD = "Le mot de passe est trop faible (minimum 6 caracteres)"
+    const val AUTH_ERROR_NETWORK = "Erreur reseau, verifiez votre connexion"
+    const val AUTH_ERROR_GENERIC = "Une erreur est survenue, veuillez reessayer"
+
     // Auth — Forgot password
     const val FORGOT_PASSWORD_TITLE = "Reinitialiser le mot de passe"
     const val FORGOT_PASSWORD_DESCRIPTION = "Entrez votre adresse e-mail pour recevoir un lien de reinitialisation."
