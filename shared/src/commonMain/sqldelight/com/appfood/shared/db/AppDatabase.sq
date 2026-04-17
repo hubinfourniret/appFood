@@ -158,6 +158,13 @@ CREATE TABLE local_recette (
     created_at INTEGER NOT NULL DEFAULT 0
 );
 
+-- Token d'authentification persiste
+CREATE TABLE local_auth_token (
+    user_id TEXT NOT NULL PRIMARY KEY,
+    token TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT 0
+);
+
 -- Queue de synchronisation
 CREATE TABLE sync_queue (
     id TEXT NOT NULL PRIMARY KEY,

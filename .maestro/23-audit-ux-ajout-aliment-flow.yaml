@@ -1,0 +1,86 @@
+appId: com.appfood
+name: "23 — Audit UX: flow complet ajout aliment"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 60000
+
+# Etape 1: Cliquer Ajouter
+- tapOn:
+    text: "Ajouter"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "23-01-add-entry-repas"
+
+# Etape 2: Selectionner un repas
+- tapOn:
+    text: "Dejeuner"
+    optional: true
+- tapOn:
+    text: "Petit-dejeuner"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "23-02-search-screen"
+
+# Etape 3: Rechercher "lentille"
+- tapOn:
+    text: ".*[Rr]echerch.*"
+    optional: true
+- inputText: "lentille"
+- waitForAnimationToEnd:
+    timeout: 5000
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "23-03-search-results"
+
+# Etape 4: Selectionner le premier resultat
+- tapOn:
+    text: ".*[Ll]entille.*"
+    index: 0
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "23-04-portion-selector"
+
+# Etape 5: Voir le resume nutritionnel
+- scroll
+- takeScreenshot: "23-05-portion-nutrition"
+
+# Annuler et revenir
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "23-06-retour-search"
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "23-07-retour-add-entry"
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "23-08-retour-dashboard"

@@ -1,0 +1,42 @@
+appId: com.appfood
+name: "20 — Audit UX: Dashboard complet"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 60000
+
+# Dashboard: haut de page
+- takeScreenshot: "20-01-dashboard-top"
+# Dashboard: scroll 1
+- scroll
+- takeScreenshot: "20-02-dashboard-mid"
+# Dashboard: scroll 2
+- scroll
+- takeScreenshot: "20-03-dashboard-bottom"
+# Dashboard: scroll 3
+- scroll
+- takeScreenshot: "20-04-dashboard-far-bottom"

@@ -1,0 +1,59 @@
+appId: com.appfood
+name: "24 — Token persistence: login, fermer, rouvrir"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+# Etape 1: Login frais (clearState)
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 60000
+- takeScreenshot: "24-01-dashboard-apres-login"
+
+# Etape 2: Fermer l'app (kill process) puis rouvrir SANS clearState
+- stopApp
+- waitForAnimationToEnd:
+    timeout: 3000
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: "24-02-apres-reouverture"
+
+# Le token doit etre restaure — on doit arriver au Dashboard, pas au Login
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 30000
+- takeScreenshot: "24-03-dashboard-restaure"
+
+# Verifier que "Modifier le profil" fonctionne (token valide)
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    text: "Modifier le profil"
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: "24-04-edit-profil"

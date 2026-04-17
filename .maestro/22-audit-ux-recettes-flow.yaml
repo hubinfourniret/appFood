@@ -1,0 +1,60 @@
+appId: com.appfood
+name: "22 — Audit UX: Recettes liste + detail + navigation"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      text: "Recettes"
+    timeout: 60000
+
+# Recettes liste
+- tapOn:
+    text: "Recettes"
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: "22-01-recettes-liste-top"
+- scroll
+- takeScreenshot: "22-02-recettes-liste-scroll"
+
+# Detail recette
+- swipe:
+    direction: "DOWN"
+    duration: 400
+- tapOn:
+    text: "Pudding de chia mangue"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "22-03-recette-detail-top"
+- scroll
+- takeScreenshot: "22-04-recette-detail-mid"
+- scroll
+- takeScreenshot: "22-05-recette-detail-bottom"
+
+# Retour et navigation vers 2e recette (si existe)
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+- scroll
+- takeScreenshot: "22-06-recettes-liste-2"

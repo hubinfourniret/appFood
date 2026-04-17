@@ -30,6 +30,7 @@ import kotlinx.serialization.json.jsonPrimitive
 class ApiClient(
     val httpClient: HttpClient,
     private val baseUrl: String,
+    private val onTokenCleared: (() -> Unit)? = null,
 ) {
 
     @Volatile
@@ -54,6 +55,7 @@ class ApiClient(
     private suspend fun interceptResponse(response: HttpResponse): HttpResponse {
         if (response.status == HttpStatusCode.Unauthorized) {
             setAuthToken(null)
+            onTokenCleared?.invoke()
             _sessionExpired.tryEmit(true)
         }
         if (!response.status.isSuccess()) {

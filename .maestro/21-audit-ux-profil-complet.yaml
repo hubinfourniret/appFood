@@ -1,0 +1,116 @@
+appId: com.appfood
+name: "21 — Audit UX: Profil et tous ses sous-ecrans"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      text: "Profil"
+    timeout: 60000
+
+# Profil principal
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "21-01-profil-top"
+- scroll
+- takeScreenshot: "21-02-profil-bottom"
+
+# Modifier le profil
+- swipe:
+    direction: "DOWN"
+    duration: 400
+- tapOn:
+    text: "Modifier le profil"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "21-03-edit-profil-top"
+- scroll
+- takeScreenshot: "21-04-edit-profil-bottom"
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Preferences alimentaires
+- tapOn:
+    text: "Preferences alimentaires"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "21-05-preferences-top"
+- scroll
+- takeScreenshot: "21-06-preferences-bottom"
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Parametres
+- tapOn:
+    text: "Parametres"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "21-07-settings-top"
+- scroll
+- takeScreenshot: "21-08-settings-bottom"
+
+# Parametres > Politique de confidentialite
+- tapOn:
+    text: "Politique de confidentialite"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "21-09-privacy-policy"
+- scroll
+- takeScreenshot: "21-10-privacy-scroll"
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Parametres > CGU
+- tapOn:
+    text: "Conditions generales d'utilisation"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "21-11-cgu"
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Parametres > Gestion consentements
+- swipe:
+    direction: "DOWN"
+    duration: 400
+- tapOn:
+    text: "Gestion des consentements"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "21-12-consent-settings"
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Retour profil
+- tapOn:
+    text: "Retour"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "21-13-retour-profil"

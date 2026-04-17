@@ -95,4 +95,27 @@ class LocalUserDataSource(private val database: AppDatabase) {
     fun deleteAllPreferences() {
         queries.deleteAllPreferences()
     }
+
+    // ===== Auth Token =====
+
+    fun getAuthToken(): String? {
+        return queries.getAuthToken().executeAsOneOrNull()
+    }
+
+    fun getAuthUserId(): String? {
+        return queries.getAuthTokenWithUserId().executeAsOneOrNull()?.user_id
+    }
+
+    fun saveAuthToken(userId: String, token: String) {
+        val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        queries.insertOrReplaceAuthToken(
+            user_id = userId,
+            token = token,
+            created_at = now,
+        )
+    }
+
+    fun deleteAuthToken() {
+        queries.deleteAuthToken()
+    }
 }

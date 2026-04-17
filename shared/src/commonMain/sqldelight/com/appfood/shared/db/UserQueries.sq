@@ -45,3 +45,21 @@ DELETE FROM local_preferences WHERE user_id = ?;
 
 deleteAllPreferences:
 DELETE FROM local_preferences;
+
+-- ===== local_auth_token =====
+
+getAuthToken:
+SELECT token FROM local_auth_token LIMIT 1;
+
+getAuthTokenWithUserId:
+SELECT * FROM local_auth_token LIMIT 1;
+
+insertOrReplaceAuthToken:
+INSERT OR REPLACE INTO local_auth_token(user_id, token, created_at)
+VALUES (?, ?, ?);
+
+deleteAuthToken:
+DELETE FROM local_auth_token;
+
+deleteAuthTokenByUserId:
+DELETE FROM local_auth_token WHERE user_id = ?;

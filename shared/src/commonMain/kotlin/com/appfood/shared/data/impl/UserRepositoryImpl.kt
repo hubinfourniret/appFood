@@ -36,6 +36,7 @@ class UserRepositoryImpl(
         return try {
             val response = authApi.register(request)
             apiClient.setAuthToken(response.token)
+            localUserDataSource.saveAuthToken(response.user.id, response.token)
             cacheUser(response)
             AppResult.Success(response)
         } catch (e: Exception) {
@@ -47,6 +48,7 @@ class UserRepositoryImpl(
         return try {
             val response = authApi.login(request)
             apiClient.setAuthToken(response.token)
+            localUserDataSource.saveAuthToken(response.user.id, response.token)
             cacheUser(response)
             AppResult.Success(response)
         } catch (e: Exception) {
@@ -96,6 +98,7 @@ class UserRepositoryImpl(
     override suspend fun logout(): AppResult<Unit> {
         return try {
             apiClient.setAuthToken(null)
+            localUserDataSource.deleteAuthToken()
             localUserDataSource.deleteAllPreferences()
             localUserDataSource.deleteAllProfiles()
             localUserDataSource.deleteAll()

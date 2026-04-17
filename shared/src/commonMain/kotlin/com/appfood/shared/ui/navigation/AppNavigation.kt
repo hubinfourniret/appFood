@@ -171,6 +171,16 @@ fun AppNavigation(
     val supportApi = koinInject<SupportApi>()
     val faqViewModel = remember(supportApi) { FaqViewModel(supportApi).also { it.init() } }
 
+    // Restaurer la session si un token est persiste
+    LaunchedEffect(Unit) {
+        val savedToken = localUserDataSource.getAuthToken()
+        if (savedToken != null) {
+            navController.navigate(Screen.Dashboard) {
+                popUpTo<Screen.Login> { inclusive = true }
+            }
+        }
+    }
+
     // AUTH-02 : Observer l'expiration de session (401) pour rediriger vers Login
     val apiClient = koinInject<ApiClient>()
     LaunchedEffect(apiClient) {

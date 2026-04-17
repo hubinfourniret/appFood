@@ -82,10 +82,17 @@ val sharedModule = module {
     // ApiClient: HttpClient must be registered in the platform-specific module.
     // ApiClient is registered here using the platform-provided HttpClient + base URL.
     single {
-        ApiClient(
+        val localUserDataSource = get<LocalUserDataSource>()
+        val client = ApiClient(
             httpClient = get(),
             baseUrl = getProperty("API_BASE_URL", "https://appfood-production.up.railway.app"),
+            onTokenCleared = { localUserDataSource.deleteAuthToken() },
         )
+        // Restaurer le token persiste au demarrage
+        localUserDataSource.getAuthToken()?.let { token ->
+            client.setAuthToken(token)
+        }
+        client
     }
     single { AuthApi(get()) }
     single { UserApi(get()) }
