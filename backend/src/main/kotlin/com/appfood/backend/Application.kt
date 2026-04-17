@@ -87,8 +87,18 @@ fun Application.module() {
                 environment.log.info("FORCE_REIMPORT_ALL: recettes + ingredients videes (cascade FK)")
                 get<AlimentDao>().truncateAll()
                 environment.log.info("FORCE_REIMPORT_ALL: aliments videes")
+
+                // Vider Meilisearch pour eviter les vieux documents avec anciens UUIDs
+                try {
+                    val meili = get<MeilisearchClient>()
+                    meili.deleteAllDocuments("aliments")
+                    environment.log.info("FORCE_REIMPORT_ALL: index Meilisearch 'aliments' vide")
+                } catch (e: Exception) {
+                    environment.log.warn("FORCE_REIMPORT_ALL: impossible de vider Meilisearch: ${e.message}")
+                }
+
                 environment.log.warn(
-                    "FORCE_REIMPORT_ALL: tables videes — l'import Ciqual + recettes va se relancer automatiquement. " +
+                    "FORCE_REIMPORT_ALL: tables + Meilisearch vides — l'import Ciqual + recettes va se relancer automatiquement. " +
                         "N'OUBLIE PAS de retirer la variable d'env FORCE_REIMPORT_ALL apres ce demarrage.",
                 )
             } catch (e: Exception) {

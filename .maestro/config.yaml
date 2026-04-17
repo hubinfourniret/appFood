@@ -1,0 +1,15 @@
+# Maestro workspace config
+# Auto-discovers all .yaml flows in this folder.
+
+appId: com.appfood
+
+executionOrder:
+  flowsOrder:
+    - 00-smoke-test
+    - 01-login-dashboard
+    - 02-bug-ajout-plat
+    - 03-bug-ajout-recette
+    - 04-reco-j-ai-mange-ca
+    - 05-profil-aliments-exclus
+    - 06-settings-placeholder
+    - 99-tour-complet-screenshots

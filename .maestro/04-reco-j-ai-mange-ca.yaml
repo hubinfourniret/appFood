@@ -1,0 +1,57 @@
+appId: com.appfood
+name: "04 — Bug : bouton 'J'ai mange ca' sur recommandations"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+- extendedWaitUntil:
+    visible:
+      text: "Recettes"
+    timeout: 60000
+- takeScreenshot: "04-01-dashboard"
+
+# Scroller pour voir les recommandations
+- scroll
+- takeScreenshot: "04-02-apres-scroll"
+- scroll
+- takeScreenshot: "04-03-reco-visible"
+- scroll
+- takeScreenshot: "04-03b-reco-visible-2"
+
+# Chercher "Recommandations" sur le dashboard
+- tapOn:
+    text: "Recommandations"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "04-04-apres-clic-reco"
+
+# Chercher "J'ai mange ca"
+- tapOn:
+    text: ".*[Jj]'ai mange.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "04-05-apres-j-ai-mange"

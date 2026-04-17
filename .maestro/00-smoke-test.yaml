@@ -1,0 +1,8 @@
+appId: com.appfood
+name: "00 — Smoke test : l'app se lance"
+---
+- launchApp:
+    clearState: true
+- takeScreenshot: "00-app-launch"
+- assertVisible:
+    text: "appFood"

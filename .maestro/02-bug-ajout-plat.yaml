@@ -1,0 +1,75 @@
+appId: com.appfood
+name: "02 — Bug : ajout plat → dashboard vide"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+
+# L'app met du temps a demarrer, attendre avant d'interagir
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+- extendedWaitUntil:
+    visible:
+      text: "Ajouter mon premier repas"
+    timeout: 60000
+- takeScreenshot: "02-01-dashboard-initial"
+
+- tapOn:
+    text: "Ajouter mon premier repas"
+- extendedWaitUntil:
+    visible:
+      text: "Petit-dejeuner"
+    timeout: 10000
+- takeScreenshot: "02-02-select-meal"
+
+- tapOn:
+    text: "Dejeuner"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "02-03-search-screen"
+
+- tapOn:
+    text: ".*[Rr]echerch.*"
+- inputText: "banane"
+- waitForAnimationToEnd:
+    timeout: 3000
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "02-04-resultats-recherche"
+
+- tapOn:
+    text: "Banane plantain, crue"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "02-05-portion-selector"
+
+- tapOn:
+    text: "Valider"
+- waitForAnimationToEnd:
+    timeout: 15000
+- takeScreenshot: "02-06-apres-validation"
+
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: "02-07-dashboard-final"

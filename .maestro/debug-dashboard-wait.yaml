@@ -1,0 +1,46 @@
+appId: com.appfood
+name: "DEBUG — Attendre 30s sur dashboard, screenshot toutes les 5s"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+# Attendre et screenshot toutes les 5 secondes
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "debug-t05s"
+
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "debug-t10s"
+
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "debug-t15s"
+
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "debug-t20s"
+
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "debug-t25s"
+
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "debug-t30s"

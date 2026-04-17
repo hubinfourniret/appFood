@@ -1,0 +1,67 @@
+appId: com.appfood
+name: "05 — Bug : recherche aliments exclus retourne toujours vide"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+- extendedWaitUntil:
+    visible:
+      text: "Profil"
+    timeout: 60000
+
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "05-01-profil"
+
+# Scroll pour voir toutes les options
+- scroll
+- takeScreenshot: "05-02-profil-scroll"
+- scroll
+- takeScreenshot: "05-03-profil-scroll-2"
+
+# Tenter d'ouvrir les preferences/exclus
+- tapOn:
+    text: ".*[Pp]reference.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "05-04-preferences"
+
+- tapOn:
+    text: ".*[Ee]xclu.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "05-05-exclus"
+
+- tapOn:
+    text: ".*[Rr]echerch.*"
+    optional: true
+- inputText: "banane"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "05-06-recherche-exclus"

@@ -1,0 +1,57 @@
+appId: com.appfood
+name: "06 — Verification : ecran Settings placeholder"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+- extendedWaitUntil:
+    visible:
+      text: "Profil"
+    timeout: 60000
+
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "06-01-profil"
+
+# Chercher icone/bouton parametres (souvent en haut a droite)
+- tapOn:
+    text: ".*[Pp]arametre.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "06-02-settings-placeholder"
+
+- tapOn:
+    text: ".*[Ss]etting.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "06-03-settings-maj"
+
+# Scroll le profil pour voir s'il y a d'autres options
+- scroll
+- takeScreenshot: "06-04-profil-bas"

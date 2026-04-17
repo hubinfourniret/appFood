@@ -1,0 +1,42 @@
+appId: com.appfood
+name: "01 — Login avec compte existant → Dashboard"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "01-01-login-screen"
+
+# Saisie email
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+
+# Saisie mot de passe
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "01-02-credentials-saisis"
+
+# Tap sur le bouton "Se connecter" (le gros bouton vert, index: 1 car il y a aussi le titre "Se connecter")
+- tapOn:
+    text: "Se connecter"
+    index: 1
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: "01-03-apres-login"
+
+# Capture des ecrans successifs (consent/onboarding/disclaimer/dashboard)
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "01-04-ecran-apres-login-2"
+
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "01-05-ecran-final"

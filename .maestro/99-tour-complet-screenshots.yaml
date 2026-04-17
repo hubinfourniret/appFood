@@ -1,0 +1,138 @@
+appId: com.appfood
+name: "99 — Tour complet : screenshot de chaque ecran principal"
+env:
+  TEST_EMAIL: "hubin.fourniret@gmail.com"
+  TEST_PASSWORD: "CHANGEME"
+---
+- launchApp:
+    clearState: false
+
+- runFlow:
+    when:
+      visible:
+        text: "Se connecter"
+    commands:
+      - tapOn:
+          text: "Adresse e-mail"
+      - inputText: "${TEST_EMAIL}"
+      - tapOn:
+          text: "Mot de passe"
+      - inputText: "${TEST_PASSWORD}"
+      - tapOn:
+          text: "Se connecter"
+          index: 1
+      - waitForAnimationToEnd:
+          timeout: 5000
+
+- runFlow:
+    when:
+      visible: "J'ai lu et j'accepte"
+    commands:
+      - tapOn: "J'ai lu et j'accepte"
+      - waitForAnimationToEnd
+
+# Dashboard
+- takeScreenshot: "99-01-dashboard"
+- scroll
+- takeScreenshot: "99-02-dashboard-bas"
+
+# Onglet Ajouter
+- tapOn:
+    text: "Ajouter"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-03-ajouter"
+
+# Retour
+- back
+
+# Onglet Recettes
+- tapOn:
+    text: "Recettes"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-04-recettes"
+- scroll
+- takeScreenshot: "99-05-recettes-bas"
+
+# Onglet Profil
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-06-profil"
+- scroll
+- takeScreenshot: "99-07-profil-bas"
+
+# Tour des sous-ecrans profil
+- tapOn:
+    text: ".*[Mm]odifier.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-08-edit-profil"
+- back
+
+- tapOn:
+    text: ".*[Pp]references.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-09-preferences"
+- back
+
+- tapOn:
+    text: ".*[Hh]ydratation.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-10-hydratation"
+- back
+
+- tapOn:
+    text: ".*[Pp]oids.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-11-poids"
+- back
+
+- tapOn:
+    text: ".*[Qq]uotas.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-12-quotas"
+- back
+
+- tapOn:
+    text: ".*[Rr]ecommandations.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-13-recommandations"
+- back
+
+- tapOn:
+    text: ".*[AaÀà] propos.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-14-a-propos"
+- back
+
+- tapOn:
+    text: ".*FAQ.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-15-faq"
+- back
+
+- tapOn:
+    text: ".*[Ll]egal.*|.*[Pp]olitique.*|.*[Cc]onfidentialite.*"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "99-16-privacy"
+- back
