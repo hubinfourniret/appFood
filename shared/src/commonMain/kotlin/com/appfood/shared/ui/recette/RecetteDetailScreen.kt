@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -21,12 +22,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,6 +41,7 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.appfood.shared.model.IngredientRecette
+import com.appfood.shared.model.MealType
 import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.ui.Strings
 
@@ -141,14 +147,39 @@ fun RecetteDetailScreen(
     recetteId: String,
     viewModel: RecettesViewModel,
     onNavigateBack: () -> Unit,
-    onNavigateToJournalAdd: () -> Unit,
 ) {
     val detailState by viewModel.detailState.collectAsState()
     val selectedPortions by viewModel.selectedPortions.collectAsState()
     val isFavorite by viewModel.isDetailFavorite.collectAsState()
+    val showMealDialog by viewModel.showMealSelectionDialog.collectAsState()
+    val addToJournalState by viewModel.addToJournalState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(recetteId) {
         viewModel.loadRecetteDetail(recetteId)
+    }
+
+    // Show snackbar on success/offline save
+    LaunchedEffect(addToJournalState) {
+        when (addToJournalState) {
+            is AddRecetteToJournalState.Success -> {
+                snackbarHostState.showSnackbar(Strings.RECETTE_ADDED_TO_JOURNAL)
+                viewModel.resetAddToJournalState()
+            }
+            is AddRecetteToJournalState.SavedOffline -> {
+                snackbarHostState.showSnackbar(Strings.RECETTE_ADDED_TO_JOURNAL_OFFLINE)
+                viewModel.resetAddToJournalState()
+            }
+            else -> {}
+        }
+    }
+
+    // Meal selection dialog
+    if (showMealDialog) {
+        MealSelectionDialog(
+            onMealSelected = viewModel::onMealSelectedForRecette,
+            onDismiss = viewModel::onDismissMealSelectionDialog,
+        )
     }
 
     RecetteDetailContent(
@@ -157,13 +188,66 @@ fun RecetteDetailScreen(
         isFavorite = isFavorite,
         onPortionsChanged = viewModel::onDetailPortionsChanged,
         onToggleFavorite = viewModel::onToggleDetailFavorite,
-        onAddToJournal = {
-            viewModel.onAddRecetteToJournal()
-            onNavigateToJournalAdd()
-        },
+        onAddToJournal = viewModel::onAddRecetteToJournal,
         onRetry = { viewModel.loadRecetteDetail(recetteId) },
         onNavigateBack = onNavigateBack,
+        snackbarHostState = snackbarHostState,
     )
+}
+
+/**
+ * Dialog asking the user to select a meal type before adding the recipe to the journal.
+ */
+@Composable
+private fun MealSelectionDialog(
+    onMealSelected: (MealType) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(Strings.JOURNAL_SELECT_MEAL_TYPE) },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                MealOptionButton(
+                    label = Strings.JOURNAL_MEAL_BREAKFAST,
+                    onClick = { onMealSelected(MealType.PETIT_DEJEUNER) },
+                )
+                MealOptionButton(
+                    label = Strings.JOURNAL_MEAL_LUNCH,
+                    onClick = { onMealSelected(MealType.DEJEUNER) },
+                )
+                MealOptionButton(
+                    label = Strings.JOURNAL_MEAL_DINNER,
+                    onClick = { onMealSelected(MealType.DINER) },
+                )
+                MealOptionButton(
+                    label = Strings.JOURNAL_MEAL_SNACK,
+                    onClick = { onMealSelected(MealType.COLLATION) },
+                )
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(Strings.RECETTE_ADD_CANCEL)
+            }
+        },
+    )
+}
+
+@Composable
+private fun MealOptionButton(
+    label: String,
+    onClick: () -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(label)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -177,8 +261,10 @@ private fun RecetteDetailContent(
     onAddToJournal: () -> Unit,
     onRetry: () -> Unit,
     onNavigateBack: () -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(Strings.RECETTE_DETAIL_TITLE) },

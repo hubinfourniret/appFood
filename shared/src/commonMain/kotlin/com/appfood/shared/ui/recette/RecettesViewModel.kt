@@ -7,10 +7,16 @@ import com.appfood.shared.model.MealType
 import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.Recette
 import com.appfood.shared.model.RegimeAlimentaire
+import com.appfood.shared.api.request.AddJournalEntryRequest
 import com.appfood.shared.api.request.CreateRecetteRequest
 import com.appfood.shared.api.request.IngredientRequest
+import com.appfood.shared.data.repository.JournalRepository
 import com.appfood.shared.data.repository.RecetteRepository
+import com.appfood.shared.sync.SyncEnqueuer
 import com.appfood.shared.util.AppResult
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +37,8 @@ import kotlinx.coroutines.launch
  */
 class RecettesViewModel(
     private val recetteRepository: RecetteRepository,
+    private val journalRepository: JournalRepository,
+    private val syncEnqueuer: SyncEnqueuer,
 ) : ViewModel() {
 
     // ==================== LIST STATE (RECETTES-01) ====================
@@ -71,6 +79,13 @@ class RecettesViewModel(
 
     private val _isDetailFavorite = MutableStateFlow(false)
     val isDetailFavorite: StateFlow<Boolean> = _isDetailFavorite.asStateFlow()
+
+    // --- Meal selection dialog for adding recipe to journal ---
+    private val _showMealSelectionDialog = MutableStateFlow(false)
+    val showMealSelectionDialog: StateFlow<Boolean> = _showMealSelectionDialog.asStateFlow()
+
+    private val _addToJournalState = MutableStateFlow<AddRecetteToJournalState>(AddRecetteToJournalState.Idle)
+    val addToJournalState: StateFlow<AddRecetteToJournalState> = _addToJournalState.asStateFlow()
 
     // ==================== CREATE STATE (RECETTES-03) ====================
 
@@ -234,8 +249,53 @@ class RecettesViewModel(
     }
 
     fun onAddRecetteToJournal() {
-        // TODO: Navigate to journal add with recette data
-        // This will be wired with SHARED agent use cases
+        _showMealSelectionDialog.value = true
+    }
+
+    fun onDismissMealSelectionDialog() {
+        _showMealSelectionDialog.value = false
+    }
+
+    fun onMealSelectedForRecette(mealType: MealType) {
+        _showMealSelectionDialog.value = false
+        val detail = _detailState.value as? RecetteDetailState.Success ?: return
+        val portions = _selectedPortions.value
+
+        _addToJournalState.value = AddRecetteToJournalState.Saving
+        val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val request = AddJournalEntryRequest(
+            date = today.toString(),
+            mealType = mealType.name,
+            recetteId = detail.id,
+            nom = detail.nom,
+            nbPortions = portions.toDouble(),
+        )
+
+        viewModelScope.launch {
+            when (val result = journalRepository.addEntry(request)) {
+                is AppResult.Success -> {
+                    _addToJournalState.value = AddRecetteToJournalState.Success
+                }
+                is AppResult.Error -> {
+                    // Offline fallback — enqueue for sync
+                    val payloadJson = Json.encodeToString(
+                        AddJournalEntryRequest.serializer(),
+                        request,
+                    )
+                    syncEnqueuer.enqueue(
+                        entityType = "journal",
+                        entityId = "${detail.id}_${kotlin.time.Clock.System.now().toEpochMilliseconds()}",
+                        action = "CREATE",
+                        payloadJson = payloadJson,
+                    )
+                    _addToJournalState.value = AddRecetteToJournalState.SavedOffline
+                }
+            }
+        }
+    }
+
+    fun resetAddToJournalState() {
+        _addToJournalState.value = AddRecetteToJournalState.Idle
     }
 
     // ==================== CREATE ACTIONS (RECETTES-03) ====================
@@ -460,3 +520,12 @@ data class IngredientFormEntry(
     val alimentNom: String = "",
     val quantiteGrammes: String = "",
 )
+
+// ==================== ADD RECETTE TO JOURNAL STATE ====================
+
+sealed interface AddRecetteToJournalState {
+    data object Idle : AddRecetteToJournalState
+    data object Saving : AddRecetteToJournalState
+    data object Success : AddRecetteToJournalState
+    data object SavedOffline : AddRecetteToJournalState
+}

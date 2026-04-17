@@ -102,11 +102,13 @@ fun AppNavigation(
     // Shared ViewModels — created once and shared across screens
     // UserRepository injected via Koin, passed to ViewModels that need it
     val userRepository = koinInject<UserRepository>()
+    val alimentRepository = koinInject<AlimentRepository>()
     val authViewModel = remember(userRepository) { AuthViewModel(userRepository) }
     val onboardingViewModel = remember(userRepository) { OnboardingViewModel(userRepository = userRepository) }
-    val profilViewModel = remember(userRepository) { ProfilViewModel(userRepository = userRepository) }
+    val profilViewModel = remember(userRepository, alimentRepository) {
+        ProfilViewModel(userRepository = userRepository, alimentRepository = alimentRepository)
+    }
     val journalRepository = koinInject<JournalRepository>()
-    val alimentRepository = koinInject<AlimentRepository>()
     val recetteRepository = koinInject<RecetteRepository>()
     val syncManager = koinInject<SyncManager>()
     val journalViewModel = remember(journalRepository, alimentRepository, recetteRepository, syncManager) {
@@ -162,8 +164,8 @@ fun AppNavigation(
     val disclaimerViewModel = remember { DisclaimerViewModel() }
     val consentApi = koinInject<ConsentApi>()
     val consentViewModel = remember(consentApi) { ConsentViewModel(consentApi) }
-    val recettesViewModel = remember(recetteRepository) {
-        RecettesViewModel(recetteRepository).also { it.init() }
+    val recettesViewModel = remember(recetteRepository, journalRepository, syncManager) {
+        RecettesViewModel(recetteRepository, journalRepository, syncManager).also { it.init() }
     }
     val supportApi = koinInject<SupportApi>()
     val faqViewModel = remember(supportApi) { FaqViewModel(supportApi).also { it.init() } }
@@ -460,11 +462,6 @@ fun AppNavigation(
                     viewModel = recettesViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
-                    },
-                    onNavigateToJournalAdd = {
-                        navController.navigate(Screen.AddEntry) {
-                            launchSingleTop = true
-                        }
                     },
                 )
             }

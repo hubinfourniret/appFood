@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.appfood.shared.api.request.UpdatePreferencesRequest
 import com.appfood.shared.api.request.UpdateProfileRequest
 import com.appfood.shared.api.response.UserExportResponse
+import com.appfood.shared.data.repository.AlimentRepository
 import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.model.NiveauActivite
 import com.appfood.shared.model.RegimeAlimentaire
@@ -22,12 +23,7 @@ import kotlinx.coroutines.launch
  */
 class ProfilViewModel(
     private val userRepository: UserRepository? = null,
-    // TODO: Inject use cases when created by SHARED agent
-    // private val getProfileUseCase: GetProfileUseCase,
-    // private val updateProfileUseCase: UpdateProfileUseCase,
-    // private val updatePreferencesUseCase: UpdatePreferencesUseCase,
-    // private val deleteAccountUseCase: DeleteAccountUseCase,
-    // private val searchAlimentUseCase: SearchAlimentUseCase,
+    private val alimentRepository: AlimentRepository? = null,
 ) : ViewModel() {
 
     companion object {
@@ -228,15 +224,11 @@ class ProfilViewModel(
 
     private fun searchAliments(query: String) {
         viewModelScope.launch {
-            // TODO: Call searchAlimentUseCase when created by SHARED agent
-            // val result = searchAlimentUseCase(query)
-            // when (result) {
-            //     is AppResult.Success -> _searchResults.value = result.data.map { it.nom }
-            //     is AppResult.Error -> { /* silently ignore search errors */ }
-            // }
-
-            // Stub: empty results
-            _searchResults.value = emptyList()
+            val repo = alimentRepository ?: return@launch
+            when (val result = repo.search(query)) {
+                is AppResult.Success -> _searchResults.value = result.data.data.map { it.nom }
+                is AppResult.Error -> _searchResults.value = emptyList()
+            }
         }
     }
 

@@ -12,6 +12,16 @@ env:
 - waitForAnimationToEnd:
     timeout: 10000
 
+# Fermer les dialogues systeme eventuels (Digital Wellbeing, etc.)
+- tapOn:
+    text: "Close app"
+    optional: true
+- tapOn:
+    text: "Wait"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+
 - extendedWaitUntil:
     visible:
       text: "Adresse e-mail"
@@ -30,12 +40,13 @@ env:
 
 - extendedWaitUntil:
     visible:
-      text: "Ajouter mon premier repas"
+      text: "Tableau de bord"
     timeout: 60000
 - takeScreenshot: "02-01-dashboard-initial"
 
+# Ajouter via le bouton + (Ajouter) dans la bottom nav
 - tapOn:
-    text: "Ajouter mon premier repas"
+    text: "Ajouter"
 - extendedWaitUntil:
     visible:
       text: "Petit-dejeuner"
