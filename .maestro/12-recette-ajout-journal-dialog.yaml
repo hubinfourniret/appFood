@@ -1,0 +1,82 @@
+appId: com.appfood
+name: "12 — Verif: bouton 'Ajouter au journal' affiche dialog repas"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+- extendedWaitUntil:
+    visible:
+      text: "Recettes"
+    timeout: 60000
+
+# Naviguer vers l'onglet Recettes
+- tapOn:
+    text: "Recettes"
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: "12-01-liste-recettes"
+
+# Ouvrir le detail d'une recette
+- tapOn:
+    text: "Pudding de chia mangue"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "12-02-detail-recette"
+
+# Scroll jusqu'au bouton "Ajouter a mon journal"
+- scroll
+- scroll
+- takeScreenshot: "12-03-detail-bas"
+
+# Cliquer sur "Ajouter a mon journal"
+- tapOn:
+    text: "Ajouter a mon journal"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "12-04-dialog-repas"
+
+# Verifier que le dialog affiche les options de repas (et PAS l'ecran AddEntry)
+- assertVisible:
+    text: "Petit-dejeuner"
+    optional: true
+- assertVisible:
+    text: "Dejeuner"
+    optional: true
+- assertVisible:
+    text: "Diner"
+    optional: true
+- assertVisible:
+    text: "Collation"
+    optional: true
+- takeScreenshot: "12-05-dialog-options"
+
+# Selectionner un repas
+- tapOn:
+    text: "Dejeuner"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: "12-06-apres-selection"

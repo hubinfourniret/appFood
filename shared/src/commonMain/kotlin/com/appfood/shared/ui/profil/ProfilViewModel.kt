@@ -74,6 +74,9 @@ class ProfilViewModel(
     private val _searchResults = MutableStateFlow<List<String>>(emptyList())
     val searchResults: StateFlow<List<String>> = _searchResults.asStateFlow()
 
+    private val _searchState = MutableStateFlow<SearchState>(SearchState.Idle)
+    val searchState: StateFlow<SearchState> = _searchState.asStateFlow()
+
     // Save state
     private val _saveState = MutableStateFlow<SaveState>(SaveState.Idle)
     val saveState: StateFlow<SaveState> = _saveState.asStateFlow()
@@ -219,15 +222,28 @@ class ProfilViewModel(
             searchAliments(query)
         } else {
             _searchResults.value = emptyList()
+            _searchState.value = SearchState.Idle
         }
     }
 
     private fun searchAliments(query: String) {
+        _searchState.value = SearchState.Loading
         viewModelScope.launch {
-            val repo = alimentRepository ?: return@launch
+            val repo = alimentRepository
+            if (repo == null) {
+                _searchState.value = SearchState.Error
+                return@launch
+            }
             when (val result = repo.search(query)) {
-                is AppResult.Success -> _searchResults.value = result.data.data.map { it.nom }
-                is AppResult.Error -> _searchResults.value = emptyList()
+                is AppResult.Success -> {
+                    val names = result.data.data.map { it.nom }
+                    _searchResults.value = names
+                    _searchState.value = if (names.isEmpty()) SearchState.Empty else SearchState.Success
+                }
+                is AppResult.Error -> {
+                    _searchResults.value = emptyList()
+                    _searchState.value = SearchState.Error
+                }
             }
         }
     }
@@ -323,4 +339,12 @@ sealed interface ExportState {
     data object Loading : ExportState
     data class Success(val data: UserExportResponse) : ExportState
     data class Error(val message: String) : ExportState
+}
+
+sealed interface SearchState {
+    data object Idle : SearchState
+    data object Loading : SearchState
+    data object Success : SearchState
+    data object Empty : SearchState
+    data object Error : SearchState
 }

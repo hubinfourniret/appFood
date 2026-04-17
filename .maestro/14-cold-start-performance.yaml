@@ -1,0 +1,81 @@
+appId: com.appfood
+name: "14 — Performance: cold start et temps de chargement"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+# Test cold start: l'app doit afficher l'ecran login en moins de 15 secondes
+- launchApp:
+    clearState: true
+    stopApp: true
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 15000
+- takeScreenshot: "14-01-login-cold-start"
+
+# Login et mesure du temps avant dashboard
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+# Le dashboard doit apparaitre en moins de 30 secondes apres login
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 30000
+- takeScreenshot: "14-02-dashboard-loaded"
+
+# Naviguer vers Recettes et mesurer le temps de chargement
+- tapOn:
+    text: "Recettes"
+- extendedWaitUntil:
+    visible:
+      text: ".*[Rr]ecette.*"
+    timeout: 15000
+- takeScreenshot: "14-03-recettes-loaded"
+
+# Retour Dashboard et re-chargement (warm)
+- tapOn:
+    text: "Dashboard"
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 10000
+- takeScreenshot: "14-04-dashboard-warm"
+
+# Aller sur Profil et retour rapide
+- tapOn:
+    text: "Profil"
+- extendedWaitUntil:
+    visible:
+      text: "Mon profil"
+    timeout: 10000
+- takeScreenshot: "14-05-profil-loaded"
+
+# Switch rapide entre onglets (fluidite)
+- tapOn:
+    text: "Dashboard"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    text: "Recettes"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn:
+    text: "Dashboard"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "14-06-tab-switching-complete"

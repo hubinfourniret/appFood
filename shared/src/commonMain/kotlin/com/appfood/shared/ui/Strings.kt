@@ -189,6 +189,9 @@ object Strings {
     const val PREFERENCES_NO_EXCLUSIONS = "Aucun aliment exclu"
     const val PREFERENCES_REMOVE = "Retirer"
     const val PREFERENCES_SAVE_SUCCESS = "Preferences mises a jour"
+    const val PREFERENCES_SEARCH_LOADING = "Recherche en cours..."
+    const val PREFERENCES_SEARCH_NO_RESULTS = "Aucun resultat pour cette recherche"
+    const val PREFERENCES_SEARCH_ERROR = "Erreur de recherche. Verifiez votre connexion."
 
     // Profil — Delete account
     const val DELETE_ACCOUNT_BUTTON = "Supprimer mon compte"
@@ -493,6 +496,22 @@ object Strings {
     const val ABOUT_HOST_VALUE = "Railway (railway.app)"
     const val ABOUT_DESCRIPTION = "appFood est une application de suivi nutritionnel personnalise pour vegans, vegetariens et sportifs."
     const val ABOUT_BACK = "Retour"
+
+    // Settings
+    const val SETTINGS_TITLE = "Parametres"
+    const val SETTINGS_BACK = "Retour"
+    const val SETTINGS_SECTION_GENERAL = "General"
+    const val SETTINGS_SECTION_HEALTH = "Sante et suivi"
+    const val SETTINGS_SECTION_LEGAL = "Informations legales"
+    const val SETTINGS_ABOUT = "A propos"
+    const val SETTINGS_CONSENT = "Gestion des consentements"
+    const val SETTINGS_PRIVACY = "Politique de confidentialite"
+    const val SETTINGS_CGU = "Conditions generales d'utilisation"
+    const val SETTINGS_POIDS = "Suivi du poids"
+    const val SETTINGS_HYDRATATION = "Hydratation"
+    const val SETTINGS_QUOTAS = "Gestion des quotas"
+    const val SETTINGS_FAQ = "Questions frequentes"
+    const val SETTINGS_VERSION = "Version de l'application"
 
     // FAQ (SUPPORT-02)
     const val FAQ_TITLE = "Questions frequentes"

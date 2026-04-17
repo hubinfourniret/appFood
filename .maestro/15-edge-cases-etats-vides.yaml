@@ -1,0 +1,77 @@
+appId: com.appfood
+name: "15 — Edge cases: etats vides, erreurs, deconnexion"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+# === Test login avec mauvais mot de passe ===
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "WrongPassword123"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: "15-01-login-error"
+
+# === Login correct — cliquer Reessayer pour reset le formulaire ===
+- tapOn:
+    text: "Reessayer"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Les champs doivent etre vides apres Reessayer (fix UX)
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 2000
+- tapOn:
+    text: "Se connecter"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 60000
+- takeScreenshot: "15-02-dashboard-ok"
+
+# === Deconnexion ===
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- scroll
+- tapOn:
+    text: "Se deconnecter"
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: "15-05-apres-deconnexion"
+
+# Verifier qu'on est bien revenu au login
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 10000
+- takeScreenshot: "15-06-login-apres-deconnexion"

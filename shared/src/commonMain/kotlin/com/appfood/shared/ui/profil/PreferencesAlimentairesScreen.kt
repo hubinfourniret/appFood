@@ -62,12 +62,14 @@ fun PreferencesAlimentairesScreen(
     val excludedAliments by viewModel.excludedAliments.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
+    val searchState by viewModel.searchState.collectAsState()
 
     PreferencesContent(
         selectedAllergies = selectedAllergies,
         excludedAliments = excludedAliments,
         searchQuery = searchQuery,
         searchResults = searchResults,
+        searchState = searchState,
         isSaving = saveState is SaveState.Saving,
         snackbarHostState = snackbarHostState,
         onAllergieToggled = viewModel::onAllergieToggled,
@@ -85,6 +87,7 @@ private fun PreferencesContent(
     excludedAliments: List<String>,
     searchQuery: String,
     searchResults: List<String>,
+    searchState: SearchState,
     isSaving: Boolean,
     snackbarHostState: SnackbarHostState,
     onAllergieToggled: (String) -> Unit,
@@ -151,30 +154,54 @@ private fun PreferencesContent(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            // Search results
-            if (searchResults.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    ),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(8.dp),
+            // Search feedback
+            Spacer(modifier = Modifier.height(8.dp))
+            when (searchState) {
+                is SearchState.Loading -> {
+                    Text(
+                        text = Strings.PREFERENCES_SEARCH_LOADING,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                is SearchState.Empty -> {
+                    Text(
+                        text = Strings.PREFERENCES_SEARCH_NO_RESULTS,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                is SearchState.Error -> {
+                    Text(
+                        text = Strings.PREFERENCES_SEARCH_ERROR,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                is SearchState.Success -> {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        ),
                     ) {
-                        searchResults.forEach { result ->
-                            Text(
-                                text = result,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onExcludedAlimentAdded(result) }
-                                    .padding(vertical = 8.dp, horizontal = 8.dp),
-                            )
+                        Column(
+                            modifier = Modifier.padding(8.dp),
+                        ) {
+                            searchResults.forEach { result ->
+                                Text(
+                                    text = result,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onExcludedAlimentAdded(result) }
+                                        .padding(vertical = 8.dp, horizontal = 8.dp),
+                                )
+                            }
                         }
                     }
                 }
+                is SearchState.Idle -> {}
             }
 
             Spacer(modifier = Modifier.height(16.dp))

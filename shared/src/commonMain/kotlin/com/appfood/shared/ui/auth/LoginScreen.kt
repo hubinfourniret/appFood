@@ -72,7 +72,10 @@ fun LoginScreen(
         onAppleSignIn = viewModel::onAppleSignIn,
         onNavigateToRegister = onNavigateToRegister,
         onNavigateToForgotPassword = onNavigateToForgotPassword,
-        onDismissError = viewModel::resetState,
+        onDismissError = {
+            viewModel.resetState()
+            viewModel.clearLoginForm()
+        },
     )
 }
 

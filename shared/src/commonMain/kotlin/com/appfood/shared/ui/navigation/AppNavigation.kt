@@ -66,6 +66,7 @@ import com.appfood.shared.ui.recette.RecettesViewModel
 import com.appfood.shared.ui.recommandation.RecommandationsScreen
 import com.appfood.shared.ui.recommandation.RecommandationViewModel
 import com.appfood.shared.ui.settings.AboutScreen
+import com.appfood.shared.ui.settings.SettingsScreen
 import com.appfood.shared.data.local.LocalUserDataSource
 import com.appfood.shared.data.repository.AlimentRepository
 import com.appfood.shared.data.repository.DashboardRepository
@@ -558,7 +559,51 @@ fun AppNavigation(
             }
 
             composable<Screen.Settings> {
-                PlaceholderScreen(title = Strings.SCREEN_SETTINGS)
+                SettingsScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToAbout = {
+                        navController.navigate(Screen.About) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToConsentSettings = {
+                        navController.navigate(Screen.ConsentSettings) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToPrivacyPolicy = {
+                        navController.navigate(Screen.PrivacyPolicy) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToTermsOfService = {
+                        navController.navigate(Screen.TermsOfService) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToPoids = {
+                        navController.navigate(Screen.Poids) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToHydratation = {
+                        navController.navigate(Screen.Hydratation) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToQuotaManagement = {
+                        navController.navigate(Screen.QuotaManagement) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToFaq = {
+                        navController.navigate(Screen.Faq) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
             }
 
             // Consent settings (LEGAL-03) — modify consent choices from Settings

@@ -1,0 +1,76 @@
+appId: com.appfood
+name: "16 — Coherence: dashboard et donnees chargees"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 60000
+- takeScreenshot: "16-01-dashboard-initial"
+
+# Verifier que le dashboard a du contenu
+- assertVisible:
+    text: "Tableau de bord"
+- takeScreenshot: "16-02-dashboard-content"
+
+# Scroll pour voir tout le dashboard
+- scroll
+- takeScreenshot: "16-03-dashboard-scroll"
+
+# Verifier que les onglets fonctionnent et gardent leur etat
+- tapOn:
+    text: "Recettes"
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: "16-04-recettes"
+
+# Retour Dashboard — le contenu doit etre preserve (warm)
+- tapOn:
+    text: "Dashboard"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    text: "Tableau de bord"
+- takeScreenshot: "16-05-dashboard-preserved"
+
+# Profil — verifier que les donnees utilisateur sont chargees
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    text: "Mon profil"
+- takeScreenshot: "16-06-profil-data"
+
+# Retour final
+- tapOn:
+    text: "Dashboard"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    text: "Tableau de bord"
+- takeScreenshot: "16-07-final-dashboard"

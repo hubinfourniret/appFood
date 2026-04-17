@@ -1,0 +1,138 @@
+appId: com.appfood
+name: "13 — Navigation complete: tous les onglets et sous-ecrans"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+- extendedWaitUntil:
+    visible:
+      text: "Tableau de bord"
+    timeout: 60000
+- takeScreenshot: "13-01-dashboard"
+
+# === Onglet Dashboard ===
+- assertVisible:
+    text: "Tableau de bord"
+
+# === Onglet Ajouter (central +) ===
+- tapOn:
+    text: "Ajouter"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "13-02-ajouter"
+
+# Retour au dashboard (back button, pas bottom nav car invisible sur AddEntry)
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# === Onglet Recettes ===
+- tapOn:
+    text: "Recettes"
+- waitForAnimationToEnd:
+    timeout: 8000
+- takeScreenshot: "13-03-recettes"
+
+# === Onglet Profil ===
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    text: "Mon profil"
+- takeScreenshot: "13-04-profil"
+
+# === Profil > Modifier le profil ===
+- tapOn:
+    text: "Modifier le profil"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "13-05-edit-profil"
+
+# Retour
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# === Profil > Preferences alimentaires ===
+- tapOn:
+    text: "Preferences alimentaires"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "13-06-preferences"
+
+# Retour
+- back
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# === Profil > Parametres ===
+- tapOn:
+    text: "Parametres"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "13-07-parametres"
+
+# === Parametres > A propos ===
+- tapOn:
+    text: "A propos"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible:
+    text: "appFood"
+- takeScreenshot: "13-08-about"
+- tapOn:
+    text: "Retour"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# === Parametres > FAQ ===
+- tapOn:
+    text: "Questions frequentes"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "13-09-faq"
+- tapOn:
+    text: "Retour"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Retour aux parametres puis profil
+- tapOn:
+    text: "Retour"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Retour au dashboard depuis la bottom nav (visible sur Profil)
+- tapOn:
+    text: "Dashboard"
+- waitForAnimationToEnd:
+    timeout: 3000
+- assertVisible:
+    text: "Tableau de bord"
+- takeScreenshot: "13-10-retour-dashboard"

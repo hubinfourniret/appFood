@@ -1,0 +1,89 @@
+appId: com.appfood
+name: "11 — Fix verif: recherche aliments exclus avec feedback"
+env:
+  TEST_EMAIL: "hubin.fourniret1@gmail.com"
+  TEST_PASSWORD: "Password1234"
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- waitForAnimationToEnd:
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      text: "Adresse e-mail"
+    timeout: 45000
+
+- tapOn:
+    text: "Adresse e-mail"
+- inputText: "${TEST_EMAIL}"
+- tapOn:
+    text: "Mot de passe"
+- inputText: "${TEST_PASSWORD}"
+- hideKeyboard
+- tapOn:
+    text: "Se connecter"
+    index: 1
+
+- extendedWaitUntil:
+    visible:
+      text: "Profil"
+    timeout: 60000
+
+# Naviguer vers Profil > Preferences
+- tapOn:
+    text: "Profil"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- tapOn:
+    text: "Preferences alimentaires"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "11-01-preferences-screen"
+
+# Verifier la section Aliments exclus
+- assertVisible:
+    text: "Aliments exclus"
+- assertVisible:
+    text: "Aucun aliment exclu"
+- takeScreenshot: "11-02-aliments-exclus-vide"
+
+# Chercher "banane" — doit afficher feedback (loading puis resultats ou erreur)
+- tapOn:
+    text: "Rechercher un aliment..."
+- inputText: "banane"
+- waitForAnimationToEnd:
+    timeout: 8000
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "11-03-search-banane-result"
+
+# Chercher avec un seul caractere — pas de recherche
+- tapOn:
+    text: "Rechercher un aliment..."
+- eraseText: 20
+- inputText: "b"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: "11-04-search-single-char"
+
+# Chercher un terme sans resultats
+- eraseText: 20
+- inputText: "xyznonexistent"
+- waitForAnimationToEnd:
+    timeout: 5000
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: "11-05-search-no-results"
+
+# Verifier la section Allergies
+- swipe:
+    direction: "DOWN"
+    duration: 400
+- assertVisible:
+    text: "Allergies"
+- takeScreenshot: "11-06-allergies-section"

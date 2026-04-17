@@ -12,4 +12,11 @@ executionOrder:
     - 04-reco-j-ai-mange-ca
     - 05-profil-aliments-exclus
     - 06-settings-placeholder
+    - 10-fix-settings-screen
+    - 11-fix-search-aliments-exclus
+    - 12-recette-ajout-journal-dialog
+    - 13-navigation-complete
+    - 14-cold-start-performance
+    - 15-edge-cases-etats-vides
+    - 16-dashboard-donnees-coherence
     - 99-tour-complet-screenshots
