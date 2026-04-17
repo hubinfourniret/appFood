@@ -543,6 +543,9 @@ fun AppNavigation(
             composable<Screen.EditProfil> {
                 EditProfilScreen(
                     viewModel = profilViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
                     onSaveSuccess = {
                         navController.popBackStack()
                     },
@@ -552,6 +555,9 @@ fun AppNavigation(
             composable<Screen.PreferencesAlimentaires> {
                 PreferencesAlimentairesScreen(
                     viewModel = profilViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
                     onSaveSuccess = {
                         navController.popBackStack()
                     },

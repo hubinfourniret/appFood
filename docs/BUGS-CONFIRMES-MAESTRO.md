@@ -46,6 +46,21 @@ Tests exécutés sur emulator-5554 avec compte `hubin.fourniret1@gmail.com`.
 **Fichier modifie** : `shared/.../ui/auth/LoginScreen.kt`
 **Statut** : **CORRIGE** — Test 15 passe.
 
+### BUG #6 — Ecrans "Modifier le profil" et "Preferences" sans bouton Retour (NOUVEAU + CORRIGE)
+**Flow** : 21-audit-ux-profil-complet.yaml
+**Observé** : En cas d'erreur (token expiré), l'utilisateur est piégé sur un écran vide avec juste "Reessayer" — aucun moyen de revenir en arrière sauf le geste système
+**Fix** : Ajout de Scaffold + TopAppBar avec bouton "Retour" sur EditProfilScreen et PreferencesAlimentairesScreen (tous les états : loading, error, loaded)
+**Fichiers modifies** :
+- `shared/.../ui/profil/EditProfilScreen.kt` — Scaffold + TopAppBar + onNavigateBack
+- `shared/.../ui/profil/PreferencesAlimentairesScreen.kt` — Scaffold + TopAppBar + onNavigateBack
+- `shared/.../ui/navigation/AppNavigation.kt` — câblage onNavigateBack
+**Statut** : **CORRIGE** — Test 21 passe.
+
+### Problèmes non-bloquants identifiés par l'audit UX
+
+- **Dashboard "0 / 0 kcal"** : Les quotas ne se chargent pas (profil incomplet ou API quota en erreur). Lié au `FIREBASE_MOCK=true` et au "Token invalide ou expire" côté backend.
+- **"Token invalide ou expire" sur Modifier le profil** : Le token JWT n'est pas persisté localement (problème connu). Chaque restart app nécessite re-login, et le token peut expirer en session.
+
 ## INFO / CONFIRMÉS OK
 
 - Login email/password fonctionne après activation Firebase réelle ✓
@@ -77,6 +92,12 @@ Tests exécutés sur emulator-5554 avec compte `hubin.fourniret1@gmail.com`.
 | 12 | Recette → dialog repas | PASS |
 | 13 | Navigation complète | PASS |
 | 14 | Cold start performance | PASS |
+| 15 | Edge cases (erreur login + déconnexion) | PASS |
+| 16 | Cohérence dashboard | PASS |
+| 20 | Audit UX dashboard | PASS |
+| 21 | Audit UX profil complet | PASS |
+| 22 | Audit UX recettes flow | PASS |
+| 23 | Audit UX ajout aliment flow | PASS |
 | 15 | Edge cases (erreur login + déconnexion) | PASS |
 | 16 | Cohérence dashboard | PASS |
 | 99 | Tour complet screenshots | OK |

@@ -17,13 +17,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,6 +46,7 @@ import com.appfood.shared.ui.onboarding.PredefinedAllergies
 @Composable
 fun PreferencesAlimentairesScreen(
     viewModel: ProfilViewModel,
+    onNavigateBack: () -> Unit = {},
     onSaveSuccess: () -> Unit,
 ) {
     val saveState by viewModel.saveState.collectAsState()
@@ -72,6 +77,7 @@ fun PreferencesAlimentairesScreen(
         searchState = searchState,
         isSaving = saveState is SaveState.Saving,
         snackbarHostState = snackbarHostState,
+        onNavigateBack = onNavigateBack,
         onAllergieToggled = viewModel::onAllergieToggled,
         onSearchQueryChanged = viewModel::onSearchQueryChanged,
         onExcludedAlimentAdded = viewModel::onExcludedAlimentAdded,
@@ -80,7 +86,7 @@ fun PreferencesAlimentairesScreen(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun PreferencesContent(
     selectedAllergies: Set<String>,
@@ -90,15 +96,28 @@ private fun PreferencesContent(
     searchState: SearchState,
     isSaving: Boolean,
     snackbarHostState: SnackbarHostState,
+    onNavigateBack: () -> Unit,
     onAllergieToggled: (String) -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onExcludedAlimentAdded: (String) -> Unit,
     onExcludedAlimentRemoved: (String) -> Unit,
     onSavePreferences: () -> Unit,
 ) {
-
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(Strings.PREFERENCES_TITLE) },
+                navigationIcon = {
+                    TextButton(onClick = onNavigateBack) {
+                        Text(Strings.ABOUT_BACK)
+                    }
+                },
+            )
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+    ) { scaffoldPadding ->
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(scaffoldPadding),
     ) {
         Column(
             modifier = Modifier
@@ -106,12 +125,6 @@ private fun PreferencesContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
-            Text(
-                text = Strings.PREFERENCES_TITLE,
-                style = MaterialTheme.typography.headlineMedium,
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Allergies section
             Text(
@@ -261,6 +274,6 @@ private fun PreferencesContent(
             }
         }
 
-        SnackbarHost(hostState = snackbarHostState)
+    }
     }
 }

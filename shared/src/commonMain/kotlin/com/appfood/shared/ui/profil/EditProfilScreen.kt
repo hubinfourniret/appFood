@@ -17,11 +17,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,9 +50,11 @@ import com.appfood.shared.ui.common.LoadingSkeleton
  * Edit profile screen (PROFIL-02).
  * Same fields as onboarding but pre-filled with existing values.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfilScreen(
     viewModel: ProfilViewModel,
+    onNavigateBack: () -> Unit = {},
     onSaveSuccess: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
@@ -65,43 +73,60 @@ fun EditProfilScreen(
         }
     }
 
-    when (state) {
-        is ProfilState.Loading -> {
-            LoadingSkeleton()
-        }
-        is ProfilState.Error -> {
-            ErrorMessage(
-                message = (state as ProfilState.Error).message,
-                onRetry = viewModel::loadProfile,
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(Strings.SCREEN_EDIT_PROFIL) },
+                navigationIcon = {
+                    TextButton(onClick = onNavigateBack) {
+                        Text(Strings.ABOUT_BACK)
+                    }
+                },
             )
-        }
-        is ProfilState.Loaded -> {
-            val sexe by viewModel.sexe.collectAsState()
-            val ageText by viewModel.ageText.collectAsState()
-            val poidsText by viewModel.poidsText.collectAsState()
-            val tailleText by viewModel.tailleText.collectAsState()
-            val regime by viewModel.regimeAlimentaire.collectAsState()
-            val activite by viewModel.niveauActivite.collectAsState()
-            val editError by viewModel.editError.collectAsState()
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { innerPadding ->
+        when (state) {
+            is ProfilState.Loading -> {
+                LoadingSkeleton(
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+            is ProfilState.Error -> {
+                ErrorMessage(
+                    message = (state as ProfilState.Error).message,
+                    onRetry = viewModel::loadProfile,
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+            is ProfilState.Loaded -> {
+                val sexe by viewModel.sexe.collectAsState()
+                val ageText by viewModel.ageText.collectAsState()
+                val poidsText by viewModel.poidsText.collectAsState()
+                val tailleText by viewModel.tailleText.collectAsState()
+                val regime by viewModel.regimeAlimentaire.collectAsState()
+                val activite by viewModel.niveauActivite.collectAsState()
+                val editError by viewModel.editError.collectAsState()
 
-            EditProfilContent(
-                sexe = sexe,
-                ageText = ageText,
-                poidsText = poidsText,
-                tailleText = tailleText,
-                regime = regime,
-                activite = activite,
-                editError = editError,
-                isSaving = saveState is SaveState.Saving,
-                snackbarHostState = snackbarHostState,
-                onSexeChanged = viewModel::onSexeChanged,
-                onAgeChanged = viewModel::onAgeChanged,
-                onPoidsChanged = viewModel::onPoidsChanged,
-                onTailleChanged = viewModel::onTailleChanged,
-                onRegimeChanged = viewModel::onRegimeChanged,
-                onActiviteChanged = viewModel::onActiviteChanged,
-                onSaveProfile = viewModel::onSaveProfile,
-            )
+                EditProfilContent(
+                    sexe = sexe,
+                    ageText = ageText,
+                    poidsText = poidsText,
+                    tailleText = tailleText,
+                    regime = regime,
+                    activite = activite,
+                    editError = editError,
+                    isSaving = saveState is SaveState.Saving,
+                    snackbarHostState = snackbarHostState,
+                    onSexeChanged = viewModel::onSexeChanged,
+                    onAgeChanged = viewModel::onAgeChanged,
+                    onPoidsChanged = viewModel::onPoidsChanged,
+                    onTailleChanged = viewModel::onTailleChanged,
+                    onRegimeChanged = viewModel::onRegimeChanged,
+                    onActiviteChanged = viewModel::onActiviteChanged,
+                    onSaveProfile = viewModel::onSaveProfile,
+                )
+            }
         }
     }
 }
@@ -134,13 +159,6 @@ private fun EditProfilContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
-            Text(
-                text = Strings.SCREEN_EDIT_PROFIL,
-                style = MaterialTheme.typography.headlineMedium,
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
             // Section: Body metrics
             Text(
                 text = Strings.PROFIL_SECTION_BODY,
@@ -304,7 +322,6 @@ private fun EditProfilContent(
             }
         }
 
-        SnackbarHost(hostState = snackbarHostState)
     }
 }
 
