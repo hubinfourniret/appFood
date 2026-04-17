@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.batchUpsert
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.selectAll
 
 data class AlimentRow(
@@ -91,6 +92,17 @@ class AlimentDao {
         dbQuery {
             AlimentsTable.selectAll()
                 .limit(limit).offset(offset)
+                .map { it.toRow() }
+        }
+
+    suspend fun findByNameLike(
+        name: String,
+        limit: Int = 10,
+    ): List<AlimentRow> =
+        dbQuery {
+            AlimentsTable.selectAll()
+                .where { AlimentsTable.nom.lowerCase() like "%${name.lowercase().replace("'", "''")}%" }
+                .limit(limit)
                 .map { it.toRow() }
         }
 
