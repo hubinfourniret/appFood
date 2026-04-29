@@ -86,12 +86,23 @@ class HydratationRepositoryImpl(
 
     override suspend fun getWeekly(
         userId: String,
-        dateFrom: String,
-        dateTo: String,
+        weekOf: String,
     ): AppResult<List<HydratationJournaliere>> {
         return try {
-            val responses = hydratationApi.getWeekly(dateFrom, dateTo)
-            AppResult.Success(responses.map { it.toDomain(userId) })
+            val weekly = hydratationApi.getWeekly(weekOf)
+            val result = weekly.parJour.map { (dateStr, summary) ->
+                HydratationJournaliere(
+                    id = "weekly-$dateStr",
+                    userId = userId,
+                    date = kotlinx.datetime.LocalDate.parse(dateStr),
+                    quantiteMl = summary.quantiteMl,
+                    objectifMl = summary.objectifMl,
+                    estObjectifPersonnalise = false,
+                    entrees = emptyList(),
+                    updatedAt = kotlin.time.Clock.System.now(),
+                )
+            }
+            AppResult.Success(result)
         } catch (e: Exception) {
             AppResult.Error(
                 code = "NETWORK_ERROR",

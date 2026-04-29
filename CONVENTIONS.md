@@ -1,7 +1,7 @@
 # appFood — Conventions de code
 
-> Ce fichier est lu par TOUS les agents avant chaque tache.
-> Toute violation de ces conventions sera detectee par l'agent REVIEW.
+> Ce fichier est la reference de code pour tout le projet.
+> Claude Code (developpeur principal) respecte ces conventions sur toutes les couches.
 
 ---
 
@@ -174,15 +174,15 @@ En kotlinx-datetime 0.6.x, `kotlin.time.Instant` et `kotlinx.datetime.Instant` s
 
 Le backend **force** kotlinx-datetime a 0.6.2 via `resolutionStrategy.force` dans `backend/build.gradle.kts`. Ne JAMAIS retirer ce bloc — sans lui, Gradle resout vers 0.7.1 ou les types deviennent des typealiases incompatibles avec Exposed.
 
-**Conversion obligatoire** quand on appelle des fonctions kotlinx.datetime (ex: `toLocalDateTime`) sur un `kotlin.time.Instant` :
+**Usage recommande** : Les extensions kotlinx.datetime (`toLocalDateTime`, etc.) sont disponibles directement sur `kotlin.time.Instant` (depuis que `kotlinx.datetime.Instant` est un typealias). Plus besoin de conversion epoch :
 ```kotlin
-val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(
-    kotlin.time.Clock.System.now().toEpochMilliseconds()
-)
-val today = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.TimeZone
+
+val today = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 ```
 
-**Interdit** : migrer les modeles shared vers `kotlinx.datetime.Instant`, retirer le `resolutionStrategy.force`, ou supprimer les conversions epoch.
+**Interdit** : migrer les modeles shared vers `kotlinx.datetime.Instant`, retirer le `resolutionStrategy.force` du backend.
 
 ### kotlinx.serialization — Regles
 
@@ -695,4 +695,4 @@ logger.error("Erreur Open Food Facts API", exception)             // erreurs
 
 ---
 
-*Ce document est la reference pour toutes les conventions de code. Les agents REVIEW et PROJECT-MASTER verifient le respect de ces conventions.*
+*Ce document est la reference pour toutes les conventions de code. Claude Code les applique sur toutes les couches (backend, shared, mobile).*

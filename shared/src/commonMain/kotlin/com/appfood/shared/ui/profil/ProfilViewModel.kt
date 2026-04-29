@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
  * Manages profile editing, preferences, and account deletion.
  */
 class ProfilViewModel(
-    private val userRepository: UserRepository? = null,
+    private val userRepository: UserRepository,
     private val alimentRepository: AlimentRepository? = null,
 ) : ViewModel() {
 
@@ -92,19 +92,7 @@ class ProfilViewModel(
     fun loadProfile() {
         _state.value = ProfilState.Loading
         viewModelScope.launch {
-            val repo = userRepository
-            if (repo == null) {
-                // Fallback stub si pas de repository injecte
-                _sexe.value = Sexe.HOMME
-                _ageText.value = "30"
-                _poidsText.value = "75.0"
-                _tailleText.value = "178"
-                _regimeAlimentaire.value = RegimeAlimentaire.VEGAN
-                _niveauActivite.value = NiveauActivite.MODERE
-                _state.value = ProfilState.Loaded
-                return@launch
-            }
-            when (val result = repo.getCurrentUser()) {
+            when (val result = userRepository.getCurrentUser()) {
                 is AppResult.Success -> {
                     val profile = result.data.profile
                     val preferences = result.data.preferences
@@ -164,11 +152,6 @@ class ProfilViewModel(
 
         _saveState.value = SaveState.Saving
         viewModelScope.launch {
-            val repo = userRepository
-            if (repo == null) {
-                _saveState.value = SaveState.Success(Strings.PROFIL_SAVE_SUCCESS)
-                return@launch
-            }
             val request = UpdateProfileRequest(
                 sexe = _sexe.value?.name,
                 age = _ageText.value.toIntOrNull(),
@@ -177,7 +160,7 @@ class ProfilViewModel(
                 regimeAlimentaire = _regimeAlimentaire.value?.name,
                 niveauActivite = _niveauActivite.value?.name,
             )
-            when (val result = repo.updateProfile(request)) {
+            when (val result = userRepository.updateProfile(request)) {
                 is AppResult.Success -> {
                     _saveState.value = SaveState.Success(Strings.PROFIL_SAVE_SUCCESS)
                 }
@@ -263,16 +246,11 @@ class ProfilViewModel(
     fun onSavePreferences() {
         _saveState.value = SaveState.Saving
         viewModelScope.launch {
-            val repo = userRepository
-            if (repo == null) {
-                _saveState.value = SaveState.Success(Strings.PREFERENCES_SAVE_SUCCESS)
-                return@launch
-            }
             val request = UpdatePreferencesRequest(
                 allergies = _selectedAllergies.value.toList(),
                 alimentsExclus = _excludedAliments.value,
             )
-            when (val result = repo.updatePreferences(request)) {
+            when (val result = userRepository.updatePreferences(request)) {
                 is AppResult.Success -> {
                     _saveState.value = SaveState.Success(Strings.PREFERENCES_SAVE_SUCCESS)
                 }
@@ -290,13 +268,9 @@ class ProfilViewModel(
     // --- Export data ---
 
     fun onExportData() {
-        val repo = userRepository ?: run {
-            _exportState.value = ExportState.Error(Strings.PROFIL_EXPORT_ERROR)
-            return
-        }
         _exportState.value = ExportState.Loading
         viewModelScope.launch {
-            when (val result = repo.exportData()) {
+            when (val result = userRepository.exportData()) {
                 is AppResult.Success -> {
                     _exportState.value = ExportState.Success(result.data)
                 }

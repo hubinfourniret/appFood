@@ -7,31 +7,37 @@ Stack : Kotlin Multiplatform + Compose Multiplatform (mobile) + Ktor (backend) +
 
 | Document | Contenu |
 |----------|---------|
+| `docs/workflow-claude-code.md` | **Organisation du travail** — roles, format taches, workflow (reference active) |
 | `CONVENTIONS.md` | Conventions de code, architecture, patterns obligatoires |
 | `docs/phase1-vision-rapport.md` | Vision produit, personas, modele economique |
 | `docs/phase2-architecture-rapport.md` | Architecture technique, stack, infrastructure |
-| `docs/phase3-backlog-rapport.md` | Backlog complet avec toutes les User Stories |
-| `docs/phase4-dispatch-plan-agents.md` | Plan d'execution des agents, sprints, parallelisme |
-| `docs/project-structure.md` | Arborescence du projet, mapping Agent → Fichiers |
+| `docs/phase3-backlog-rapport.md` | Backlog complet avec toutes les User Stories (reference produit) |
+| `docs/project-structure.md` | Arborescence du projet, structure des modules |
 | `docs/data-models.md` | Modeles de donnees (Kotlin, Exposed, SQLDelight) |
 | `docs/api-contracts.md` | 50 endpoints API avec Request/Response DTOs |
 | `docs/us-clarifications.md` | Specifications detaillees pour QUOTAS-01, RECO-01/02, DATA-01, SYNC-01/02 |
-| `docs/sprint-tracker.md` | Suivi d'avancement des sprints |
+| `docs/sprint-tracker.md` | Suivi d'avancement + backlog actif |
 | `docs/TODO-HUMAIN.md` | Actions humaines requises (cles API, comptes, contenu) |
-| `docs/WAITING-REVIEW.md` | US en attente de validation utilisateur |
+| `docs/WAITING-REVIEW.md` | Taches en attente de validation superviseur |
+| `docs/phase4-dispatch-plan-agents.md` | ~~Ancien plan agents~~ (historique, remplace par workflow-claude-code.md) |
 
-## Agents
+## Organisation du travail
 
-7 agents specialises, orchestres par PROJECT-MASTER :
-- **SHARED** — Logique metier KMP (`shared/` sauf `ui/`)
-- **MOBILE** — UI Compose Multiplatform (`shared/ui/`)
-- **BACKEND** — API Ktor (`backend/`)
-- **DATA** — Import Ciqual, AJR, Meilisearch
-- **INFRA** — CI/CD, Docker, Railway
-- **REVIEW** — Revue de code (lecture seule)
-- **PROJECT-MASTER** — Orchestrateur
+**Claude Code** est le developpeur principal (full-stack, toutes couches).
+**Le superviseur** (utilisateur) coordonne, priorise et valide les resultats par test fonctionnel.
 
-Skills agents : `.CLAUDE/commands/agent-*.md`
+Voir `docs/workflow-claude-code.md` pour le detail complet.
+
+### Agents actifs
+- **PROJECT-MASTER** — Orchestrateur (point d'entree pour faire le bilan et planifier)
+- **REVIEW** — Revue de code sur taches critiques uniquement (algo, crypto, sync)
+- **DATA** — Import/transformation de donnees volumineuses
+- **INFRA** — CI/CD, Docker, deploiement
+
+### Conventions par couche (reference, pas dispatch)
+- `.CLAUDE/commands/agent-backend.md` — Conventions backend Ktor
+- `.CLAUDE/commands/agent-mobile.md` — Conventions UI Compose
+- `.CLAUDE/commands/agent-shared.md` — Conventions logique metier KMP
 
 ## Infrastructure
 
@@ -43,7 +49,7 @@ Skills agents : `.CLAUDE/commands/agent-*.md`
 | Meilisearch (interne) | `http://meilisearch.railway.internal:7700` |
 | Firebase projet | `foodapp-5ea23` |
 
-Backend en mode `FIREBASE_MOCK=true` (pas encore de verification Firebase en prod).
+Backend en mode `FIREBASE_MOCK=false` en prod (vrai Firebase Admin SDK configure).
 
 ## Regles cles
 
@@ -51,7 +57,7 @@ Backend en mode `FIREBASE_MOCK=true` (pas encore de verification Firebase en pro
 - **Erreurs** : `AppResult<T>` partout dans shared, jamais de throw. Exceptions metier dans backend (StatusPages les intercepte)
 - **Serialization** : kotlinx.serialization uniquement, pas de Gson/Moshi/Jackson
 - **DI** : Koin uniquement, pas de Dagger/Hilt
-- **UI** : Compose Multiplatform (`org.jetbrains.compose.*`), jamais `androidx.compose.*` ni imports platform-specific
+- **UI** : Compose Multiplatform, `androidx.compose.*` est le namespace officiel depuis CMP 1.6+
 - **Offline-first** : SQLDelight local + sync_queue pour journal/poids/hydratation
 - **Langue** : Code en anglais, UI/commentaires en francais
 - **Tests** : Kotest (shared), Ktor test engine + Testcontainers (backend)

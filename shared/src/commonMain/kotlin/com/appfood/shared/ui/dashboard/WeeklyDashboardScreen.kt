@@ -78,7 +78,7 @@ private fun WeeklyDashboardContent(
                 title = { Text(Strings.WEEKLY_TITLE) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("\u2190", style = MaterialTheme.typography.titleLarge)
+                        Text(Strings.ICON_BACK, style = MaterialTheme.typography.titleLarge)
                     }
                 },
             )
@@ -217,7 +217,7 @@ private fun WeekNavigationHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(onClick = onPreviousWeek) {
-            Text("\u2190 ${Strings.WEEKLY_PREVIOUS}")
+            Text("${Strings.ICON_BACK} ${Strings.WEEKLY_PREVIOUS}")
         }
         Text(
             text = "$dateFrom — $dateTo",

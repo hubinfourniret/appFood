@@ -245,9 +245,9 @@ class HydratationViewModel(
      */
     private suspend fun loadWeeklyData(): List<Int> {
         val tz = TimeZone.currentSystemDefault()
-        val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(tz).date
+        val today = kotlin.time.Clock.System.now().toLocalDateTime(tz).date
         val weekAgo = today.minus(6, DateTimeUnit.DAY)
-        val result = hydratationRepository.getWeekly(USER_ID, weekAgo.toString(), today.toString())
+        val result = hydratationRepository.getWeekly(USER_ID, weekAgo.toString())
         return when (result) {
             is AppResult.Success -> {
                 // Build a list of 7 days, filling missing days with 0
@@ -262,8 +262,7 @@ class HydratationViewModel(
     }
 
     private fun formatHeure(instant: kotlin.time.Instant): String {
-        val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(instant.toEpochMilliseconds())
-        val localDateTime = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault())
+        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
         val hour = localDateTime.hour.toString().padStart(2, '0')
         val minute = localDateTime.minute.toString().padStart(2, '0')
         return "$hour:$minute"

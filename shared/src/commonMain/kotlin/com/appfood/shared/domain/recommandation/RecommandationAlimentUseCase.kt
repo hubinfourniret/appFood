@@ -111,13 +111,13 @@ class RecommandationAlimentUseCase {
             val manque = status.valeurCible - status.valeurConsommee
 
             when {
-                pourcentage < 70.0 -> Deficit(
+                pourcentage < RecommandationConstants.SEUIL_DEFICIT_FORT -> Deficit(
                     nutriment = status.nutriment,
                     niveau = NiveauDeficit.FORT,
                     manque = manque,
                     pourcentageAtteint = pourcentage,
                 )
-                pourcentage < 90.0 -> Deficit(
+                pourcentage < RecommandationConstants.SEUIL_DEFICIT_MODERE -> Deficit(
                     nutriment = status.nutriment,
                     niveau = NiveauDeficit.MODERE,
                     manque = manque,
@@ -131,24 +131,7 @@ class RecommandationAlimentUseCase {
     // --- Critical nutrients per regime ---
 
     internal fun getNutrimentsCritiques(regime: RegimeAlimentaire): Set<NutrimentType> {
-        return when (regime) {
-            RegimeAlimentaire.VEGAN -> setOf(
-                NutrimentType.VITAMINE_B12,
-                NutrimentType.FER,
-                NutrimentType.ZINC,
-                NutrimentType.OMEGA_3,
-                NutrimentType.CALCIUM,
-                NutrimentType.PROTEINES,
-            )
-            RegimeAlimentaire.VEGETARIEN -> setOf(
-                NutrimentType.VITAMINE_B12,
-                NutrimentType.FER,
-                NutrimentType.ZINC,
-                NutrimentType.OMEGA_3,
-            )
-            RegimeAlimentaire.FLEXITARIEN,
-            RegimeAlimentaire.OMNIVORE -> emptySet()
-        }
+        return RecommandationConstants.getNutrimentsCritiques(regime)
     }
 
     // --- Deficit weight calculation ---
@@ -159,9 +142,9 @@ class RecommandationAlimentUseCase {
     ): Map<NutrimentType, Double> {
         return deficits.associate { deficit ->
             val poids = when {
-                deficit.niveau == NiveauDeficit.FORT && deficit.nutriment in nutrimentsCritiques -> 3.0
-                deficit.niveau == NiveauDeficit.FORT -> 2.0
-                else -> 1.0 // MODERE
+                deficit.niveau == NiveauDeficit.FORT && deficit.nutriment in nutrimentsCritiques -> RecommandationConstants.POIDS_FORT_CRITIQUE
+                deficit.niveau == NiveauDeficit.FORT -> RecommandationConstants.POIDS_FORT_NORMAL
+                else -> RecommandationConstants.POIDS_MODERE
             }
             deficit.nutriment to poids
         }
@@ -231,15 +214,7 @@ class RecommandationAlimentUseCase {
     }
 
     private fun getAllergyPatterns(allergie: String): List<String> {
-        return when (allergie) {
-            "gluten" -> listOf("ble", "seigle", "orge", "avoine")
-            "soja" -> listOf("soja")
-            "arachides" -> listOf("arachide", "cacahuete")
-            "fruits_a_coque" -> listOf("noix", "amande", "noisette", "cajou", "pistache", "pecan", "macadamia")
-            "lait" -> listOf("lait", "fromage", "yaourt", "beurre", "creme")
-            "oeufs" -> listOf("oeuf", "egg")
-            else -> listOf(allergie)
-        }
+        return RecommandationConstants.ALLERGEN_PATTERNS[allergie] ?: listOf(allergie)
     }
 
     // --- Scoring ---

@@ -4,6 +4,7 @@ import com.appfood.backend.database.dao.JournalEntryDao
 import com.appfood.backend.database.dao.QuotaDao
 import com.appfood.backend.database.dao.QuotaRow
 import com.appfood.backend.database.dao.UserProfileDao
+import com.appfood.backend.database.dao.getByType
 import com.appfood.backend.database.tables.NutrimentType
 import com.appfood.backend.plugins.NotFoundException
 import com.appfood.backend.plugins.ValidationException
@@ -128,15 +129,16 @@ class QuotaService(
                 ?: throw NotFoundException("Profil non trouve. Creez d'abord un profil via POST /users/me/profile.")
 
         // Delegate to the shared CalculerQuotasUseCase (single source of truth for formulas)
+        // Plus besoin de conversion : les enums backend sont des typealias vers shared
         val sharedProfile =
             UserProfile(
                 userId = userId,
-                sexe = com.appfood.shared.model.Sexe.valueOf(profile.sexe.name),
+                sexe = profile.sexe,
                 age = profile.age,
                 poidsKg = profile.poidsKg,
                 tailleCm = profile.tailleCm,
-                regimeAlimentaire = com.appfood.shared.model.RegimeAlimentaire.valueOf(profile.regimeAlimentaire.name),
-                niveauActivite = com.appfood.shared.model.NiveauActivite.valueOf(profile.niveauActivite.name),
+                regimeAlimentaire = profile.regimeAlimentaire,
+                niveauActivite = profile.niveauActivite,
                 onboardingComplete = true,
                 objectifPoids = null,
                 updatedAt = kotlin.time.Clock.System.now(),
@@ -148,7 +150,7 @@ class QuotaService(
             sharedQuotas.map { q ->
                 QuotaRow(
                     userId = userId,
-                    nutriment = NutrimentType.valueOf(q.nutriment.name),
+                    nutriment = q.nutriment,
                     valeurCible = q.valeurCible,
                     estPersonnalise = false,
                     valeurCalculee = q.valeurCalculee,
@@ -202,29 +204,7 @@ class QuotaService(
         }
     }
 
-    private fun getConsumedValue(
-        consumed: NutrientSums,
-        nutriment: NutrimentType,
-    ): Double {
-        return when (nutriment) {
-            NutrimentType.CALORIES -> consumed.calories
-            NutrimentType.PROTEINES -> consumed.proteines
-            NutrimentType.GLUCIDES -> consumed.glucides
-            NutrimentType.LIPIDES -> consumed.lipides
-            NutrimentType.FIBRES -> consumed.fibres
-            NutrimentType.SEL -> consumed.sel
-            NutrimentType.SUCRES -> consumed.sucres
-            NutrimentType.FER -> consumed.fer
-            NutrimentType.CALCIUM -> consumed.calcium
-            NutrimentType.ZINC -> consumed.zinc
-            NutrimentType.MAGNESIUM -> consumed.magnesium
-            NutrimentType.VITAMINE_B12 -> consumed.vitamineB12
-            NutrimentType.VITAMINE_D -> consumed.vitamineD
-            NutrimentType.VITAMINE_C -> consumed.vitamineC
-            NutrimentType.OMEGA_3 -> consumed.omega3
-            NutrimentType.OMEGA_6 -> consumed.omega6
-        }
-    }
+    private fun getConsumedValue(consumed: NutrientSums, nutriment: NutrimentType) = consumed.getByType(nutriment)
 }
 
 data class QuotaStatusResult(

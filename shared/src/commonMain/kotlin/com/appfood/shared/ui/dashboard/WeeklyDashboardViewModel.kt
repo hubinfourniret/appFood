@@ -22,7 +22,7 @@ import kotlinx.datetime.todayIn
  * improvements and degradations.
  */
 class WeeklyDashboardViewModel(
-    private val dashboardRepository: DashboardRepository? = null,
+    private val dashboardRepository: DashboardRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<WeeklyState>(WeeklyState.Loading)
@@ -53,16 +53,10 @@ class WeeklyDashboardViewModel(
     private fun loadWeek() {
         _state.value = WeeklyState.Loading
         viewModelScope.launch {
-            val repo = dashboardRepository
-            if (repo == null) {
-                _state.value = buildStubSuccess()
-                return@launch
-            }
             val tz = TimeZone.currentSystemDefault()
-            val today = kotlinx.datetime.Instant.fromEpochMilliseconds(kotlin.time.Clock.System.now().toEpochMilliseconds()).toLocalDateTime(tz).date
-            // weekOf = date du lundi de la semaine souhaitee
+            val today = kotlin.time.Clock.System.now().toLocalDateTime(tz).date
             val weekOf = today.plus(currentWeekOffset * 7, DateTimeUnit.DAY)
-            when (val result = repo.getWeeklyDashboard(weekOf.toString())) {
+            when (val result = dashboardRepository.getWeeklyDashboard(weekOf.toString())) {
                 is AppResult.Success -> {
                     _state.value = mapWeeklyResponse(result.data)
                 }
@@ -114,38 +108,6 @@ class WeeklyDashboardViewModel(
         )
     }
 
-    private fun buildStubSuccess(): WeeklyState.Success = WeeklyState.Success(
-        dateFrom = "24 mars 2026",
-        dateTo = "30 mars 2026",
-        canGoNext = currentWeekOffset < 0,
-        nutrimentAverages = buildStubAverages(),
-        hydratationWeekly = listOf(1500, 1800, 2000, 1200, 2100, 1900, 0),
-        hydratationObjectifMl = 2000,
-        criticalNutrients = listOf(
-            NutrimentTrend("Vitamine B12", 0.8, 2.4, "ug"),
-            NutrimentTrend("Fer", 5.5, 11.0, "mg"),
-        ),
-        improvements = listOf(
-            NutrimentTrend("Proteines", 75.0, 82.0, "g"),
-        ),
-        degradations = listOf(
-            NutrimentTrend("Calcium", 450.0, 900.0, "mg"),
-        ),
-    )
-
-    private fun buildStubAverages(): List<NutrimentAverage> = listOf(
-        NutrimentAverage("Proteines", 65.0, 82.0, "g", NutrimentCategorie.MACRO),
-        NutrimentAverage("Glucides", 280.0, 345.0, "g", NutrimentCategorie.MACRO),
-        NutrimentAverage("Lipides", 75.0, 92.0, "g", NutrimentCategorie.MACRO),
-        NutrimentAverage("Fibres", 22.0, 30.0, "g", NutrimentCategorie.MACRO),
-        NutrimentAverage("Vitamine B12", 0.8, 2.4, "ug", NutrimentCategorie.VITAMINE),
-        NutrimentAverage("Vitamine D", 5.0, 15.0, "ug", NutrimentCategorie.VITAMINE),
-        NutrimentAverage("Vitamine C", 85.0, 110.0, "mg", NutrimentCategorie.VITAMINE),
-        NutrimentAverage("Fer", 5.5, 11.0, "mg", NutrimentCategorie.MINERAL),
-        NutrimentAverage("Calcium", 450.0, 900.0, "mg", NutrimentCategorie.MINERAL),
-        NutrimentAverage("Zinc", 8.0, 12.0, "mg", NutrimentCategorie.MINERAL),
-        NutrimentAverage("Omega-3", 1.2, 2.5, "g", NutrimentCategorie.ACIDE_GRAS),
-    )
 }
 
 // --- States ---

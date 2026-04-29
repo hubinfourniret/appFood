@@ -227,7 +227,7 @@ class JournalViewModel(
                 is AppResult.Error -> {
                     // API failed — enqueue for offline sync so the entry
                     // is persisted locally and will be synced later.
-                    println("JournalViewModel.onValidateEntry error: ${result.code} ${result.message}")
+                    // API failed — fallback to offline sync
                     val payloadJson = Json.encodeToString(
                         AddJournalEntryRequest.serializer(),
                         request,
@@ -413,8 +413,7 @@ class JournalViewModel(
 
     fun onRecetteSelected(recetteId: String) {
         viewModelScope.launch {
-            // TODO: Naviguer vers le detail recette ou ajouter une portion recette au journal
-            // Pour l'instant, on ajoute directement 1 portion au journal
+            // Ajout direct de 1 portion au journal (navigation vers detail recette = V1.1 UX-06)
             val mealType = _selectedMealType.value ?: return@launch
             val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
             val request = AddJournalEntryRequest(

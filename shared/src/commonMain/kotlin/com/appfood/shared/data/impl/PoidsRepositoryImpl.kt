@@ -1,6 +1,7 @@
 package com.appfood.shared.data.impl
 
 import com.appfood.shared.api.request.AddPoidsRequest
+import com.appfood.shared.api.response.PoidsListResponse
 import com.appfood.shared.api.response.PoidsResponse
 import com.appfood.shared.data.local.LocalPoidsDataSource
 import com.appfood.shared.data.remote.PoidsApi
@@ -28,8 +29,8 @@ class PoidsRepositoryImpl(
         dateTo: String?,
     ): AppResult<List<HistoriquePoids>> {
         return try {
-            val responses = poidsApi.getHistory(dateFrom, dateTo)
-            val entries = responses.map { it.toDomain(userId) }
+            val listResponse = poidsApi.getHistory(dateFrom, dateTo)
+            val entries = listResponse.data.map { it.toDomain(userId) }
             AppResult.Success(entries)
         } catch (e: Exception) {
             // Fallback to local cache
@@ -45,7 +46,7 @@ class PoidsRepositoryImpl(
         return try {
             val request = AddPoidsRequest(date = date, poidsKg = poidsKg)
             val response = poidsApi.addEntry(request)
-            AppResult.Success(response.toDomain(userId))
+            AppResult.Success(response.poids.toDomain(userId))
         } catch (e: Exception) {
             // Offline: enqueue for sync
             val payloadJson = kotlinx.serialization.json.Json.encodeToString(
@@ -74,8 +75,9 @@ class PoidsRepositoryImpl(
 
     override suspend fun getCurrent(userId: String): AppResult<HistoriquePoids?> {
         return try {
-            val response = poidsApi.getCurrent()
-            AppResult.Success(response.toDomain(userId))
+            val listResponse = poidsApi.getHistory()
+            val latest = listResponse.data.firstOrNull()
+            AppResult.Success(latest?.toDomain(userId))
         } catch (e: Exception) {
             AppResult.Success(null)
         }

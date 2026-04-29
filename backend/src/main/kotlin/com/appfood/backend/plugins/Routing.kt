@@ -14,6 +14,7 @@ import com.appfood.backend.routes.quotaRoutes
 import com.appfood.backend.routes.recetteRoutes
 import com.appfood.backend.routes.recommandationRoutes
 import com.appfood.backend.routes.supportRoutes
+import com.appfood.backend.routes.syncRoutes
 import com.appfood.backend.routes.userRoutes
 import io.ktor.server.application.Application
 import io.ktor.server.routing.routing
@@ -35,5 +36,6 @@ fun Application.configureRouting() {
         notificationRoutes()
         consentRoutes()
         supportRoutes()
+        syncRoutes()
     }
 }

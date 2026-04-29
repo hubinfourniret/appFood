@@ -2,6 +2,7 @@ package com.appfood.shared.ui
 
 object Strings {
     const val APP_NAME = "appFood"
+    const val ICON_BACK = "\u2190"
 
     // Navigation — barre inferieure
     const val NAV_DASHBOARD = "Dashboard"

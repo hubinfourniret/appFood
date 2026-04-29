@@ -21,6 +21,6 @@ interface HydratationRepository {
     /** Reset the objective to the calculated default. */
     suspend fun resetObjectif(userId: String): AppResult<Unit>
 
-    /** Get weekly hydration data (list of daily totals). */
-    suspend fun getWeekly(userId: String, dateFrom: String, dateTo: String): AppResult<List<HydratationJournaliere>>
+    /** Get weekly hydration data. weekOf = any date in the target week (backend computes the range). */
+    suspend fun getWeekly(userId: String, weekOf: String): AppResult<List<HydratationJournaliere>>
 }

@@ -46,7 +46,7 @@ private fun TermsOfServiceContent(
                 title = { Text(Strings.SCREEN_TOS) },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
-                        Text("\u2190")
+                        Text(Strings.ICON_BACK)
                     }
                 },
             )

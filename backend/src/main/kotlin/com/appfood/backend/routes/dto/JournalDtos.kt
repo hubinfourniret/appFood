@@ -11,6 +11,7 @@ data class AddJournalEntryRequest(
     val mealType: String,
     val alimentId: String? = null,
     val recetteId: String? = null,
+    val nom: String? = null,
     val quantiteGrammes: Double? = null,
     val nbPortions: Double? = null,
 )

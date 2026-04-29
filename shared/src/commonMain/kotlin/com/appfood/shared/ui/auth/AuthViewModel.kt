@@ -171,7 +171,7 @@ class AuthViewModel(
                     try {
                         Firebase.auth.currentUser?.sendEmailVerification()
                     } catch (_: Exception) {
-                        println("WARNING: Echec envoi email de verification")
+                        // Email verification failed — non-bloquant, l'utilisateur peut continuer
                     }
                     _state.value = AuthState.Success(needsOnboarding = true)
                 }
@@ -252,21 +252,11 @@ class AuthViewModel(
     // --- Social sign-in ---
 
     fun onGoogleSignIn() {
-        _state.value = AuthState.Loading
-        viewModelScope.launch {
-            // TODO: Call googleSignInUseCase when created by SHARED agent
-            // The flow is: Firebase SDK handles OAuth, returns token
-            // Then we call our backend to register/login the user
-            _state.value = AuthState.Success(needsOnboarding = true)
-        }
+        _state.value = AuthState.Error("Google Sign-In n'est pas encore disponible. Utilisez l'inscription par email.")
     }
 
     fun onAppleSignIn() {
-        _state.value = AuthState.Loading
-        viewModelScope.launch {
-            // TODO: Call appleSignInUseCase when created by SHARED agent
-            _state.value = AuthState.Success(needsOnboarding = true)
-        }
+        _state.value = AuthState.Error("Apple Sign-In n'est pas encore disponible. Utilisez l'inscription par email.")
     }
 
     // --- Delete account ---

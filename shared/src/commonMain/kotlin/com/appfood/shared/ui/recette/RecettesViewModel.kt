@@ -242,10 +242,8 @@ class RecettesViewModel(
     }
 
     fun onToggleDetailFavorite() {
+        // Toggle local uniquement — pas d'endpoint backend pour les favoris recettes (V1.1)
         _isDetailFavorite.value = !_isDetailFavorite.value
-        viewModelScope.launch {
-            // TODO: Call toggleFavoriRecetteUseCase when created by SHARED agent
-        }
     }
 
     fun onAddRecetteToJournal() {

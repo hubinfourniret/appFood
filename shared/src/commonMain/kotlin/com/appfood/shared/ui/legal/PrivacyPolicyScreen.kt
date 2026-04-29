@@ -47,7 +47,7 @@ private fun PrivacyPolicyContent(
                 title = { Text(Strings.SCREEN_PRIVACY_POLICY) },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
-                        Text("\u2190")
+                        Text(Strings.ICON_BACK)
                     }
                 },
             )

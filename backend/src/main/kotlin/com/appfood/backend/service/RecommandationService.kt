@@ -6,9 +6,11 @@ import com.appfood.backend.database.dao.RecetteDao
 import com.appfood.backend.database.dao.RecetteRow
 import com.appfood.backend.database.dao.UserPreferencesDao
 import com.appfood.backend.database.dao.UserProfileDao
+import com.appfood.backend.database.dao.getNutrientValue
 import com.appfood.backend.database.tables.NutrimentType
 import com.appfood.backend.database.tables.RegimeAlimentaire
 import com.appfood.backend.plugins.NotFoundException
+import com.appfood.shared.domain.recommandation.RecommandationConstants
 import kotlinx.datetime.LocalDate
 import org.slf4j.LoggerFactory
 import kotlin.math.min
@@ -211,8 +213,8 @@ class RecommandationService(
             val isCritique = status.nutriment in critiques
 
             when {
-                pourcentage < 70.0 -> {
-                    val poids = if (isCritique) 3.0 else 2.0
+                pourcentage < RecommandationConstants.SEUIL_DEFICIT_FORT -> {
+                    val poids = if (isCritique) RecommandationConstants.POIDS_FORT_CRITIQUE else RecommandationConstants.POIDS_FORT_NORMAL
                     NutrientDeficit(
                         nutriment = status.nutriment,
                         manque = status.valeurCible - status.valeurConsommee,
@@ -221,13 +223,13 @@ class RecommandationService(
                         poids = poids,
                     )
                 }
-                pourcentage < 90.0 -> {
+                pourcentage < RecommandationConstants.SEUIL_DEFICIT_MODERE -> {
                     NutrientDeficit(
                         nutriment = status.nutriment,
                         manque = status.valeurCible - status.valeurConsommee,
                         quota = status.valeurCible,
                         pourcentageAtteint = pourcentage,
-                        poids = 1.0,
+                        poids = RecommandationConstants.POIDS_MODERE,
                     )
                 }
                 else -> null
@@ -236,26 +238,7 @@ class RecommandationService(
     }
 
     private fun getCriticalNutrients(regime: RegimeAlimentaire): Set<NutrimentType> {
-        return when (regime) {
-            RegimeAlimentaire.VEGAN ->
-                setOf(
-                    NutrimentType.VITAMINE_B12,
-                    NutrimentType.FER,
-                    NutrimentType.ZINC,
-                    NutrimentType.OMEGA_3,
-                    NutrimentType.CALCIUM,
-                    NutrimentType.PROTEINES,
-                )
-            RegimeAlimentaire.VEGETARIEN ->
-                setOf(
-                    NutrimentType.VITAMINE_B12,
-                    NutrimentType.FER,
-                    NutrimentType.ZINC,
-                    NutrimentType.OMEGA_3,
-                )
-            RegimeAlimentaire.FLEXITARIEN -> emptySet()
-            RegimeAlimentaire.OMNIVORE -> emptySet()
-        }
+        return RecommandationConstants.getNutrimentsCritiques(regime)
     }
 
     // --- Aliment scoring ---
@@ -293,7 +276,7 @@ class RecommandationService(
             } else {
                 100.0
             }
-        val quantiteSuggereGrammes = roundToTen(min(rawQuantite, 300.0))
+        val quantiteSuggereGrammes = RecommandationConstants.arrondirQuantite(min(rawQuantite, RecommandationConstants.QUANTITE_MAX_GRAMMES))
 
         // Now score with the suggested quantity
         for (deficit in deficits) {
@@ -389,7 +372,7 @@ class RecommandationService(
     ): Boolean {
         val catLower = categorie.lowercase()
         for (allergie in allergies) {
-            val patterns = ALLERGEN_PATTERNS[allergie.lowercase()] ?: continue
+            val patterns = RecommandationConstants.ALLERGEN_PATTERNS[allergie.lowercase()] ?: continue
             for (pattern in patterns) {
                 if (catLower.contains(pattern)) {
                     // Special case: "sans gluten" in name should not be excluded
@@ -423,59 +406,9 @@ class RecommandationService(
         return result
     }
 
-    // --- Nutrient value accessors ---
-
-    private fun getAlimentNutrientValue(
-        aliment: AlimentRow,
-        nutriment: NutrimentType,
-    ): Double {
-        return when (nutriment) {
-            NutrimentType.CALORIES -> aliment.calories
-            NutrimentType.PROTEINES -> aliment.proteines
-            NutrimentType.GLUCIDES -> aliment.glucides
-            NutrimentType.LIPIDES -> aliment.lipides
-            NutrimentType.FIBRES -> aliment.fibres
-            NutrimentType.SEL -> aliment.sel
-            NutrimentType.SUCRES -> aliment.sucres
-            NutrimentType.FER -> aliment.fer
-            NutrimentType.CALCIUM -> aliment.calcium
-            NutrimentType.ZINC -> aliment.zinc
-            NutrimentType.MAGNESIUM -> aliment.magnesium
-            NutrimentType.VITAMINE_B12 -> aliment.vitamineB12
-            NutrimentType.VITAMINE_D -> aliment.vitamineD
-            NutrimentType.VITAMINE_C -> aliment.vitamineC
-            NutrimentType.OMEGA_3 -> aliment.omega3
-            NutrimentType.OMEGA_6 -> aliment.omega6
-        }
-    }
-
-    private fun getRecetteNutrientValue(
-        recette: RecetteRow,
-        nutriment: NutrimentType,
-    ): Double {
-        return when (nutriment) {
-            NutrimentType.CALORIES -> recette.calories
-            NutrimentType.PROTEINES -> recette.proteines
-            NutrimentType.GLUCIDES -> recette.glucides
-            NutrimentType.LIPIDES -> recette.lipides
-            NutrimentType.FIBRES -> recette.fibres
-            NutrimentType.SEL -> recette.sel
-            NutrimentType.SUCRES -> recette.sucres
-            NutrimentType.FER -> recette.fer
-            NutrimentType.CALCIUM -> recette.calcium
-            NutrimentType.ZINC -> recette.zinc
-            NutrimentType.MAGNESIUM -> recette.magnesium
-            NutrimentType.VITAMINE_B12 -> recette.vitamineB12
-            NutrimentType.VITAMINE_D -> recette.vitamineD
-            NutrimentType.VITAMINE_C -> recette.vitamineC
-            NutrimentType.OMEGA_3 -> recette.omega3
-            NutrimentType.OMEGA_6 -> recette.omega6
-        }
-    }
-
-    private fun roundToTen(value: Double): Double {
-        return ((value / 10.0).roundToInt() * 10).toDouble()
-    }
+    // Nutrient value accessors — delegated to extension functions in NutrientAccessors.kt
+    private fun getAlimentNutrientValue(aliment: AlimentRow, nutriment: NutrimentType) = aliment.getNutrientValue(nutriment)
+    private fun getRecetteNutrientValue(recette: RecetteRow, nutriment: NutrimentType) = recette.getNutrientValue(nutriment)
 
     private fun deserializeList(jsonStr: String): List<String> {
         return try {
@@ -491,16 +424,6 @@ class RecommandationService(
         private const val CANDIDATE_POOL_MAX = 400
         private const val RECETTE_CANDIDATE_LIMIT_PER_DEFICIT = 50
         private const val RECETTE_CANDIDATE_POOL_MAX = 150
-
-        private val ALLERGEN_PATTERNS =
-            mapOf(
-                "gluten" to listOf("ble", "seigle", "orge", "avoine"),
-                "soja" to listOf("soja"),
-                "arachides" to listOf("arachide", "cacahuete"),
-                "fruits_a_coque" to listOf("noix", "amande", "noisette", "cajou", "pistache", "pecan", "macadamia"),
-                "lait" to listOf("lait", "fromage", "yaourt", "beurre", "creme"),
-                "oeufs" to listOf("oeuf", "egg"),
-            )
     }
 }
 

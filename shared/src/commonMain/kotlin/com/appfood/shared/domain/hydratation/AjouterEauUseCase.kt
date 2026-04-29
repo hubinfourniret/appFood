@@ -10,9 +10,7 @@ class AjouterEauUseCase(
     private val hydratationRepository: HydratationRepository,
 ) {
     suspend operator fun invoke(userId: String, quantiteMl: Int): AppResult<HydratationJournaliere> {
-        val nowMs = kotlin.time.Clock.System.now().toEpochMilliseconds()
-        val kxInstant = kotlinx.datetime.Instant.fromEpochMilliseconds(nowMs)
-        val today = kxInstant.toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+        val today = kotlin.time.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
         return hydratationRepository.addEntry(userId, today, quantiteMl)
     }
 }

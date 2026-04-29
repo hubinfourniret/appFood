@@ -147,7 +147,7 @@ private fun HydratationContent(
                 title = { Text(Strings.HYDRA_TITLE) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("\u2190", style = MaterialTheme.typography.titleLarge)
+                        Text(Strings.ICON_BACK, style = MaterialTheme.typography.titleLarge)
                     }
                 },
             )

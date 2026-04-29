@@ -1,105 +1,157 @@
-# Phase 3 — Backlog & User Stories
+# Phase 3 — Backlog & Taches
 
-Règles et structure pour la création du backlog projet.
+Regles et structure pour la creation du backlog projet.
+
+## Contexte : Claude Code comme developpeur principal
+
+Le backlog est concu pour un workflow ou **Claude Code est le developpeur principal unique** et l'utilisateur est le **superviseur** (coordinateur, decideur, testeur fonctionnel). Les taches sont donc :
+- **Verticales** : chaque tache couvre toutes les couches (backend, shared, mobile) d'une feature
+- **Orientees resultat** : decrites du point de vue de ce que l'utilisateur final voit/fait
+- **Autonomes** : Claude Code peut les implementer de bout en bout sans dispatch intermediaire
 
 ## Structure du backlog
 
-Le backlog est organisé en 3 niveaux :
+Le backlog est organise en 2 niveaux :
 
 ```
-Thème (grand domaine fonctionnel)
-  └── Epic (fonctionnalité majeure)
-       └── User Story (tâche unitaire livrable)
+Theme (grand domaine fonctionnel)
+  └── Tache (feature complete et livrable, toutes couches confondues)
 ```
 
-## Rédaction des User Stories
+> **Note** : L'ancien niveau "Epic → User Story" est remplace par des taches plus larges et autonomes. Le decoupage fin en sous-taches est laisse a Claude Code au moment de l'implementation.
+
+## Redaction des taches
 
 ### Format obligatoire
 
 ```
-**[EPIC-ID-STORY-NUM]** — Titre court
+**[THEME-NUM]** — Titre court
 
-En tant que [persona],
-je veux [action concrète],
-afin de [bénéfice/valeur].
+**Objectif** : Description en 1-3 phrases de ce que l'utilisateur final voit ou fait
+quand cette tache est terminee. Toujours formuler du point de vue du resultat,
+pas de l'implementation.
 
-**Critères d'acceptation :**
-- [ ] Critère 1 (vérifiable et testable)
-- [ ] Critère 2
-- [ ] Critère N
+**Contraintes** :
+- Contrainte technique 1 (si applicable)
+- Contrainte technique 2
 
-**Complexité :** S | M | L | XL
-**Priorité :** MVP | V1.1 | V2 | Nice-to-have
-**Dépendances :** [liste des story IDs pré-requis, ou "Aucune"]
-**Agent assigné :** [à remplir en Phase 4]
-**Notes techniques :** [détails d'implémentation si pertinents]
+**Criteres de validation** :
+- [ ] Ce que le superviseur teste pour valider (scenario fonctionnel)
+- [ ] Edge case important a verifier
+- [ ] Critere technique critique (si applicable, ex: "fonctionne offline")
+
+**Complexite :** S | M | L | XL
+**Priorite :** MVP | V1.1 | V2 | Nice-to-have
+**Dependances :** [liste des tache IDs pre-requis, ou "Aucune"]
+**Critique :** Oui | Non (si Oui = review algo/crypto/sync + validation superviseur obligatoire)
+**Notes techniques :** [details d'implementation si pertinents — Claude Code s'en sert comme guide]
 ```
 
-### Guide des complexités
+### Ce qui change par rapport au format User Story classique
 
-- **S (Small)** : < 1 jour. Tâche isolée, pas d'ambiguïté. Ex : ajouter un champ à un formulaire.
-- **M (Medium)** : 1-3 jours. Fonctionnalité simple mais complète. Ex : page de profil utilisateur avec édition.
-- **L (Large)** : 3-5 jours. Fonctionnalité complexe avec plusieurs composants. Ex : système de notifications multi-canal.
-- **XL (Extra Large)** : > 5 jours. Probablement à redécouper. Si tu écris une story XL, demande-toi si elle peut être splitée. Ex : moteur de recherche full-text avec filtres avancés.
+| Aspect | Ancien (US) | Nouveau (Tache) |
+|--------|-------------|-----------------|
+| Granularite | 1 US = 1 couche (backend OU mobile OU shared) | 1 tache = feature complete (toutes couches) |
+| Persona | "En tant que [persona], je veux..." | "Objectif : l'utilisateur peut..." |
+| Assignation | Agent specifique (BACKEND, MOBILE, SHARED) | Claude Code (full-stack) |
+| Criteres | Criteres d'acceptation techniques | Criteres de validation fonctionnels (ce que le superviseur teste) |
+| Dispatch | Phase 4 repartit entre agents | Pas de dispatch — Claude Code fait tout |
 
-### Guide des priorités
+### Guide des complexites
 
-- **MVP** : Sans ça, le produit n'a pas de sens. Le strict minimum pour valider l'hypothèse core.
-- **V1.1** : Important mais pas bloquant pour le lancement. Améliore significativement l'expérience.
+- **S (Small)** : < 1 session. Bugfix, ajustement UI, ajout de champ. Claude Code le fait en une passe.
+- **M (Medium)** : 1-2 sessions. Feature simple mais complete (ecran + endpoint + logique). Ex : page de profil avec edition.
+- **L (Large)** : 2-4 sessions. Feature complexe avec plusieurs composants. Ex : systeme de journal alimentaire avec recherche + portions + favoris.
+- **XL (Extra Large)** : > 4 sessions. Probablement a decouper. Si tu ecris une tache XL, demande-toi si elle peut etre splitee en 2-3 taches L ou M.
+
+### Guide des priorites
+
+- **MVP** : Sans ca, le produit n'a pas de sens. Le strict minimum pour valider l'hypothese core.
+- **V1.1** : Important mais pas bloquant pour le lancement. Ameliore significativement l'experience.
 - **V2** : Features d'expansion, optimisations, nouvelles audiences.
-- **Nice-to-have** : Serait cool mais peut vivre sans indéfiniment.
+- **Nice-to-have** : Serait cool mais peut vivre sans indefiniment.
 
 ### Bonnes pratiques
 
-1. **Une story = un livrable testable.** Si tu ne peux pas le tester, c'est trop vague.
-2. **Indépendance maximale.** Minimise les dépendances entre stories. Si A dépend de B, note-le explicitement.
-3. **Le persona est concret.** Pas "l'utilisateur" mais "le restaurateur", "l'admin", "le visiteur non inscrit".
-4. **Les critères d'acceptation sont la définition de "fini".** Pas de zone grise.
-5. **N'oublie pas les stories techniques.** Setup du projet, CI/CD, migrations, monitoring — ce sont aussi des stories.
-6. **N'oublie pas les stories transverses.** Auth, gestion d'erreurs, emails, responsive, accessibilité.
+1. **Une tache = un resultat testable par le superviseur.** Si le superviseur ne peut pas le tester sur emulateur/device, c'est trop technique ou trop vague.
+2. **Independance maximale.** Minimise les dependances entre taches. Si A depend de B, note-le explicitement.
+3. **L'objectif est concret.** Pas "ameliorer le dashboard" mais "le dashboard affiche les calories du jour, les macros et les repas saisis".
+4. **Les criteres de validation sont fonctionnels.** Pas "le DTO a un champ X" mais "l'utilisateur voit X sur l'ecran".
+5. **Les notes techniques sont un guide, pas une spec.** Claude Code a le contexte du codebase et peut adapter. Ne pas sur-specifier l'implementation.
+6. **Marquer les taches critiques.** Toute tache touchant a un algo metier, du chiffrement, de la sync ou des donnees de sante doit etre marquee Critique = Oui.
 
-### Epics techniques à ne pas oublier
+### Themes techniques a ne pas oublier
 
-Ces epics sont souvent absentes des backlogs et créent de la dette technique :
+Ces themes sont souvent absents des backlogs et creent de la dette technique :
 
-- **SETUP** : Initialisation projet, structure, linting, CI/CD, env de dev
-- **AUTH** : Inscription, connexion, reset password, gestion de session, rôles
-- **INFRA** : Déploiement, monitoring, logging, alerting, backups
-- **DATA** : Migrations, seeds, imports/exports, RGPD (suppression données)
-- **UX-TRANSVERSE** : Design system, responsive, états vides/erreur/loading, accessibilité
-- **QUALITE** : Tests unitaires, tests E2E, documentation API, documentation développeur
+- **SETUP** : Initialisation projet, structure, config build, DI
+- **AUTH** : Inscription, connexion, reset password, gestion de session
+- **INFRA** : Deploiement, monitoring, logging, alerting, backups
+- **DATA** : Imports de donnees, indexation, qualite des donnees
+- **UX** : Etats vides, etats de chargement, gestion erreurs, navigation
+- **LEGAL** : RGPD, CGU, politique de confidentialite, consentement
+- **QUALITE** : Tests unitaires, tests integration, tests E2E
+
+> **Note** : Contrairement a un backlog multi-equipe, ces themes n'ont pas besoin d'etre des epics separees avec des sous-stories par couche. Chaque tache inclut naturellement le backend, le shared et le mobile necessaires.
 
 ---
 
 ## Exemple de structure
 
 ```
-## THEME : Gestion des utilisateurs
+## THEME : Suivi nutritionnel quotidien
 
-### EPIC : AUTH — Authentification
-- AUTH-01 : Inscription par email
-- AUTH-02 : Connexion / Déconnexion
-- AUTH-03 : Reset de mot de passe
-- AUTH-04 : Connexion OAuth (Google)
-- AUTH-05 : Gestion des rôles (admin/user)
+### JOURNAL-01 — Saisie d'un aliment au journal
 
-### EPIC : PROFIL — Profil utilisateur
-- PROFIL-01 : Page de profil en lecture
-- PROFIL-02 : Édition du profil
-- PROFIL-03 : Upload d'avatar
-- PROFIL-04 : Suppression de compte (RGPD)
+**Objectif** : L'utilisateur recherche un aliment, choisit une portion,
+voit le resume nutritionnel, valide, et l'entree apparait dans son journal du jour.
+
+**Contraintes** :
+- Recherche via Meilisearch (pas de requete SQL directe)
+- Offline-first : si pas de connexion, l'entree est mise en file d'attente de sync
+- L'aliment doit exister dans PostgreSQL (coherence avec l'index Meilisearch)
+
+**Criteres de validation** :
+- [ ] Recherche "banane" → resultats pertinents en < 1s
+- [ ] Selection d'une portion → resume nutritionnel affiche (calories, proteines, glucides, lipides)
+- [ ] Validation → retour au dashboard, l'entree apparait dans le repas du moment
+- [ ] En mode avion → l'entree est sauvegardee localement et synchro au retour en ligne
+
+**Complexite :** L
+**Priorite :** MVP
+**Dependances :** SETUP-01, DATA-01
+**Critique :** Non
+**Notes techniques :** Utiliser AddEntryScreen existant. Endpoint POST /api/v1/journal/entries.
+Portions via PortionApi. SyncQueue SQLDelight pour offline.
 ```
+
+---
+
+## Gestion du backlog en continu
+
+Le backlog n'est pas fige. Il evolue au fil du projet :
+
+- **Ajout** : Le superviseur identifie un nouveau besoin ou un bug → nouvelle tache
+- **Repriorisation** : Le superviseur change l'ordre des priorites a tout moment
+- **Decoupe** : Une tache trop large (XL) est splitee en 2-3 taches plus petites
+- **Suppression** : Une tache devenue irrelevante est retiree
+- **Conversion** : Un bug remonte en prod peut devenir une tache prioritaire
+
+Le superviseur dit "fais X en premier" ou "continue dans l'ordre" — pas besoin de sprint planning formel.
 
 ---
 
 ## Checklist finale du backlog
 
-Avant de présenter le backlog à l'utilisateur, vérifie :
+Avant de presenter le backlog a l'utilisateur, verifie :
 
-- [ ] Toutes les fonctionnalités discutées en Phase 1 et 2 sont couvertes
-- [ ] Les stories MVP sont clairement identifiées et suffisantes pour un lancement
-- [ ] Les dépendances forment un graphe cohérent (pas de cycle)
-- [ ] Les stories techniques/transverses sont présentes
-- [ ] Chaque story a ses critères d'acceptation
-- [ ] Les estimations de complexité sont cohérentes entre elles
-- [ ] Le backlog MVP est réaliste par rapport aux ressources identifiées
+- [ ] Toutes les fonctionnalites discutees en Phase 1 et 2 sont couvertes
+- [ ] Les taches MVP sont clairement identifiees et suffisantes pour un lancement
+- [ ] Chaque tache est une **tranche verticale** (pas decoupee par couche technique)
+- [ ] Les dependances forment un graphe coherent (pas de cycle)
+- [ ] Les themes techniques/transverses sont presents (setup, auth, infra, data, UX, legal, qualite)
+- [ ] Chaque tache a des criteres de validation testables par le superviseur
+- [ ] Les taches critiques (algo, crypto, sync, donnees sensibles) sont marquees
+- [ ] Les estimations de complexite sont coherentes entre elles
+- [ ] Le backlog MVP est realiste
+- [ ] Les taches humaines (cles API, comptes, contenu legal) sont identifiees separement

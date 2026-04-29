@@ -17,14 +17,14 @@ class RecetteApi(private val apiClient: ApiClient) {
         sort: String? = null,
         query: String? = null,
         page: Int = 1,
-        limit: Int = 20,
+        size: Int = 20,
     ): RecetteListResponse {
         val params = buildString {
-            append("/api/v1/recettes?page=$page&limit=$limit")
+            append("/api/v1/recettes?page=$page&size=$size")
             if (regime != null) append("&regime=$regime")
             if (typeRepas != null) append("&typeRepas=$typeRepas")
             if (sort != null) append("&sort=$sort")
-            if (query != null) append("&query=$query")
+            if (query != null) append("&q=$query")
         }
         return apiClient.getRequest(params).body()
     }

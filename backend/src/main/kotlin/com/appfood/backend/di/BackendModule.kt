@@ -35,6 +35,7 @@ import com.appfood.backend.service.QuotaService
 import com.appfood.backend.service.RecetteService
 import com.appfood.backend.service.RecommandationService
 import com.appfood.backend.service.SupportService
+import com.appfood.backend.service.SyncService
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
@@ -107,6 +108,7 @@ fun backendModule(
     single { NotificationService(get(), get()) }
     single { ConsentService(get()) }
     single { SupportService(get()) }
+    single { SyncService(get(), get(), get()) }
 
     // DAOs
     single { UserDao() }

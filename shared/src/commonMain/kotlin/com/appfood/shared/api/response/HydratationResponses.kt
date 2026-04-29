@@ -10,7 +10,7 @@ data class HydratationResponse(
     val objectifMl: Int,
     val estObjectifPersonnalise: Boolean,
     val pourcentage: Double,
-    val entrees: List<HydratationEntryResponse>,
+    val entrees: List<HydratationEntryResponse> = emptyList(),
 )
 
 @Serializable

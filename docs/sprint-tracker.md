@@ -308,4 +308,33 @@ Tous les ViewModels ont ete cables aux repositories/use cases. Aucun stub TODO r
 
 **Suivi** : US RECO-PERF-01 a creer au backlog pour optimiser `RecommandationService` (SQL pre-filter + reduction du pool candidat).
 
+## Sprint 5 (Audit UX + Stabilisation) — EN COURS
+
+### Corrections appliquees (2026-04-17)
+
+| Correction | Fichiers | Statut |
+|-----------|---------|--------|
+| BUG #3 : Recherche aliments exclus sans feedback | ProfilViewModel, PreferencesAlimentairesScreen, Strings | Done |
+| BUG #4 : SettingsScreen placeholder vide | SettingsScreen.kt (nouveau), AppNavigation, Strings | Done |
+| BUG #5 : Reessayer ne reset pas le formulaire login | LoginScreen.kt | Done |
+| BUG #6 : EditProfil/Preferences sans bouton Retour | EditProfilScreen, PreferencesAlimentairesScreen, AppNavigation | Done |
+| BUG #7 : Token JWT non persiste (perdu au restart) | AppDatabase.sq, UserQueries.sq, LocalUserDataSource, UserRepositoryImpl, ApiClient, SharedModule, AppNavigation | Done |
+
+### US a faire — Sprint 5
+
+| US-ID | Titre | Description | Agents | Statut | Priorite |
+|-------|-------|-------------|--------|--------|----------|
+| UX-06 | Ajout recette depuis AddEntry | L'ecran "Ajouter un aliment" a les onglets Aliment/Recette mais l'onglet Recette ne permet pas de chercher et ajouter une recette au journal. Le flow doit etre : tap Recette → recherche → selection → choix portions → valider → retour dashboard. Actuellement seul l'onglet Aliment fonctionne. | MOBILE, SHARED | Todo | Haute |
+| UX-07 | Portions adaptees par categorie (fruits, etc.) | Le selecteur de portions propose uniquement grammes + portions generiques (cuillere, poignee). Pour les fruits/legumes il faut des portions specifiques : "1 pomme (~180g)", "1 banane (~120g)", "1 orange (~130g)". Utiliser la categorie de l'aliment pour proposer des portions pertinentes. | BACKEND, MOBILE, DATA | Todo | Haute |
+| DASH-BUG-01 | Dashboard affiche 0/0 kcal ou reste vide | Le dashboard affiche "0 / 0 kcal (0%)" et les repas "Aucune saisie" meme apres login. Causes possibles : (1) API quotas retourne erreur silencieuse, (2) le DashboardViewModel utilise un stub a 0 en fallback, (3) l'endpoint /api/v1/dashboard retourne des donnees vides. A investiguer avec les logs backend Railway. | BACKEND, SHARED | Todo | Critique |
+| JOURNAL-BUG-01 | Ajout aliment echoue "Aliment non trouve" | Meilisearch retourne des UUIDs qui n'existent pas/plus dans PostgreSQL. Le reimport ne suffit pas. A investiguer : (1) verifier la coherence Meilisearch vs PostgreSQL en prod, (2) ajouter un endpoint de diagnostic /api/v1/admin/data-consistency, (3) si l'aliment n'existe pas en DB, le re-fetcher depuis Meilisearch ou Open Food Facts. | BACKEND, DATA | Todo | Critique |
+| RECO-PERF-01 | Optimiser RecommandationService | RecommandationService charge 2000 aliments en memoire a chaque cache miss. Implementer un pre-filtre SQL + reduire le pool candidat pour eviter les timeouts en cold start. | BACKEND | Todo | Moyenne |
+
+### Notes Sprint 5
+- Token JWT maintenant persiste en SQLDelight (table local_auth_token) et restaure au demarrage
+- L'app navigue directement vers Dashboard si un token valide est en cache (skip login)
+- 19 tests Maestro couvrent auth, navigation, profil, recettes, ajout aliment, performance, edge cases
+- FIREBASE_MOCK=false en prod, le vrai Firebase Admin SDK est utilise
+- Compilation : `:shared` OK | `:backend` OK
+
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked

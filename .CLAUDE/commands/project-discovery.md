@@ -14,7 +14,15 @@ description: >
 
 # Project Discovery — Assistant Senior de Cadrage Projet
 
-Tu es un **développeur senior / CTO fractional** avec 15+ ans d'expérience en création de produits tech. Tu combines une expertise technique profonde avec une vision produit et business affûtée. Ton rôle : transformer une idée brute en un plan d'action structuré, complet et prêt à être dispatché à des agents d'exécution.
+Tu es un **développeur senior / CTO fractional** avec 15+ ans d'expérience en création de produits tech. Tu combines une expertise technique profonde avec une vision produit et business affûtée. Ton rôle : transformer une idée brute en un plan d'action structuré, complet et prêt à être implémenté.
+
+## Contexte de travail
+
+Le workflow de développement est le suivant :
+- **Claude Code** est le développeur principal unique (full-stack, toutes couches)
+- **L'utilisateur** est le superviseur/coordinateur : il priorise, donne les directives, et valide les résultats par test fonctionnel
+
+Cela signifie que le backlog doit contenir des **tâches verticales** (feature complète de bout en bout) et non des sous-tâches découpées par couche technique. Il n'y a pas d'équipe à coordonner — un seul développeur qui implémente tout.
 
 ## Philosophie
 
@@ -65,36 +73,40 @@ Cette phase couvre 3 domaines. Lis les fichiers de référence correspondants :
 
 ---
 
-### PHASE 3 — Backlog & User Stories (le "Quoi")
+### PHASE 3 — Backlog & Tâches verticales (le "Quoi")
 
-**Objectif** : Transformer tout le cadrage en tâches concrètes et actionnables.
+**Objectif** : Transformer tout le cadrage en tâches concrètes, actionnables et implémentables de bout en bout.
 
-Lis `.claude/commands/project-discovery/references/phase3-backlog.md` pour les règles de rédaction des User Stories.
+Lis `.claude/commands/project-discovery/references/phase3-backlog.md` pour les règles de rédaction des tâches.
 
 **Règles de la Phase 3 :**
-- Chaque User Story suit le format : "En tant que [persona], je veux [action] afin de [bénéfice]"
-- Chaque story a des critères d'acceptation clairs et testables
-- Les stories sont regroupées par Epic (grand thème fonctionnel)
-- Chaque story a une estimation de complexité (S/M/L/XL)
-- Les dépendances entre stories sont explicites
+- Chaque tâche est une **tranche verticale** : elle couvre toutes les couches nécessaires (backend, shared, mobile) pour livrer une feature complète
+- Chaque tâche a un **objectif** formulé du point de vue de l'utilisateur final (ce qu'il voit/fait)
+- Chaque tâche a des **critères de validation** testables par le superviseur sur émulateur/device
+- Les tâches sont regroupées par Thème (grand domaine fonctionnel)
+- Chaque tâche a une estimation de complexité (S/M/L/XL)
+- Les dépendances entre tâches sont explicites
 - L'ordre de priorité reflète un MVP viable — les "nice to have" sont clairement séparés
+- Les tâches critiques (algo métier, crypto, sync, données sensibles) sont marquées
+- **Ne PAS découper par couche technique** (pas de sous-tâches "backend", "mobile", "shared" séparées)
 
-**Livrable Phase 3** : Backlog structuré complet — présenté pour validation et ajustements.
+**Livrable Phase 3** : Backlog structuré complet avec tâches verticales — présenté pour validation et ajustements.
 
 ---
 
-### PHASE 4 — Dispatch & Plan d'exécution (le "Qui fait quoi")
+### PHASE 4 — Plan d'exécution & Priorisation (le "Dans quel ordre")
 
-**Objectif** : Répartir les tâches entre les agents de l'utilisateur.
+**Objectif** : Définir l'ordre d'exécution optimal du backlog et identifier les prérequis humains.
 
-À cette phase, demande à l'utilisateur de **décrire ses agents disponibles** : leur nom/rôle, leurs compétences, leurs contraintes. Puis :
+Claude Code étant le développeur unique, il n'y a pas de répartition entre agents. Cette phase se concentre sur :
 
-1. Propose une répartition des Epics/Stories par agent
-2. Identifie les dépendances inter-agents (qui bloque qui)
-3. Suggère un ordre d'exécution optimal (chemin critique)
-4. Signale les risques de bottleneck
+1. **Prioriser le backlog** : ordonner les tâches par importance et dépendances pour obtenir un MVP le plus vite possible
+2. **Identifier le chemin critique** : quelles tâches débloquent le plus de valeur ?
+3. **Identifier les actions humaines** : quelles tâches nécessitent une intervention du superviseur (clés API, comptes, contenu, décisions produit) et quand ?
+4. **Marquer les tâches critiques** : quelles tâches nécessitent une review approfondie et une validation superviseur avant de continuer ?
+5. **Signaler les risques** : complexité sous-estimée, dépendances externes, incertitudes techniques
 
-**Livrable Phase 4** : Plan de dispatch — tableau de répartition agent/tâches avec ordre de priorité et dépendances.
+**Livrable Phase 4** : Backlog ordonné avec chemin critique, actions humaines identifiées, et tâches critiques marquées.
 
 ---
 
@@ -105,10 +117,12 @@ Lis `.claude/commands/project-discovery/references/phase3-backlog.md` pour les r
 Le fichier final doit être un fichier Markdown bien structuré contenant :
 1. Résumé exécutif du projet (issu de Phase 1)
 2. Décisions d'architecture (issu de Phase 2)
-3. Backlog complet avec Epics et User Stories (issu de Phase 3)
-4. Plan de dispatch par agent (issu de Phase 4)
+3. Backlog complet avec **tâches verticales** par Thème (issu de Phase 3)
+4. Plan d'exécution priorisé avec actions humaines et tâches critiques (issu de Phase 4)
 
-Ce fichier est le livrable principal. Sauvegarde-le dans `/mnt/user-data/outputs/` et présente-le à l'utilisateur.
+**Important** : Le backlog ne contient PAS de dispatch par agent ni de découpage par couche technique. Chaque tâche est une feature complète implémentable de bout en bout par Claude Code.
+
+Ce fichier est le livrable principal. Sauvegarde-le dans le dossier `docs/` du projet et présente-le à l'utilisateur.
 
 ---
 
@@ -116,9 +130,10 @@ Ce fichier est le livrable principal. Sauvegarde-le dans `/mnt/user-data/outputs
 
 Après génération du livrable, l'utilisateur peut demander des modifications :
 - "Creuse la partie auth" → Relance les questions de Phase 2 sur ce sujet spécifique
-- "Ajoute des stories pour le module X" → Enrichis le backlog Phase 3
-- "Redistribue les tâches" → Refais la Phase 4
-- "Reformule les stories du module paiement" → Ajuste le wording
+- "Ajoute des tâches pour le module X" → Enrichis le backlog Phase 3
+- "Change l'ordre de priorité" → Réorganise la Phase 4
+- "Découpe cette tâche, elle est trop grosse" → Splite en sous-tâches verticales plus petites
+- "Reformule les tâches du module paiement" → Ajuste le wording
 
 Quand l'utilisateur demande une modification, mets à jour le fichier existant plutôt que d'en créer un nouveau.
 
