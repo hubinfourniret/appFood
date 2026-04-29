@@ -5,6 +5,7 @@ import com.appfood.shared.api.request.UpdatePortionRequest
 import com.appfood.shared.api.response.PortionListResponse
 import com.appfood.shared.api.response.PortionResponse
 import io.ktor.client.call.body
+import io.ktor.http.encodeURLParameter
 
 /**
  * Client API for portion endpoints (/api/v1/portions).
@@ -17,7 +18,7 @@ class PortionApi(private val apiClient: ApiClient) {
             append("/api/v1/portions")
             val parts = mutableListOf<String>()
             if (alimentId != null) parts.add("alimentId=$alimentId")
-            if (alimentNom != null) parts.add("alimentNom=$alimentNom")
+            if (alimentNom != null) parts.add("alimentNom=${alimentNom.encodeURLParameter()}")
             if (parts.isNotEmpty()) {
                 append("?")
                 append(parts.joinToString("&"))

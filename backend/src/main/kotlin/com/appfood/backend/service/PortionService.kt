@@ -73,7 +73,7 @@ class PortionService(
      * Ignore les mots courts et les mots generiques.
      */
     private fun extractKeywords(nom: String): List<String> {
-        val stopWords = setOf("de", "du", "la", "le", "les", "des", "un", "une", "au", "aux", "en", "et", "ou", "avec", "sans", "pour", "sur", "cru", "cuit", "cuite", "frais", "fraiche")
+        val stopWords = setOf("de", "du", "la", "le", "les", "des", "un", "une", "au", "aux", "en", "et", "ou", "avec", "sans", "pour", "sur", "cru", "crue", "crus", "crues", "cuit", "cuite", "cuits", "cuites", "frais", "fraiche", "sec", "seche", "entier", "entiere", "pulpe", "jus", "pur")
         return nom.lowercase()
             .replace(",", " ")
             .replace("(", " ")
