@@ -17,6 +17,7 @@ import com.appfood.backend.routes.dto.UpdateProfileRequest
 import com.appfood.backend.routes.dto.UserExportResponse
 import com.appfood.backend.routes.dto.UserProfileResponse
 import com.appfood.backend.service.ProfileService
+import com.appfood.backend.service.QuotaService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -31,6 +32,7 @@ import org.koin.ktor.ext.inject
 
 fun Route.userRoutes() {
     val profileService by inject<ProfileService>()
+    val quotaService by inject<QuotaService>()
 
     authenticate("auth-jwt") {
         route("/api/v1/users") {
@@ -63,6 +65,13 @@ fun Route.userRoutes() {
                         regimeAlimentaireStr = request.regimeAlimentaire,
                         niveauActiviteStr = request.niveauActivite,
                     )
+                // Initialiser les quotas automatiquement apres creation du profil
+                try {
+                    quotaService.recalculateQuotas(userId)
+                } catch (e: Exception) {
+                    // Non-bloquant : le profil est cree meme si le calcul echoue
+                    // Les quotas seront recalcules au prochain acces dashboard
+                }
                 call.respond(
                     HttpStatusCode.Created,
                     profile.toProfileResponse(),

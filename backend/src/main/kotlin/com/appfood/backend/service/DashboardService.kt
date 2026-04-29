@@ -32,15 +32,24 @@ class DashboardService(
     ): DashboardData {
         val tStart = System.currentTimeMillis()
 
-        // 1. Quota statuses
+        // 1. Quota statuses — auto-recalcul si vides (utilisateurs existants sans quotas)
         val t0 = System.currentTimeMillis()
-        val quotasStatus =
+        var quotasStatus =
             try {
                 quotaService.getQuotaStatus(userId, date)
             } catch (e: Exception) {
-                logger.warn("No quotas found for userId=$userId, returning empty list")
+                logger.warn("No quotas found for userId=$userId, attempting auto-recalculate")
                 emptyList()
             }
+        if (quotasStatus.isEmpty()) {
+            try {
+                quotaService.recalculateQuotas(userId)
+                quotasStatus = quotaService.getQuotaStatus(userId, date)
+                logger.info("Dashboard/$userId auto-recalculated quotas successfully")
+            } catch (e: Exception) {
+                logger.warn("Dashboard/$userId auto-recalculate failed: ${e.message}")
+            }
+        }
         logger.info("Dashboard/$userId quotas=${System.currentTimeMillis() - t0}ms")
 
         // 2. Journal entries for the day
