@@ -97,6 +97,7 @@ fun PortionSelectorScreen(
     val selectedPortion by viewModel.selectedPortion.collectAsState()
     val addEntryState by viewModel.addEntryState.collectAsState()
     val nutritionPreview by viewModel.nutritionPreview.collectAsState()
+    val loadedPortions by viewModel.loadedPortions.collectAsState()
 
     val aliment = selectedAliment ?: return
 
@@ -115,6 +116,7 @@ fun PortionSelectorScreen(
         aliment = aliment,
         quantityGrams = quantityGrams,
         selectedPortion = selectedPortion,
+        loadedPortions = loadedPortions,
         computedNutriments = nutritionPreview ?: NutrimentValues(),
         isSaving = addEntryState is AddEntryState.Saving,
         errorMessage = (addEntryState as? AddEntryState.Error)?.message,
@@ -134,6 +136,7 @@ private fun PortionSelectorContent(
     aliment: Aliment,
     quantityGrams: Double,
     selectedPortion: PortionStandard?,
+    loadedPortions: List<PortionStandard>,
     computedNutriments: NutrimentValues,
     isSaving: Boolean,
     errorMessage: String?,
@@ -228,8 +231,8 @@ private fun PortionSelectorContent(
                 }
             }
 
-            // Food-specific portions (PORTIONS-01)
-            if (aliment.portionsStandard.isNotEmpty()) {
+            // Portions suggerees (UX-07 — chargees depuis l'API par nom d'aliment)
+            if (loadedPortions.isNotEmpty()) {
                 Text(
                     text = Strings.JOURNAL_PORTION_STANDARD,
                     style = MaterialTheme.typography.titleSmall,
@@ -240,7 +243,7 @@ private fun PortionSelectorContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    aliment.portionsStandard.forEach { portion ->
+                    loadedPortions.forEach { portion ->
                         FilterChip(
                             selected = selectedPortion?.id == portion.id,
                             onClick = { onPortionSelected(portion) },

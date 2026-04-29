@@ -77,6 +77,7 @@ import com.appfood.shared.data.repository.RecommandationRepository
 import com.appfood.shared.data.repository.UserRepository
 import com.appfood.shared.data.remote.ApiClient
 import com.appfood.shared.data.remote.ConsentApi
+import com.appfood.shared.data.remote.PortionApi
 import com.appfood.shared.data.remote.SupportApi
 import com.appfood.shared.sync.SyncManager
 import com.appfood.shared.ui.support.FaqScreen
@@ -112,12 +113,14 @@ fun AppNavigation(
     val journalRepository = koinInject<JournalRepository>()
     val recetteRepository = koinInject<RecetteRepository>()
     val syncManager = koinInject<SyncManager>()
-    val journalViewModel = remember(journalRepository, alimentRepository, recetteRepository, syncManager) {
+    val portionApi = koinInject<PortionApi>()
+    val journalViewModel = remember(journalRepository, alimentRepository, recetteRepository, syncManager, portionApi) {
         JournalViewModel(
             journalRepository = journalRepository,
             alimentRepository = alimentRepository,
             recetteRepository = recetteRepository,
             syncManager = syncManager,
+            portionApi = portionApi,
         ).also { it.init() }
     }
     val dashboardRepository = koinInject<DashboardRepository>()

@@ -22,12 +22,12 @@ fun Route.portionRoutes() {
 
     authenticate("auth-jwt") {
         route("/api/v1/portions") {
-            // GET /portions?alimentId={id} — list portions (authenticated to include user's custom portions)
+            // GET /portions?alimentId={id}&alimentNom={nom} — list portions with name matching
             get {
                 val userId = call.userId()
                 val alimentId = call.request.queryParameters["alimentId"]
-                val result = portionService.listPortions(alimentId, userId)
-                // PortionListResponse already has { data, total } structure
+                val alimentNom = call.request.queryParameters["alimentNom"]
+                val result = portionService.listPortions(alimentId, userId, alimentNom)
                 call.respond(HttpStatusCode.OK, result)
             }
 

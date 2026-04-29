@@ -2,11 +2,13 @@ package com.appfood.backend.database.dao
 
 import com.appfood.backend.database.dbQuery
 import com.appfood.backend.database.tables.PortionsTable
+import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
@@ -60,6 +62,23 @@ class PortionDao {
         dbQuery {
             PortionsTable.selectAll()
                 .where { PortionsTable.estGenerique eq true }
+                .map { it.toRow() }
+        }
+
+    /**
+     * Trouve les portions dont le nom contient un des mots-cles.
+     * Utilise pour matcher par exemple "orange" → "Une orange (~200 g)".
+     */
+    suspend fun findByNameKeywords(keywords: List<String>): List<PortionRow> =
+        dbQuery {
+            if (keywords.isEmpty()) return@dbQuery emptyList()
+            PortionsTable.selectAll()
+                .where {
+                    val conditions = keywords.map { keyword ->
+                        PortionsTable.nom.lowerCase() like "%${keyword.lowercase()}%"
+                    }
+                    conditions.drop(1).fold(conditions.first() as org.jetbrains.exposed.sql.Op<Boolean>) { acc, op -> acc or op }
+                }
                 .map { it.toRow() }
         }
 

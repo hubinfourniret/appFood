@@ -18,27 +18,70 @@ class PortionService(
 
     /**
      * List portions for an aliment.
-     * Returns specific portions for the aliment + generic portions + user's custom portions.
-     * If alimentId is null, returns only generic + user's custom portions.
+     * Priority order:
+     * 1. Portions linked to this specific alimentId
+     * 2. Portions matching the aliment name (ex: "orange" → "Une orange (~200g)")
+     * 3. User's custom portions
+     * 4. Generic portions (cuillere, bol, etc.) — only if no specific/name-matched portions found
+     *
+     * @param alimentId aliment ID (optional)
+     * @param alimentNom aliment name for keyword matching (optional)
      */
     suspend fun listPortions(
         alimentId: String?,
         userId: String,
+        alimentNom: String? = null,
     ): PortionListResponse {
-        val portions =
-            if (alimentId != null) {
-                portionDao.findByAlimentId(alimentId, userId)
-            } else {
-                val generiques = portionDao.findGeneriques()
-                val personnalisees = portionDao.findByUserId(userId)
-                generiques + personnalisees
-            }
+        val seenIds = mutableSetOf<String>()
+        val result = mutableListOf<PortionRow>()
 
-        val responses = portions.map { it.toPortionResponse() }
+        // 1. Portions specifiques a l'aliment
+        if (alimentId != null) {
+            val specific = portionDao.findByAlimentId(alimentId, userId)
+                .filter { it.alimentId == alimentId }
+            specific.forEach { if (seenIds.add(it.id)) result.add(it) }
+        }
+
+        // 2. Portions matchees par nom
+        if (alimentNom != null) {
+            val keywords = extractKeywords(alimentNom)
+            if (keywords.isNotEmpty()) {
+                val matched = portionDao.findByNameKeywords(keywords)
+                matched.forEach { if (seenIds.add(it.id)) result.add(it) }
+            }
+        }
+
+        // 3. Portions personnalisees de l'utilisateur
+        val personnalisees = portionDao.findByUserId(userId)
+        personnalisees.forEach { if (seenIds.add(it.id)) result.add(it) }
+
+        // 4. Portions generiques (seulement si aucune portion specifique/matchee)
+        if (result.isEmpty() || result.all { it.estPersonnalise }) {
+            val generiques = portionDao.findGeneriques()
+            generiques.forEach { if (seenIds.add(it.id)) result.add(it) }
+        }
+
+        val responses = result.map { it.toPortionResponse() }
         return PortionListResponse(
             data = responses,
             total = responses.size,
         )
+    }
+
+    /**
+     * Extrait les mots-cles significatifs du nom d'un aliment.
+     * Ignore les mots courts et les mots generiques.
+     */
+    private fun extractKeywords(nom: String): List<String> {
+        val stopWords = setOf("de", "du", "la", "le", "les", "des", "un", "une", "au", "aux", "en", "et", "ou", "avec", "sans", "pour", "sur", "cru", "cuit", "cuite", "frais", "fraiche")
+        return nom.lowercase()
+            .replace(",", " ")
+            .replace("(", " ")
+            .replace(")", " ")
+            .split(" ")
+            .map { it.trim() }
+            .filter { it.length >= 3 && it !in stopWords }
+            .take(3)
     }
 
     /**

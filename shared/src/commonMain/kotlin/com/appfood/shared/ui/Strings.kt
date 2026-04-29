@@ -257,7 +257,7 @@ object Strings {
     const val JOURNAL_PORTION_GRAMS = "Grammes"
     const val JOURNAL_PORTION_QUICK_SUGGESTIONS = "Suggestions rapides"
     const val JOURNAL_PORTION_STANDARD = "Portions standard"
-    const val JOURNAL_PORTION_GENERIC = "Portions generiques"
+const val JOURNAL_PORTION_GENERIC = "Portions generiques"
     const val JOURNAL_PORTION_CUP = "Bol"
     const val JOURNAL_PORTION_TABLESPOON = "Cuillere a soupe"
     const val JOURNAL_PORTION_TEASPOON = "Cuillere a cafe"

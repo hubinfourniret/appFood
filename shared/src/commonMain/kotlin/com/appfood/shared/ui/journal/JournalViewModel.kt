@@ -6,6 +6,7 @@ import com.appfood.shared.api.request.AddJournalEntryRequest
 import com.appfood.shared.api.request.UpdateJournalEntryRequest
 import com.appfood.shared.api.response.AlimentResponse
 import com.appfood.shared.api.response.NutrimentValuesResponse
+import com.appfood.shared.data.remote.PortionApi
 import com.appfood.shared.data.repository.AlimentRepository
 import com.appfood.shared.data.repository.JournalRepository
 import com.appfood.shared.data.repository.RecetteRepository
@@ -45,6 +46,7 @@ class JournalViewModel(
     private val alimentRepository: AlimentRepository,
     private val recetteRepository: RecetteRepository,
     private val syncManager: SyncEnqueuer,
+    private val portionApi: PortionApi? = null,
 ) : ViewModel() {
 
     // --- Search state ---
@@ -69,6 +71,10 @@ class JournalViewModel(
 
     private val _selectedPortion = MutableStateFlow<PortionStandard?>(null)
     val selectedPortion: StateFlow<PortionStandard?> = _selectedPortion.asStateFlow()
+
+    // --- Loaded portions (UX-07 — from API, matched by aliment name/category) ---
+    private val _loadedPortions = MutableStateFlow<List<PortionStandard>>(emptyList())
+    val loadedPortions: StateFlow<List<PortionStandard>> = _loadedPortions.asStateFlow()
 
     // --- Favorites ---
     private val _favorites = MutableStateFlow<List<Aliment>>(emptyList())
@@ -181,7 +187,35 @@ class JournalViewModel(
         _selectedAliment.value = aliment
         _quantityGrams.value = DEFAULT_QUANTITY
         _selectedPortion.value = null
+        _loadedPortions.value = emptyList()
         _addEntryState.value = AddEntryState.SelectPortion
+        // Charger les portions pertinentes depuis l'API (UX-07)
+        loadPortionsForAliment(aliment)
+    }
+
+    private fun loadPortionsForAliment(aliment: Aliment) {
+        val api = portionApi ?: return
+        viewModelScope.launch {
+            try {
+                val response = api.getPortions(
+                    alimentId = aliment.id,
+                    alimentNom = aliment.nom,
+                )
+                _loadedPortions.value = response.data.map { portion ->
+                    PortionStandard(
+                        id = portion.id,
+                        alimentId = portion.alimentId,
+                        nom = portion.nom,
+                        quantiteGrammes = portion.quantiteGrammes,
+                        estGenerique = portion.estGenerique,
+                        estPersonnalise = portion.estPersonnalise,
+                        userId = null,
+                    )
+                }
+            } catch (_: Exception) {
+                // Fallback : pas de portions chargees, l'utilisateur utilise le champ grammes
+            }
+        }
     }
 
     // --- Portion / quantity ---

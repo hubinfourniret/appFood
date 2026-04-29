@@ -12,9 +12,18 @@ import io.ktor.client.call.body
  */
 class PortionApi(private val apiClient: ApiClient) {
 
-    suspend fun getPortions(alimentId: String? = null): PortionListResponse {
-        val path = if (alimentId != null) "/api/v1/portions?alimentId=$alimentId" else "/api/v1/portions"
-        return apiClient.getRequest(path).body()
+    suspend fun getPortions(alimentId: String? = null, alimentNom: String? = null): PortionListResponse {
+        val params = buildString {
+            append("/api/v1/portions")
+            val parts = mutableListOf<String>()
+            if (alimentId != null) parts.add("alimentId=$alimentId")
+            if (alimentNom != null) parts.add("alimentNom=$alimentNom")
+            if (parts.isNotEmpty()) {
+                append("?")
+                append(parts.joinToString("&"))
+            }
+        }
+        return apiClient.getRequest(params).body()
     }
 
     suspend fun createPortion(request: CreatePortionRequest): PortionResponse {
