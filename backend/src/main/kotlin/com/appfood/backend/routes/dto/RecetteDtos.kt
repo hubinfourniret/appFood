@@ -89,4 +89,6 @@ data class IngredientResponse(
     val alimentId: String,
     val alimentNom: String,
     val quantiteGrammes: Double,
+    /** Valeurs nutritionnelles pour 100g de cet ingredient (utile pour preview live cote client). */
+    val nutrimentsPour100g: NutrimentValuesResponse? = null,
 )

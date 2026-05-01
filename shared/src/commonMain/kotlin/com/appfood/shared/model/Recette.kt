@@ -30,4 +30,5 @@ data class IngredientRecette(
     val alimentId: String,
     val alimentNom: String,
     val quantiteGrammes: Double,
+    val nutrimentsPour100g: NutrimentValues? = null,
 )

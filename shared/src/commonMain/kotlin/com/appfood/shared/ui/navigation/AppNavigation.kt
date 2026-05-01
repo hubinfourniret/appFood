@@ -374,6 +374,17 @@ fun AppNavigation(
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToEditRecetteEntry = { recetteId, entryId, portions ->
+                        navController.navigate(
+                            Screen.RecetteDetail(
+                                recetteId = recetteId,
+                                editJournalEntryId = entryId,
+                                prefilledPortions = portions,
+                            ),
+                        ) {
+                            launchSingleTop = true
+                        }
+                    },
                     onNavigateToOnboarding = {
                         navController.navigate(Screen.Onboarding) {
                             launchSingleTop = true
@@ -508,6 +519,10 @@ fun AppNavigation(
                     recetteId = screen.recetteId,
                     viewModel = recettesViewModel,
                     onNavigateBack = {
+                        // En mode edit, on rafraichit le dashboard au retour
+                        if (screen.editJournalEntryId != null) {
+                            dashboardViewModel.loadDashboard()
+                        }
                         navController.popBackStack()
                     },
                     prefilledMealType = prefilledMeal,
@@ -517,6 +532,8 @@ fun AppNavigation(
                         navController.popBackStack(Screen.AddEntry, inclusive = false)
                         dashboardViewModel.loadDashboard()
                     },
+                    editJournalEntryId = screen.editJournalEntryId,
+                    prefilledPortions = screen.prefilledPortions,
                 )
             }
 

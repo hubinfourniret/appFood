@@ -151,6 +151,7 @@ class RecetteRepositoryImpl(
                     alimentId = it.alimentId,
                     alimentNom = it.alimentNom,
                     quantiteGrammes = it.quantiteGrammes,
+                    nutrimentsPour100g = it.nutrimentsPour100g?.toDomain(),
                 )
             },
             etapes = etapes,

@@ -230,6 +230,7 @@ fun Route.journalRoutes() {
                         quantiteGrammes = request.quantiteGrammes,
                         nbPortions = request.nbPortions,
                         mealTypeStr = request.mealType,
+                        ingredientOverrides = request.ingredientOverrides,
                     )
                 call.respond(HttpStatusCode.OK, entry.toResponse())
             }

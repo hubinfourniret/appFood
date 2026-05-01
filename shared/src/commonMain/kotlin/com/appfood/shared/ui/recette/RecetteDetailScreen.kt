@@ -149,6 +149,8 @@ fun RecetteDetailScreen(
     onNavigateBack: () -> Unit,
     prefilledMealType: MealType? = null,
     onAddedFromAddEntry: () -> Unit = onNavigateBack,
+    editJournalEntryId: String? = null,
+    prefilledPortions: Int? = null,
 ) {
     val detailState by viewModel.detailState.collectAsState()
     val selectedPortions by viewModel.selectedPortions.collectAsState()
@@ -158,8 +160,11 @@ fun RecetteDetailScreen(
     val ingredientOverrides by viewModel.ingredientOverrides.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(recetteId) {
+    LaunchedEffect(recetteId, prefilledPortions) {
         viewModel.loadRecetteDetail(recetteId)
+        if (prefilledPortions != null) {
+            viewModel.setSelectedPortionsDirect(prefilledPortions)
+        }
     }
 
     // Show snackbar on success/offline save (et popBackStack si on vient de AddEntry)
@@ -167,7 +172,10 @@ fun RecetteDetailScreen(
         when (addToJournalState) {
             is AddRecetteToJournalState.Success -> {
                 viewModel.resetAddToJournalState()
-                if (prefilledMealType != null) {
+                if (editJournalEntryId != null) {
+                    // TACHE-518 : update termine, retour au dashboard
+                    onNavigateBack()
+                } else if (prefilledMealType != null) {
                     // TACHE-510 v4 : retour jusqu'a AddEntry (selection du repas)
                     onAddedFromAddEntry()
                 } else {
@@ -176,7 +184,9 @@ fun RecetteDetailScreen(
             }
             is AddRecetteToJournalState.SavedOffline -> {
                 viewModel.resetAddToJournalState()
-                if (prefilledMealType != null) {
+                if (editJournalEntryId != null) {
+                    onNavigateBack()
+                } else if (prefilledMealType != null) {
                     onAddedFromAddEntry()
                 } else {
                     snackbarHostState.showSnackbar(Strings.RECETTE_ADDED_TO_JOURNAL_OFFLINE)
@@ -199,12 +209,16 @@ fun RecetteDetailScreen(
         selectedPortions = selectedPortions,
         isFavorite = isFavorite,
         ingredientOverrides = ingredientOverrides,
+        primaryActionLabel = if (editJournalEntryId != null) Strings.RECETTE_SAVE_CHANGES else Strings.RECETTE_ADD_TO_JOURNAL,
         onPortionsChanged = viewModel::onDetailPortionsChanged,
         onToggleFavorite = viewModel::onToggleDetailFavorite,
         onIngredientQuantityChanged = viewModel::onIngredientQuantityChanged,
         onResetIngredientOverrides = viewModel::resetIngredientOverrides,
         onAddToJournal = {
-            if (prefilledMealType != null) {
+            if (editJournalEntryId != null) {
+                // TACHE-518 : update de l'entree existante avec portions + overrides
+                viewModel.onUpdateRecetteJournalEntry(editJournalEntryId)
+            } else if (prefilledMealType != null) {
                 // Skip le dialog : ajout direct avec le mealType deja choisi en amont
                 viewModel.onMealSelectedForRecette(prefilledMealType)
             } else {
@@ -279,6 +293,7 @@ private fun RecetteDetailContent(
     selectedPortions: Int,
     isFavorite: Boolean,
     ingredientOverrides: Map<String, Double>,
+    primaryActionLabel: String,
     onPortionsChanged: (Int) -> Unit,
     onToggleFavorite: () -> Unit,
     onIngredientQuantityChanged: (String, Double) -> Unit,
@@ -340,6 +355,7 @@ private fun RecetteDetailContent(
                     recette = state,
                     selectedPortions = selectedPortions,
                     ingredientOverrides = ingredientOverrides,
+                    primaryActionLabel = primaryActionLabel,
                     onPortionsChanged = onPortionsChanged,
                     onIngredientQuantityChanged = onIngredientQuantityChanged,
                     onResetIngredientOverrides = onResetIngredientOverrides,
@@ -356,6 +372,7 @@ private fun RecetteDetailBody(
     recette: RecetteDetailState.Success,
     selectedPortions: Int,
     ingredientOverrides: Map<String, Double>,
+    primaryActionLabel: String,
     onPortionsChanged: (Int) -> Unit,
     onIngredientQuantityChanged: (String, Double) -> Unit,
     onResetIngredientOverrides: () -> Unit,
@@ -423,18 +440,27 @@ private fun RecetteDetailBody(
 
         Divider()
 
-        // Nutritional table
+        // Nutritional table — live recompute basé sur portions + overrides (TACHE-518)
+        val liveNutriments = computeLiveNutriments(
+            ingredients = recette.ingredients,
+            nbPortionsRecette = recette.nbPortions,
+            selectedPortions = selectedPortions,
+            overrides = ingredientOverrides,
+            fallback = recette.nutrimentsTotaux,
+        )
+        // On affiche le total reel pour cette saisie (passe 1 a NutritionSection pour ne pas
+        // diviser ; le titre reflete que c'est pour la saisie).
         NutritionSection(
-            nutriments = recette.nutrimentsTotaux,
-            nbPortionsOriginal = recette.nbPortions,
+            nutriments = liveNutriments,
+            nbPortionsOriginal = 1,
         )
 
-        // Add to journal button
+        // Action principale (ajouter ou enregistrer selon mode)
         Button(
             onClick = onAddToJournal,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(Strings.RECETTE_ADD_TO_JOURNAL)
+            Text(primaryActionLabel)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -562,6 +588,76 @@ private fun IngredientsSection(
 }
 
 private const val INGREDIENT_STEP_G = 10.0
+
+/**
+ * Calcule les nutriments totaux pour la saisie courante en fonction du nombre
+ * de portions selectionne et des eventuels overrides par ingredient.
+ *
+ * Si tous les ingredients exposent leurs nutriments par 100g (cas du backend a jour),
+ * on calcule a partir des ingredients pour beneficier des overrides en live.
+ * Sinon (DTO legacy / cache local sans nutriments par ingredient), on tombe en fallback
+ * sur le total de la recette scale par les portions, sans application des overrides.
+ */
+private fun computeLiveNutriments(
+    ingredients: List<IngredientRecette>,
+    nbPortionsRecette: Int,
+    selectedPortions: Int,
+    overrides: Map<String, Double>,
+    fallback: NutrimentValues,
+): NutrimentValues {
+    val portionFactor = selectedPortions.toDouble() / nbPortionsRecette.coerceAtLeast(1).toDouble()
+    val canCompute = ingredients.isNotEmpty() && ingredients.all { it.nutrimentsPour100g != null }
+    if (!canCompute) {
+        return fallback.scale(portionFactor)
+    }
+    var sum = NutrimentValues()
+    for (ing in ingredients) {
+        val grams = overrides[ing.id] ?: (ing.quantiteGrammes * portionFactor)
+        if (grams <= 0.0) continue
+        val n = ing.nutrimentsPour100g ?: continue
+        val ratio = grams / 100.0
+        sum = sum + n.scale(ratio)
+    }
+    return sum
+}
+
+private fun NutrimentValues.scale(factor: Double): NutrimentValues = NutrimentValues(
+    calories = calories * factor,
+    proteines = proteines * factor,
+    glucides = glucides * factor,
+    lipides = lipides * factor,
+    fibres = fibres * factor,
+    sel = sel * factor,
+    sucres = sucres * factor,
+    fer = fer * factor,
+    calcium = calcium * factor,
+    zinc = zinc * factor,
+    magnesium = magnesium * factor,
+    vitamineB12 = vitamineB12 * factor,
+    vitamineD = vitamineD * factor,
+    vitamineC = vitamineC * factor,
+    omega3 = omega3 * factor,
+    omega6 = omega6 * factor,
+)
+
+private operator fun NutrimentValues.plus(other: NutrimentValues): NutrimentValues = NutrimentValues(
+    calories = calories + other.calories,
+    proteines = proteines + other.proteines,
+    glucides = glucides + other.glucides,
+    lipides = lipides + other.lipides,
+    fibres = fibres + other.fibres,
+    sel = sel + other.sel,
+    sucres = sucres + other.sucres,
+    fer = fer + other.fer,
+    calcium = calcium + other.calcium,
+    zinc = zinc + other.zinc,
+    magnesium = magnesium + other.magnesium,
+    vitamineB12 = vitamineB12 + other.vitamineB12,
+    vitamineD = vitamineD + other.vitamineD,
+    vitamineC = vitamineC + other.vitamineC,
+    omega3 = omega3 + other.omega3,
+    omega6 = omega6 + other.omega6,
+)
 
 @Composable
 private fun IngredientEditableRow(

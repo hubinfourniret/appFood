@@ -54,6 +54,15 @@ class AlimentDao {
                 .singleOrNull()
         }
 
+    suspend fun findByIds(ids: List<String>): List<AlimentRow> {
+        if (ids.isEmpty()) return emptyList()
+        return dbQuery {
+            AlimentsTable.selectAll()
+                .where { AlimentsTable.id inList ids }
+                .map { it.toRow() }
+        }
+    }
+
     suspend fun findByCodeBarres(codeBarres: String): AlimentRow? =
         dbQuery {
             AlimentsTable.selectAll()

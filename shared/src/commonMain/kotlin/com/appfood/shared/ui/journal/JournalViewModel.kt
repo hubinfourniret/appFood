@@ -380,6 +380,22 @@ class JournalViewModel(
         }
     }
 
+    /** Edition du nombre de portions pour une entree de type recette (TACHE-518). */
+    fun onEditEntryPortions(entryId: String, newPortions: Double) {
+        _editState.value = EditEntryState.Saving
+        viewModelScope.launch {
+            val request = UpdateJournalEntryRequest(nbPortions = newPortions)
+            when (val result = journalRepository.updateEntry(entryId, request)) {
+                is AppResult.Success -> {
+                    _editState.value = EditEntryState.Success
+                }
+                is AppResult.Error -> {
+                    _editState.value = EditEntryState.Error(result.message)
+                }
+            }
+        }
+    }
+
     fun onDeleteEntry(entryId: String) {
         _editState.value = EditEntryState.Saving
         viewModelScope.launch {

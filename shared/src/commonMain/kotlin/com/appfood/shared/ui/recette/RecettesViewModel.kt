@@ -10,6 +10,7 @@ import com.appfood.shared.model.RegimeAlimentaire
 import com.appfood.shared.api.request.AddJournalEntryRequest
 import com.appfood.shared.api.request.CreateRecetteRequest
 import com.appfood.shared.api.request.IngredientRequest
+import com.appfood.shared.api.request.UpdateJournalEntryRequest
 import com.appfood.shared.data.repository.JournalRepository
 import com.appfood.shared.data.repository.RecetteRepository
 import com.appfood.shared.sync.SyncEnqueuer
@@ -323,6 +324,30 @@ class RecettesViewModel(
 
     fun resetAddToJournalState() {
         _addToJournalState.value = AddRecetteToJournalState.Idle
+    }
+
+    /**
+     * TACHE-518 : met a jour une entree journal de type recette avec les portions
+     * + overrides actuellement edites. Pas de selection meal type (conservee).
+     */
+    fun onUpdateRecetteJournalEntry(entryId: String) {
+        val portions = _selectedPortions.value
+        val overrides = _ingredientOverrides.value.takeIf { it.isNotEmpty() }
+        _addToJournalState.value = AddRecetteToJournalState.Saving
+        viewModelScope.launch {
+            val request = UpdateJournalEntryRequest(
+                nbPortions = portions.toDouble(),
+                ingredientOverrides = overrides,
+            )
+            when (val result = journalRepository.updateEntry(entryId, request)) {
+                is AppResult.Success -> _addToJournalState.value = AddRecetteToJournalState.Success
+                is AppResult.Error -> _addToJournalState.value = AddRecetteToJournalState.Idle
+            }
+        }
+    }
+
+    fun setSelectedPortionsDirect(portions: Int) {
+        if (portions >= 1) _selectedPortions.value = portions
     }
 
     // ==================== CREATE ACTIONS (RECETTES-03) ====================

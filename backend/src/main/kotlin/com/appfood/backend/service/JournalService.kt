@@ -179,6 +179,7 @@ class JournalService(
         quantiteGrammes: Double?,
         nbPortions: Double?,
         mealTypeStr: String?,
+        ingredientOverrides: Map<String, Double>? = null,
     ): JournalEntryRow {
         val existing =
             journalEntryDao.findById(entryId, userId)
@@ -227,11 +228,17 @@ class JournalService(
                 if (newPortions <= 0.0) {
                     throw ValidationException("nbPortions doit etre > 0")
                 }
-                if (newPortions != existing.nbPortions) {
+                val portionsChanged = newPortions != existing.nbPortions
+                val hasOverrides = !ingredientOverrides.isNullOrEmpty()
+                if (portionsChanged || hasOverrides) {
                     val recette =
                         recetteDao.findById(existing.recetteId!!)
                             ?: throw NotFoundException("Recette non trouvee: ${existing.recetteId}")
-                    val nutrients = calculateNutrientsFromRecette(recette, newPortions)
+                    val nutrients = if (hasOverrides) {
+                        calculateNutrientsFromRecetteWithOverrides(recette, newPortions, ingredientOverrides!!)
+                    } else {
+                        calculateNutrientsFromRecette(recette, newPortions)
+                    }
                     val quantiteGrammesCalc =
                         if (recette.nbPortions > 0) {
                             newPortions / recette.nbPortions * 100.0

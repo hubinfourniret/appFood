@@ -37,9 +37,13 @@ sealed class Screen {
 
     // Recette detail (RECETTES-02). prefilledMealType permet de skip le dialog
     // de selection repas quand on vient de AddEntry → SearchRecette (TACHE-510 v3).
+    // editJournalEntryId : si fourni, le bouton "Ajouter au journal" devient
+    // "Enregistrer" et appelle updateEntry au lieu de create (TACHE-518).
     @Serializable data class RecetteDetail(
         val recetteId: String,
         val prefilledMealType: String? = null,
+        val editJournalEntryId: String? = null,
+        val prefilledPortions: Int? = null,
     ) : Screen()
 
     // Create recette — admin only (RECETTES-03)

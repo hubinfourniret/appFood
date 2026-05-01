@@ -79,7 +79,11 @@ class RecetteService(
             recetteDao.findById(id)
                 ?: throw NotFoundException("Recette non trouvee: $id")
         val ingredients = recetteDao.findIngredientsByRecetteId(id)
-        return RecetteWithIngredients(recette, ingredients)
+        // Charger les aliments pour exposer les nutriments par 100g (TACHE-518 — preview live)
+        val alimentsById =
+            alimentDao.findByIds(ingredients.map { it.alimentId }.distinct())
+                .associateBy { it.id }
+        return RecetteWithIngredients(recette, ingredients, alimentsById)
     }
 
     suspend fun createRecette(
@@ -332,4 +336,6 @@ class RecetteService(
 data class RecetteWithIngredients(
     val recette: RecetteRow,
     val ingredients: List<IngredientRow>,
+    /** Nutriments par 100g de chaque aliment ingrédient (key = alimentId). Vide si non charge. */
+    val alimentsById: Map<String, AlimentRow> = emptyMap(),
 )

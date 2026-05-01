@@ -27,6 +27,8 @@ data class UpdateJournalEntryRequest(
     val quantiteGrammes: Double? = null,
     val nbPortions: Double? = null,
     val mealType: String? = null,
+    /** Overrides en grammes par ingredient (key = ingredient.id) lors de la mise a jour d'une recette. */
+    val ingredientOverrides: Map<String, Double>? = null,
 )
 
 // --- Response DTOs ---

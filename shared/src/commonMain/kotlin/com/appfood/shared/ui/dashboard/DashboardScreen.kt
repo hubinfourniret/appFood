@@ -68,21 +68,29 @@ fun DashboardScreen(
     onNavigateToRecommandations: () -> Unit,
     onNavigateToHydratation: () -> Unit,
     onNavigateToWeeklyDashboard: () -> Unit,
+    onNavigateToEditRecetteEntry: (recetteId: String, journalEntryId: String, portions: Int) -> Unit,
     onNavigateToOnboarding: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val showDeleteId by journalViewModel.showDeleteConfirmation.collectAsState()
     val editState by journalViewModel.editState.collectAsState()
 
+    // TACHE-518 : edit dialog d'une entree
+    var entryToEdit by remember { mutableStateOf<JournalEntryUiModel?>(null) }
+
     LaunchedEffect(Unit) {
         viewModel.loadDashboard()
     }
 
-    // TACHE-514 : apres une suppression effective, recharger le dashboard
+    // TACHE-514 : apres suppression OU update, recharger le dashboard
     LaunchedEffect(editState) {
-        if (editState is EditEntryState.Deleted) {
-            viewModel.loadDashboard()
-            journalViewModel.resetEditState()
+        when (editState) {
+            is EditEntryState.Deleted, is EditEntryState.Success -> {
+                viewModel.loadDashboard()
+                journalViewModel.resetEditState()
+                entryToEdit = null
+            }
+            else -> {}
         }
     }
 
@@ -97,7 +105,34 @@ fun DashboardScreen(
         onNavigateToHydratationDetail = onNavigateToHydratation,
         onNavigateToOnboarding = onNavigateToOnboarding,
         onRequestDeleteEntry = journalViewModel::onRequestDelete,
+        onEditEntry = { entry ->
+            // TACHE-518 : aliment → dialog, recette → ecran detail (vue complete)
+            if (entry.isRecette && entry.recetteId != null) {
+                onNavigateToEditRecetteEntry(
+                    entry.recetteId,
+                    entry.id,
+                    (entry.nbPortions ?: 1.0).toInt().coerceAtLeast(1),
+                )
+            } else {
+                entryToEdit = entry
+            }
+        },
     )
+
+    val editing = entryToEdit
+    if (editing != null && !editing.isRecette) {
+        EditAlimentEntryDialog(
+            entry = editing,
+            onDismiss = { entryToEdit = null },
+            onSave = { newGrammes ->
+                journalViewModel.onEditEntry(editing.id, newGrammes)
+            },
+            onDelete = {
+                entryToEdit = null
+                journalViewModel.onRequestDelete(editing.id)
+            },
+        )
+    }
 
     if (showDeleteId != null) {
         AlertDialog(
@@ -131,6 +166,7 @@ private fun DashboardContent(
     onNavigateToHydratationDetail: () -> Unit,
     onNavigateToOnboarding: () -> Unit,
     onRequestDeleteEntry: (String) -> Unit,
+    onEditEntry: (JournalEntryUiModel) -> Unit,
 ) {
     var selectedTab by remember { mutableStateOf(DashboardTab.QUOTAS) }
 
@@ -184,6 +220,7 @@ private fun DashboardContent(
                             onSeeRecommandations = onSeeRecommandations,
                             onNavigateToWeeklyDashboard = onNavigateToWeeklyDashboard,
                             onRequestDeleteEntry = onRequestDeleteEntry,
+                            onEditEntry = onEditEntry,
                             modifier = Modifier.padding(innerPadding),
                         )
                         DashboardTab.EAU -> EauTabContent(
@@ -268,6 +305,7 @@ private fun RepasTabContent(
     onSeeRecommandations: () -> Unit,
     onNavigateToWeeklyDashboard: () -> Unit,
     onRequestDeleteEntry: (String) -> Unit,
+    onEditEntry: (JournalEntryUiModel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -291,6 +329,7 @@ private fun RepasTabContent(
                 entries = entries,
                 totalCalories = caloriesTotales,
                 onRequestDeleteEntry = onRequestDeleteEntry,
+                onEditEntry = onEditEntry,
             )
         }
 
@@ -311,6 +350,7 @@ private fun MealDetailCard(
     entries: List<JournalEntryUiModel>,
     totalCalories: Double,
     onRequestDeleteEntry: (String) -> Unit,
+    onEditEntry: (JournalEntryUiModel) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -352,6 +392,7 @@ private fun MealDetailCard(
                 entries.forEach { entry ->
                     JournalEntryRow(
                         entry = entry,
+                        onClick = { onEditEntry(entry) },
                         onDelete = { onRequestDeleteEntry(entry.id) },
                     )
                 }
@@ -363,10 +404,14 @@ private fun MealDetailCard(
 @Composable
 private fun JournalEntryRow(
     entry: JournalEntryUiModel,
+    onClick: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -405,6 +450,64 @@ private fun formatEntryQuantity(entry: JournalEntryUiModel): String {
     } else {
         "${formatCalories(entry.quantiteGrammes)} g"
     }
+}
+
+/**
+ * TACHE-518 : dialog d'edition rapide d'une entree aliment du journal.
+ * Pour les recettes, on navigue vers RecetteDetailScreen en mode edit.
+ */
+@Composable
+private fun EditAlimentEntryDialog(
+    entry: JournalEntryUiModel,
+    onDismiss: () -> Unit,
+    onSave: (Double) -> Unit,
+    onDelete: () -> Unit,
+) {
+    var value by remember(entry.id) { mutableStateOf(entry.quantiteGrammes) }
+    val step = 10.0
+    val minValue = 1.0
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(entry.nom) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = Strings.JOURNAL_EDIT_GRAMMES_LABEL,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(
+                        onClick = { value = (value - step).coerceAtLeast(minValue) },
+                        enabled = value > minValue,
+                    ) { Text("-", style = MaterialTheme.typography.titleLarge) }
+                    Text(
+                        text = "${formatCalories(value)} g",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    IconButton(onClick = { value += step }) {
+                        Text("+", style = MaterialTheme.typography.titleLarge)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onSave(value) }) {
+                Text(Strings.QUOTAS_SAVE)
+            }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = onDelete) { Text(Strings.JOURNAL_DELETE_CONFIRM) }
+                TextButton(onClick = onDismiss) { Text(Strings.JOURNAL_DELETE_CANCEL) }
+            }
+        },
+    )
 }
 
 // ---------------------------------------------------------------------------

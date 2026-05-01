@@ -21,6 +21,7 @@ data class UpdateJournalEntryRequest(
     val quantiteGrammes: Double? = null,
     val nbPortions: Double? = null,
     val mealType: String? = null,
+    val ingredientOverrides: Map<String, Double>? = null,
 )
 
 // V1.1 — JOURNAL-05

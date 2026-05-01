@@ -120,11 +120,32 @@ private fun RecetteWithIngredients.toDetailResponse(): RecetteDetailResponse {
         typeRepas = recette.typeRepas.split(",").filter { it.isNotBlank() },
         ingredients =
             ingredients.map {
+                val aliment = alimentsById[it.alimentId]
                 IngredientResponse(
                     id = it.id,
                     alimentId = it.alimentId,
                     alimentNom = it.alimentNom,
                     quantiteGrammes = it.quantiteGrammes,
+                    nutrimentsPour100g = aliment?.let { a ->
+                        NutrimentValuesResponse(
+                            calories = a.calories,
+                            proteines = a.proteines,
+                            glucides = a.glucides,
+                            lipides = a.lipides,
+                            fibres = a.fibres,
+                            sel = a.sel,
+                            sucres = a.sucres,
+                            fer = a.fer,
+                            calcium = a.calcium,
+                            zinc = a.zinc,
+                            magnesium = a.magnesium,
+                            vitamineB12 = a.vitamineB12,
+                            vitamineD = a.vitamineD,
+                            vitamineC = a.vitamineC,
+                            omega3 = a.omega3,
+                            omega6 = a.omega6,
+                        )
+                    },
                 )
             },
         etapes = recette.etapes.split("|||").filter { it.isNotBlank() },
