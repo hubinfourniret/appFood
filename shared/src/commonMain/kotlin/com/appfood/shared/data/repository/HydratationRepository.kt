@@ -15,6 +15,9 @@ interface HydratationRepository {
     /** Add a water intake entry. */
     suspend fun addEntry(userId: String, date: String, quantiteMl: Int): AppResult<HydratationJournaliere>
 
+    /** Delete a water intake entry. */
+    suspend fun deleteEntry(userId: String, entryId: String): AppResult<HydratationJournaliere>
+
     /** Update the daily hydration objective. */
     suspend fun updateObjectif(userId: String, objectifMl: Int): AppResult<Unit>
 

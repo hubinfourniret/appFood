@@ -445,26 +445,27 @@ class JournalViewModel(
         }
     }
 
-    fun onRecetteSelected(recetteId: String) {
-        viewModelScope.launch {
-            // Ajout direct de 1 portion au journal (navigation vers detail recette = V1.1 UX-06)
-            val mealType = _selectedMealType.value ?: return@launch
-            val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
-            val request = AddJournalEntryRequest(
-                date = today.toString(),
-                mealType = mealType.name,
-                recetteId = recetteId,
-                nbPortions = 1.0,
-            )
-            when (val result = journalRepository.addEntry(request)) {
-                is AppResult.Success -> {
-                    _addEntryState.value = AddEntryState.Saved
-                }
-                is AppResult.Error -> {
-                    _addEntryState.value = AddEntryState.Error(result.message)
-                }
-            }
-        }
+    /**
+     * En mode Recette, on selectionne le mealType sans declencher de transition d'etat
+     * (le state-driven nav navigue vers SearchAliment uniquement, pas SearchRecette).
+     */
+    fun setSelectedMealTypeForRecette(mealType: MealType) {
+        _selectedMealType.value = mealType
+    }
+
+    /**
+     * Reset uniquement la selection en cours (aliment, portion, quantite) sans toucher
+     * au mealType selectionne. TACHE-513 : permet d'ajouter plusieurs aliments au meme repas
+     * sans repasser par l'ecran de selection du repas.
+     */
+    fun resetAlimentSelectionKeepMeal() {
+        _selectedAliment.value = null
+        _quantityGrams.value = DEFAULT_QUANTITY
+        _selectedPortion.value = null
+        _loadedPortions.value = emptyList()
+        _searchQuery.value = ""
+        _searchState.value = SearchState.Idle
+        _addEntryState.value = AddEntryState.SearchFood
     }
 
     // --- Reset / navigation helpers ---

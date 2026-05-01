@@ -58,6 +58,19 @@ class HydratationRepositoryImpl(
         }
     }
 
+    override suspend fun deleteEntry(userId: String, entryId: String): AppResult<HydratationJournaliere> {
+        return try {
+            val response = hydratationApi.deleteEntry(entryId)
+            AppResult.Success(response.toDomain(userId))
+        } catch (e: Exception) {
+            AppResult.Error(
+                code = "NETWORK_ERROR",
+                message = e.message ?: "Failed to delete hydration entry",
+                cause = e,
+            )
+        }
+    }
+
     override suspend fun updateObjectif(userId: String, objectifMl: Int): AppResult<Unit> {
         return try {
             hydratationApi.updateObjectif(UpdateHydratationObjectifRequest(objectifMl))

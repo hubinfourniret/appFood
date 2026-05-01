@@ -147,6 +147,8 @@ fun RecetteDetailScreen(
     recetteId: String,
     viewModel: RecettesViewModel,
     onNavigateBack: () -> Unit,
+    prefilledMealType: MealType? = null,
+    onAddedFromAddEntry: () -> Unit = onNavigateBack,
 ) {
     val detailState by viewModel.detailState.collectAsState()
     val selectedPortions by viewModel.selectedPortions.collectAsState()
@@ -159,22 +161,31 @@ fun RecetteDetailScreen(
         viewModel.loadRecetteDetail(recetteId)
     }
 
-    // Show snackbar on success/offline save
+    // Show snackbar on success/offline save (et popBackStack si on vient de AddEntry)
     LaunchedEffect(addToJournalState) {
         when (addToJournalState) {
             is AddRecetteToJournalState.Success -> {
-                snackbarHostState.showSnackbar(Strings.RECETTE_ADDED_TO_JOURNAL)
                 viewModel.resetAddToJournalState()
+                if (prefilledMealType != null) {
+                    // TACHE-510 v4 : retour jusqu'a AddEntry (selection du repas)
+                    onAddedFromAddEntry()
+                } else {
+                    snackbarHostState.showSnackbar(Strings.RECETTE_ADDED_TO_JOURNAL)
+                }
             }
             is AddRecetteToJournalState.SavedOffline -> {
-                snackbarHostState.showSnackbar(Strings.RECETTE_ADDED_TO_JOURNAL_OFFLINE)
                 viewModel.resetAddToJournalState()
+                if (prefilledMealType != null) {
+                    onAddedFromAddEntry()
+                } else {
+                    snackbarHostState.showSnackbar(Strings.RECETTE_ADDED_TO_JOURNAL_OFFLINE)
+                }
             }
             else -> {}
         }
     }
 
-    // Meal selection dialog
+    // Meal selection dialog (uniquement si pas de mealType pre-rempli)
     if (showMealDialog) {
         MealSelectionDialog(
             onMealSelected = viewModel::onMealSelectedForRecette,
@@ -188,7 +199,14 @@ fun RecetteDetailScreen(
         isFavorite = isFavorite,
         onPortionsChanged = viewModel::onDetailPortionsChanged,
         onToggleFavorite = viewModel::onToggleDetailFavorite,
-        onAddToJournal = viewModel::onAddRecetteToJournal,
+        onAddToJournal = {
+            if (prefilledMealType != null) {
+                // Skip le dialog : ajout direct avec le mealType deja choisi en amont
+                viewModel.onMealSelectedForRecette(prefilledMealType)
+            } else {
+                viewModel.onAddRecetteToJournal()
+            }
+        },
         onRetry = { viewModel.loadRecetteDetail(recetteId) },
         onNavigateBack = onNavigateBack,
         snackbarHostState = snackbarHostState,

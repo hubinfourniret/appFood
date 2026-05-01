@@ -71,13 +71,23 @@ class DashboardViewModel(
         val caloriesConsommees = caloriesQuota?.valeurConsommee ?: 0.0
         val caloriesCible = caloriesQuota?.valeurCible ?: 0.0
 
-        // Agreger les calories par type de repas depuis le journal du jour
+        // Agreger les calories par type de repas + collecter les items pour l'onglet Repas (TACHE-514)
         val repas = mutableMapOf<MealType, Double>()
+        val entriesParRepas = MealType.entries.associateWith { mutableListOf<JournalEntryUiModel>() }
         for (entry in response.journalDuJour) {
             val mealType = try { MealType.valueOf(entry.mealType) } catch (_: Exception) { continue }
             repas[mealType] = (repas[mealType] ?: 0.0) + entry.nutrimentsCalcules.calories
+            entriesParRepas[mealType]?.add(
+                JournalEntryUiModel(
+                    id = entry.id,
+                    nom = entry.nom,
+                    quantiteGrammes = entry.quantiteGrammes,
+                    nbPortions = entry.nbPortions,
+                    calories = entry.nutrimentsCalcules.calories,
+                    isRecette = entry.recetteId != null,
+                ),
+            )
         }
-        // S'assurer que tous les types de repas sont presents
         for (mt in MealType.entries) {
             if (mt !in repas) repas[mt] = 0.0
         }
@@ -88,6 +98,7 @@ class DashboardViewModel(
             caloriesCible = caloriesCible,
             quotasStatus = quotas.filter { !it.nutriment.equals("Calories", ignoreCase = true) },
             repas = repas,
+            entriesParRepas = entriesParRepas.mapValues { it.value.toList() },
             poidsCourant = response.poidsCourant,
             hasJournalEntries = response.journalDuJour.isNotEmpty(),
         )
@@ -122,12 +133,23 @@ sealed interface DashboardState {
         val caloriesCible: Double,
         val quotasStatus: List<QuotaStatusUiModel>,
         val repas: Map<MealType, Double>,
+        val entriesParRepas: Map<MealType, List<JournalEntryUiModel>> = emptyMap(),
         val poidsCourant: Double?,
         val hasJournalEntries: Boolean = false,
         val onboardingComplete: Boolean = true,
     ) : DashboardState
     data class Error(val message: String) : DashboardState
 }
+
+/** Resume d'une entree de journal pour l'onglet Repas (TACHE-514). */
+data class JournalEntryUiModel(
+    val id: String,
+    val nom: String,
+    val quantiteGrammes: Double,
+    val nbPortions: Double?,
+    val calories: Double,
+    val isRecette: Boolean,
+)
 
 data class QuotaStatusUiModel(
     val nutriment: String,

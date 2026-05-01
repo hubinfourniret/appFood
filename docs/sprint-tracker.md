@@ -320,15 +320,32 @@ Tous les ViewModels ont ete cables aux repositories/use cases. Aucun stub TODO r
 | BUG #6 : EditProfil/Preferences sans bouton Retour | EditProfilScreen, PreferencesAlimentairesScreen, AppNavigation | Done |
 | BUG #7 : Token JWT non persiste (perdu au restart) | AppDatabase.sq, UserQueries.sq, LocalUserDataSource, UserRepositoryImpl, ApiClient, SharedModule, AppNavigation | Done |
 
-### US a faire — Sprint 5
+### Backlog actif (format tache verticale, voir workflow-claude-code.md)
 
-| US-ID | Titre | Description | Agents | Statut | Priorite |
-|-------|-------|-------------|--------|--------|----------|
-| UX-06 | Ajout recette depuis AddEntry | L'ecran "Ajouter un aliment" a les onglets Aliment/Recette mais l'onglet Recette ne permet pas de chercher et ajouter une recette au journal. Le flow doit etre : tap Recette → recherche → selection → choix portions → valider → retour dashboard. Actuellement seul l'onglet Aliment fonctionne. | MOBILE, SHARED | Todo | Haute |
-| UX-07 | Portions adaptees par categorie (fruits, etc.) | Implemente : CategoryPortions.kt avec mapping categorie → portions suggerees (13 categories, ~50 portions). Affiche dans PortionSelectorScreen entre les portions specifiques et generiques. Pur client, pas de backend. | SHARED, MOBILE | Done | Haute |
-| DASH-BUG-01 | Dashboard affiche 0/0 kcal ou reste vide | Corrige : auto-init quotas a la creation profil (UserRoutes) + auto-recalcul si vides au chargement dashboard (DashboardService). | BACKEND | Done | Critique |
-| JOURNAL-BUG-01 | Ajout aliment echoue "Aliment non trouve" | Meilisearch retourne des UUIDs qui n'existent pas/plus dans PostgreSQL. Le reimport ne suffit pas. A investiguer : (1) verifier la coherence Meilisearch vs PostgreSQL en prod, (2) ajouter un endpoint de diagnostic /api/v1/admin/data-consistency, (3) si l'aliment n'existe pas en DB, le re-fetcher depuis Meilisearch ou Open Food Facts. | BACKEND, DATA | Todo | Critique |
-| RECO-PERF-01 | Optimiser RecommandationService | RecommandationService charge 2000 aliments en memoire a chaque cache miss. Implementer un pre-filtre SQL + reduire le pool candidat pour eviter les timeouts en cold start. | BACKEND | Todo | Moyenne |
+| # | ID | Titre | Priorite | Statut | Validation |
+|---|-----|-------|----------|--------|------------|
+| 1 | TACHE-510 | Flow symetrique aliment/recette dans AddEntry | Critique | Done | Valide utilisateur 2026-05-01. Save recette → retour direct AddEntry (pop SearchRecette+Detail). |
+| 2 | TACHE-511 | Bouton retour AddEntry demande 3-4 clicks | Critique | Done | Valide utilisateur 2026-05-01 |
+| 3 | TACHE-512 | Suggestions recettes : "tous quotas atteints" a tort | Haute | Done | Valide utilisateur 2026-05-01 |
+| 4 | TACHE-513 | Retour a la recherche d'aliments apres ajout (meme repas) | Haute | Done | Valide utilisateur 2026-05-01 |
+| 5 | TACHE-514 | Dashboard 3 onglets (Quotas / Repas / Eau) | Haute | A valider | Dashboard a 3 onglets en haut. Eau accessible directement. Onglet Repas liste les aliments/recettes par repas avec quantite et calories. "Voir suggestions" sur Quotas+Repas. "Voir la semaine" sur les 3. Bouton "Ajouter un repas" supprime (FAB suffit). |
+| 6 | TACHE-515 | Vue hebdo des repas saisis | Moyenne | Todo | Dashboard hebdo affiche un recap des repas, pas seulement les quotas |
+| 7 | TACHE-516 | Repas types personnels (templates) | Moyenne | Todo | "Sauvegarder ce repas comme template" → reutilisable depuis AddEntry |
+| 8 | JOURNAL-BUG-01 | Coherence Meilisearch/PostgreSQL | Critique | Todo | Recherche aliment → ajout sans erreur "non trouve" |
+| 9 | RECO-PERF-01 | Optimiser RecommandationService | Moyenne | Todo | Cold start dashboard < 5s |
+
+### Reporte (decision superviseur 2026-05-01)
+
+| ID | Titre | Raison |
+|-----|-------|--------|
+| TACHE-517 | Planification hebdo / repas recurrents | Mis de cote, a reevaluer apres TACHE-516 |
+
+### US faites Sprint 5 (avant bascule nouveau format)
+
+| US-ID | Titre | Statut |
+|-------|-------|--------|
+| UX-07 | Portions adaptees par categorie | Done |
+| DASH-BUG-01 | Dashboard affiche 0/0 kcal | Done |
 
 ### Notes Sprint 5
 - Token JWT maintenant persiste en SQLDelight (table local_auth_token) et restaure au demarrage

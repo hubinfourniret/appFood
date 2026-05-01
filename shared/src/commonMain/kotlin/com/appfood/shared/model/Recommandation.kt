@@ -17,3 +17,14 @@ data class RecommandationRecette(
     val pourcentageCouvertureGlobal: Double,
     val pourcentageCouverture: Map<NutrimentType, Double>,
 )
+
+/**
+ * Resultat des recommandations recettes : permet de distinguer le cas
+ * "pas de deficit" (manquesIdentifies vide) du cas "aucune recette ne correspond
+ * aux deficits identifies" (manquesIdentifies non vide mais recettes vide). TACHE-512.
+ */
+@Serializable
+data class RecommandationRecetteList(
+    val manquesIdentifies: List<NutrimentType>,
+    val recettes: List<RecommandationRecette>,
+)

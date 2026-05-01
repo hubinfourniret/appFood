@@ -303,6 +303,10 @@ const val JOURNAL_PORTION_GENERIC = "Portions generiques"
     const val DASHBOARD_ADD_MEAL = "Ajouter un repas"
     const val DASHBOARD_NO_ENTRY = "Aucune saisie"
     const val DASHBOARD_SEE_RECOMMENDATIONS = "Voir les suggestions"
+    const val DASHBOARD_SEE_WEEKLY = "Voir la semaine"
+    const val DASHBOARD_TAB_QUOTAS = "Quotas"
+    const val DASHBOARD_TAB_REPAS = "Repas"
+    const val DASHBOARD_TAB_EAU = "Eau"
 
     // PROFIL-01 — Bandeau rappel profil incomplet
     const val DASHBOARD_INCOMPLETE_PROFILE_MESSAGE = "Complete ton profil pour des recommandations personnalisees"
@@ -324,6 +328,8 @@ const val JOURNAL_PORTION_GENERIC = "Portions generiques"
     const val RECO_COVERS = "Couvre"
     const val RECO_ATE_THIS = "J'ai mange ca"
     const val RECO_NO_DEFICIT = "Tous vos quotas sont atteints, bravo !"
+    const val RECO_NO_MATCH_TITLE = "Aucune recette ne correspond a vos manques aujourd'hui"
+    fun recoNoMatchDeficits(nutriments: String) = "Manques identifies : $nutriments"
 
     // Poids (POIDS-01)
     const val SCREEN_POIDS = "Mon poids"

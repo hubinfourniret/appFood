@@ -2,6 +2,7 @@ package com.appfood.shared.data.repository
 
 import com.appfood.shared.model.RecommandationAliment
 import com.appfood.shared.model.RecommandationRecette
+import com.appfood.shared.model.RecommandationRecetteList
 import com.appfood.shared.util.AppResult
 
 /**
@@ -17,10 +18,10 @@ interface RecommandationRepository {
         limit: Int = 10,
     ): AppResult<List<RecommandationAliment>>
 
-    /** Fetch recipe recommendations for a given date. */
+    /** Fetch recipe recommendations for a given date. Returns deficits + recipes. */
     suspend fun getRecetteRecommandations(
         userId: String,
         date: String? = null,
         limit: Int? = null,
-    ): AppResult<List<RecommandationRecette>>
+    ): AppResult<RecommandationRecetteList>
 }

@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,7 +16,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,9 +35,6 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 import com.appfood.shared.model.MealType
 import com.appfood.shared.ui.Strings
-import com.appfood.shared.ui.common.EmptyJournalState
-import com.appfood.shared.ui.common.EmptyState
-import com.appfood.shared.ui.common.SearchNoResultsMessage
 
 // Back arrow icon
 private val BackArrowIcon: ImageVector by lazy {
@@ -78,12 +71,13 @@ fun AddEntryScreen(
     initialMealType: MealType? = null,
     onNavigateBack: () -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToSearchRecette: () -> Unit,
     onEntrySaved: () -> Unit,
 ) {
     val addEntryState by viewModel.addEntryState.collectAsState()
     val selectedMealType by viewModel.selectedMealType.collectAsState()
-    val recetteSearchQuery by viewModel.recetteSearchQuery.collectAsState()
-    val recetteSearchResults by viewModel.recetteSearchResults.collectAsState()
+
+    var mode by remember { mutableStateOf(JournalAddMode.ALIMENT) }
 
     // Apply initial meal type if provided
     LaunchedEffect(initialMealType) {
@@ -93,8 +87,6 @@ fun AddEntryScreen(
     }
 
     // Navigate on save success (online or offline).
-    // IMPORTANT : on declenche la nav AVANT le reset pour eviter une race
-    // (reset remet le state a SelectMeal => re-trigger ce LaunchedEffect avec un state qui n'est plus Saved).
     LaunchedEffect(addEntryState) {
         val current = addEntryState
         if (current is AddEntryState.Saved || current is AddEntryState.SavedOffline) {
@@ -103,20 +95,23 @@ fun AddEntryScreen(
         }
     }
 
-    // Navigate to search when meal type is selected (aliment mode)
-    LaunchedEffect(addEntryState) {
-        if (addEntryState is AddEntryState.SearchFood) {
+    // Aliment mode : meal type cliquee → state=SearchFood → nav SearchAliment.
+    // TACHE-511 : reset par AppNavigation au retour pour eviter re-fire.
+    LaunchedEffect(addEntryState, mode) {
+        if (addEntryState is AddEntryState.SearchFood && mode == JournalAddMode.ALIMENT) {
             onNavigateToSearch()
         }
     }
 
     AddEntryContent(
+        mode = mode,
+        onModeChanged = { mode = it },
         selectedMealType = selectedMealType,
-        recetteSearchQuery = recetteSearchQuery,
-        recetteSearchResults = recetteSearchResults,
-        onMealTypeSelected = viewModel::onMealTypeSelected,
-        onRecetteSearchQueryChanged = viewModel::onRecetteSearchQueryChanged,
-        onRecetteSelected = viewModel::onRecetteSelected,
+        onMealTypeSelectedAliment = viewModel::onMealTypeSelected,
+        onMealTypeSelectedRecette = { meal ->
+            viewModel.setSelectedMealTypeForRecette(meal)
+            onNavigateToSearchRecette()
+        },
         onNavigateBack = {
             viewModel.resetAddEntryFlow()
             onNavigateBack()
@@ -127,16 +122,13 @@ fun AddEntryScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddEntryContent(
+    mode: JournalAddMode,
+    onModeChanged: (JournalAddMode) -> Unit,
     selectedMealType: MealType?,
-    recetteSearchQuery: String,
-    recetteSearchResults: List<RecetteSearchResult>,
-    onMealTypeSelected: (MealType) -> Unit,
-    onRecetteSearchQueryChanged: (String) -> Unit,
-    onRecetteSelected: (String) -> Unit,
+    onMealTypeSelectedAliment: (MealType) -> Unit,
+    onMealTypeSelectedRecette: (MealType) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    var mode by remember { mutableStateOf(JournalAddMode.ALIMENT) }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -159,106 +151,41 @@ private fun AddEntryContent(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Mode toggle: Aliment / Recette (JOURNAL-02)
+            // Mode toggle: Aliment / Recette
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FilterChip(
                     selected = mode == JournalAddMode.ALIMENT,
-                    onClick = { mode = JournalAddMode.ALIMENT },
+                    onClick = { onModeChanged(JournalAddMode.ALIMENT) },
                     label = { Text(Strings.JOURNAL_MODE_ALIMENT) },
                 )
                 FilterChip(
                     selected = mode == JournalAddMode.RECETTE,
-                    onClick = { mode = JournalAddMode.RECETTE },
+                    onClick = { onModeChanged(JournalAddMode.RECETTE) },
                     label = { Text(Strings.JOURNAL_MODE_RECETTE) },
                 )
             }
 
-            when (mode) {
-                JournalAddMode.ALIMENT -> {
-                    // Original meal type selection
-                    Text(
-                        text = Strings.JOURNAL_SELECT_MEAL_TYPE,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-
-                    MealType.entries.forEach { mealType ->
-                        MealTypeCard(
-                            mealType = mealType,
-                            isSelected = selectedMealType == mealType,
-                            onClick = { onMealTypeSelected(mealType) },
-                        )
-                    }
-                }
-
-                JournalAddMode.RECETTE -> {
-                    // Recipe search (JOURNAL-02)
-                    OutlinedTextField(
-                        value = recetteSearchQuery,
-                        onValueChange = onRecetteSearchQueryChanged,
-                        placeholder = { Text(Strings.JOURNAL_SEARCH_RECETTE_PLACEHOLDER) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    if (recetteSearchResults.isEmpty() && recetteSearchQuery.isNotBlank()) {
-                        SearchNoResultsMessage()
-                    } else if (recetteSearchResults.isEmpty() && recetteSearchQuery.isBlank()) {
-                        EmptyState(
-                            message = Strings.JOURNAL_SEARCH_HINT,
-                        )
-                    } else {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            items(
-                                items = recetteSearchResults,
-                                key = { it.id },
-                            ) { recette ->
-                                RecetteResultCard(
-                                    recette = recette,
-                                    onClick = { onRecetteSelected(recette.id) },
-                                )
-                            }
+            // Meal type selection — commun aux deux modes (TACHE-510 v3)
+            Text(
+                text = Strings.JOURNAL_SELECT_MEAL_TYPE,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            MealType.entries.forEach { mealType ->
+                MealTypeCard(
+                    mealType = mealType,
+                    isSelected = selectedMealType == mealType,
+                    onClick = {
+                        when (mode) {
+                            JournalAddMode.ALIMENT -> onMealTypeSelectedAliment(mealType)
+                            JournalAddMode.RECETTE -> onMealTypeSelectedRecette(mealType)
                         }
-                    }
-                }
+                    },
+                )
             }
-        }
-    }
-}
-
-@Composable
-private fun RecetteResultCard(
-    recette: RecetteSearchResult,
-    onClick: () -> Unit,
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-        ) {
-            Text(
-                text = recette.nom,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = Strings.recetteTempsPrep(recette.tempsPreparationMin),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }

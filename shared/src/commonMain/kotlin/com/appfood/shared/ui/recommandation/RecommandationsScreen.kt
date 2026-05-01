@@ -219,6 +219,10 @@ private fun RecetteRecommandationsTabContent(
             NoDeficitContent()
         }
 
+        is RecommandationRecetteState.NoMatch -> {
+            NoMatchContent(manques = state.manques)
+        }
+
         is RecommandationRecetteState.Success -> {
             RecetteRecommandationListContent(
                 recettes = state.recettes,
@@ -252,6 +256,45 @@ private fun NoDeficitContent(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface,
         )
+    }
+}
+
+/**
+ * TACHE-512 : etat affiche quand des deficits existent mais aucune recette
+ * du catalogue ne couvre ces deficits \u2014 different de "tous quotas atteints".
+ */
+@Composable
+private fun NoMatchContent(
+    manques: List<String>,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "\ud83d\udd0d",
+            style = MaterialTheme.typography.displayMedium,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = Strings.RECO_NO_MATCH_TITLE,
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (manques.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = Strings.recoNoMatchDeficits(manques.joinToString(", ")),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 

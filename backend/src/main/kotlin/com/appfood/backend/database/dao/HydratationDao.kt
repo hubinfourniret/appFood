@@ -126,6 +126,22 @@ class HydratationDao {
             HydratationEntriesTable.deleteWhere { HydratationEntriesTable.id eq id } > 0
         }
 
+    suspend fun findEntryById(id: String): HydratationEntryRow? =
+        dbQuery {
+            HydratationEntriesTable.selectAll()
+                .where { HydratationEntriesTable.id eq id }
+                .map { it.toEntryRow() }
+                .singleOrNull()
+        }
+
+    suspend fun findById(id: String): HydratationRow? =
+        dbQuery {
+            HydratationTable.selectAll()
+                .where { HydratationTable.id eq id }
+                .map { it.toRow() }
+                .singleOrNull()
+        }
+
     suspend fun findByUserId(userId: String): List<HydratationRow> =
         dbQuery {
             HydratationTable.selectAll()

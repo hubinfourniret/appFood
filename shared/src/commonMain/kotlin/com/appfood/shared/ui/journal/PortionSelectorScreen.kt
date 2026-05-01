@@ -107,8 +107,10 @@ fun PortionSelectorScreen(
     LaunchedEffect(addEntryState) {
         val current = addEntryState
         if (current is AddEntryState.Saved || current is AddEntryState.SavedOffline) {
+            // TACHE-513 : reset partiel (garde le mealType selectionne) pour permettre
+            // d'enchainer plusieurs aliments sur le meme repas. La nav remonte vers SearchAliment.
+            viewModel.resetAlimentSelectionKeepMeal()
             onEntryValidated()
-            viewModel.resetAddEntryFlow()
         }
     }
 

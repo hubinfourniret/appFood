@@ -45,6 +45,8 @@ import com.appfood.shared.ui.journal.JournalScreen
 import com.appfood.shared.ui.journal.JournalViewModel
 import com.appfood.shared.ui.journal.PortionSelectorScreen
 import com.appfood.shared.ui.journal.SearchAlimentScreen
+import com.appfood.shared.ui.journal.SearchRecetteScreen
+import com.appfood.shared.model.MealType
 import com.appfood.shared.ui.onboarding.OnboardingScreen
 import com.appfood.shared.ui.onboarding.OnboardingViewModel
 import com.appfood.shared.domain.poids.DetecterChangementPoidsUseCase
@@ -346,6 +348,7 @@ fun AppNavigation(
                 DashboardScreen(
                     viewModel = dashboardViewModel,
                     hydratationViewModel = hydratationViewModel,
+                    journalViewModel = journalViewModel,
                     onNavigateToAddEntry = {
                         navController.navigate(Screen.AddEntry) {
                             launchSingleTop = true
@@ -401,7 +404,14 @@ fun AppNavigation(
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToSearchRecette = {
+                        navController.navigate(Screen.SearchRecette) {
+                            launchSingleTop = true
+                        }
+                    },
                     onEntrySaved = {
+                        // Cas marginal : si onEntrySaved fire depuis AddEntry directement
+                        // (pas via PortionSelector), on rafraichit et on retourne dashboard.
                         dashboardViewModel.loadDashboard()
                         navController.navigate(Screen.Dashboard) {
                             popUpTo<Screen.Dashboard> { inclusive = true }
@@ -415,6 +425,9 @@ fun AppNavigation(
                 SearchAlimentScreen(
                     viewModel = journalViewModel,
                     onNavigateBack = {
+                        // TACHE-511 : reset le state pour eviter que LaunchedEffect(addEntryState)
+                        // re-tire vers SearchAliment au retour sur AddEntry.
+                        journalViewModel.goBackToMealSelection()
                         navController.popBackStack()
                     },
                     onAlimentSelected = {
@@ -425,18 +438,35 @@ fun AppNavigation(
                 )
             }
 
-            composable<Screen.PortionSelector> {
-                PortionSelectorScreen(
+            composable<Screen.SearchRecette> {
+                SearchRecetteScreen(
                     viewModel = journalViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onEntryValidated = {
-                        dashboardViewModel.loadDashboard()
-                        navController.navigate(Screen.Dashboard) {
-                            popUpTo<Screen.Dashboard> { inclusive = true }
+                    onRecetteClick = { recetteId ->
+                        val mealName = journalViewModel.selectedMealType.value?.name
+                        navController.navigate(
+                            Screen.RecetteDetail(recetteId = recetteId, prefilledMealType = mealName),
+                        ) {
                             launchSingleTop = true
                         }
+                    },
+                )
+            }
+
+            composable<Screen.PortionSelector> {
+                PortionSelectorScreen(
+                    viewModel = journalViewModel,
+                    onNavigateBack = {
+                        journalViewModel.goBackToSearch()
+                        navController.popBackStack()
+                    },
+                    onEntryValidated = {
+                        // TACHE-513 : retour a SearchAliment (mealType conserve) pour
+                        // enchainer un autre aliment au meme repas. Dashboard rafraichi en arriere-plan.
+                        dashboardViewModel.loadDashboard()
+                        navController.popBackStack()
                     },
                 )
             }
@@ -468,14 +498,24 @@ fun AppNavigation(
                 )
             }
 
-            // Recette detail (RECETTES-02)
+            // Recette detail (RECETTES-02 + TACHE-510 v3)
             composable<Screen.RecetteDetail> { backStackEntry ->
                 val screen = backStackEntry.toRoute<Screen.RecetteDetail>()
+                val prefilledMeal = screen.prefilledMealType?.let {
+                    runCatching { MealType.valueOf(it) }.getOrNull()
+                }
                 RecetteDetailScreen(
                     recetteId = screen.recetteId,
                     viewModel = recettesViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                    prefilledMealType = prefilledMeal,
+                    onAddedFromAddEntry = {
+                        // TACHE-510 v4 : pop jusqu'a AddEntry (= au-dessus de SearchRecette)
+                        // pour revenir directement a la selection du repas.
+                        navController.popBackStack(Screen.AddEntry, inclusive = false)
+                        dashboardViewModel.loadDashboard()
                     },
                 )
             }

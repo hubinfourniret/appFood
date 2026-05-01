@@ -135,6 +135,38 @@ class HydratationService(
     }
 
     /**
+     * Supprime une entree d'hydratation et recalcule le cumul du jour.
+     * Verifie que l'entree appartient bien a l'utilisateur.
+     */
+    suspend fun deleteEntry(
+        userId: String,
+        entryId: String,
+    ): HydratationResponse {
+        val entry =
+            hydratationDao.findEntryById(entryId)
+                ?: throw ValidationException("Entree d'hydratation introuvable: $entryId")
+
+        val hydraRow =
+            hydratationDao.findById(entry.hydratationId)
+                ?: throw ValidationException("Journee d'hydratation introuvable")
+
+        if (hydraRow.userId != userId) {
+            throw ValidationException("Acces refuse a cette entree d'hydratation")
+        }
+
+        hydratationDao.deleteEntry(entryId)
+
+        // Recalculer le cumul a partir des entrees restantes
+        val remaining = hydratationDao.findEntriesByHydratationId(hydraRow.id)
+        val newTotal = remaining.sumOf { it.quantiteMl }
+        hydratationDao.updateQuantite(hydraRow.id, userId, newTotal)
+
+        logger.info("DeleteHydratationEntry: userId=$userId, entryId=$entryId, -${entry.quantiteMl}ml, total=${newTotal}ml")
+
+        return getDaily(userId, hydraRow.date)
+    }
+
+    /**
      * Met a jour l'objectif d'hydratation personnalise.
      */
     suspend fun updateObjectif(

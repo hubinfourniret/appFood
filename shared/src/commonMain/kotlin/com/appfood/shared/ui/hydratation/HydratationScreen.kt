@@ -45,6 +45,94 @@ import com.appfood.shared.ui.common.ErrorMessage
 import com.appfood.shared.ui.common.LoadingSkeleton
 
 /**
+ * TACHE-514 : version embarquable (sans Scaffold/TopAppBar) pour l'onglet Eau du dashboard.
+ * Reutilise toute la logique : success content, dialogs personnalises, dialog objectif.
+ */
+@Composable
+fun HydratationEmbeddedContent(
+    viewModel: HydratationViewModel,
+    modifier: Modifier = Modifier,
+) {
+    val state by viewModel.state.collectAsState()
+    val showCustomDialog by viewModel.showCustomDialog.collectAsState()
+    val customInput by viewModel.customInput.collectAsState()
+    val showObjectifDialog by viewModel.showObjectifDialog.collectAsState()
+    val objectifInput by viewModel.objectifInput.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.init()
+    }
+
+    when (state) {
+        is HydratationState.Loading -> {
+            LoadingSkeleton(lines = 6, modifier = modifier)
+        }
+        is HydratationState.Error -> {
+            ErrorMessage(
+                message = (state as HydratationState.Error).message,
+                onRetry = viewModel::retry,
+                modifier = modifier,
+            )
+        }
+        is HydratationState.Success -> {
+            HydratationSuccessContent(
+                state = state as HydratationState.Success,
+                onAddGlass = viewModel::addGlass,
+                onAddBottle = viewModel::addBottle,
+                onShowCustom = viewModel::showCustomInput,
+                onShowObjectifEditor = viewModel::showObjectifEditor,
+                onResetObjectif = viewModel::resetObjectif,
+                onDeleteEntry = viewModel::deleteEntry,
+                modifier = modifier,
+            )
+        }
+    }
+
+    if (showCustomDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissCustomDialog,
+            title = { Text(Strings.HYDRA_ADD_CUSTOM) },
+            text = {
+                OutlinedTextField(
+                    value = customInput,
+                    onValueChange = viewModel::onCustomInputChanged,
+                    label = { Text(Strings.HYDRA_CUSTOM_LABEL) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                Button(onClick = viewModel::addCustom) { Text(Strings.QUOTAS_SAVE) }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissCustomDialog) { Text(Strings.DELETE_ACCOUNT_CANCEL) }
+            },
+        )
+    }
+    if (showObjectifDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissObjectifDialog,
+            title = { Text(Strings.HYDRA_MODIFY_OBJECTIVE) },
+            text = {
+                OutlinedTextField(
+                    value = objectifInput,
+                    onValueChange = viewModel::onObjectifInputChanged,
+                    label = { Text(Strings.HYDRA_CUSTOM_LABEL) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                Button(onClick = viewModel::updateObjectif) { Text(Strings.QUOTAS_SAVE) }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissObjectifDialog) { Text(Strings.DELETE_ACCOUNT_CANCEL) }
+            },
+        )
+    }
+}
+
+/**
  * Full hydration tracking screen (HYDRA-01).
  * Shows intake buttons, progress, and weekly history.
  */
@@ -70,6 +158,7 @@ fun HydratationScreen(
         onShowCustom = viewModel::showCustomInput,
         onShowObjectifEditor = viewModel::showObjectifEditor,
         onResetObjectif = viewModel::resetObjectif,
+        onDeleteEntry = viewModel::deleteEntry,
         onRetry = viewModel::retry,
         onNavigateBack = onNavigateBack,
     )
@@ -138,6 +227,7 @@ private fun HydratationContent(
     onShowCustom: () -> Unit,
     onShowObjectifEditor: () -> Unit,
     onResetObjectif: () -> Unit,
+    onDeleteEntry: (String) -> Unit,
     onRetry: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -177,6 +267,7 @@ private fun HydratationContent(
                     onShowCustom = onShowCustom,
                     onShowObjectifEditor = onShowObjectifEditor,
                     onResetObjectif = onResetObjectif,
+                    onDeleteEntry = onDeleteEntry,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -192,6 +283,7 @@ private fun HydratationSuccessContent(
     onShowCustom: () -> Unit,
     onShowObjectifEditor: () -> Unit,
     onResetObjectif: () -> Unit,
+    onDeleteEntry: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -231,7 +323,7 @@ private fun HydratationSuccessContent(
 
         // Today's entries
         if (state.entrees.isNotEmpty()) {
-            TodayEntriesSection(entrees = state.entrees)
+            TodayEntriesSection(entrees = state.entrees, onDeleteEntry = onDeleteEntry)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -461,6 +553,7 @@ private fun WeeklyHistorySection(
 @Composable
 private fun TodayEntriesSection(
     entrees: List<HydratationEntree>,
+    onDeleteEntry: (String) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -481,18 +574,27 @@ private fun TodayEntriesSection(
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = entree.heure,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Text(
-                        text = "${entree.quantiteMl} ml",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = "${entree.quantiteMl} ml",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        IconButton(onClick = { onDeleteEntry(entree.id) }) {
+                            Text(text = "🗑", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
                 }
             }
         }

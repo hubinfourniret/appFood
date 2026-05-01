@@ -19,6 +19,10 @@ class HydratationApi(private val apiClient: ApiClient) {
         return apiClient.postRequest("/api/v1/hydratation", request).body()
     }
 
+    suspend fun deleteEntry(entryId: String): HydratationResponse {
+        return apiClient.deleteRequest("/api/v1/hydratation/entries/$entryId").body()
+    }
+
     suspend fun updateObjectif(request: UpdateHydratationObjectifRequest): HydratationResponse {
         return apiClient.putRequest("/api/v1/hydratation/objectif", request).body()
     }

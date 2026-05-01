@@ -105,19 +105,24 @@ class RecommandationViewModel(
                 date = currentDate,
             )) {
                 is AppResult.Success -> {
-                    val data = result.data
-                    _recetteState.value = if (data.isEmpty()) {
-                        RecommandationRecetteState.NoDeficit
-                    } else {
-                        RecommandationRecetteState.Success(data.map { reco ->
-                            RecommandationRecetteUiModel(
-                                recetteId = reco.recette.id,
-                                recetteNom = reco.recette.nom,
-                                tempsPreparationMin = reco.recette.tempsPreparationMin,
-                                pourcentageCouvertureGlobal = reco.pourcentageCouvertureGlobal.toInt(),
-                                nutrimentsCibles = reco.nutrimentsCibles.map { it.name },
-                            )
-                        })
+                    val payload = result.data
+                    _recetteState.value = when {
+                        // TACHE-512 : on distingue "aucun deficit" et "deficits sans recette"
+                        payload.manquesIdentifies.isEmpty() -> RecommandationRecetteState.NoDeficit
+                        payload.recettes.isEmpty() -> RecommandationRecetteState.NoMatch(
+                            manques = payload.manquesIdentifies.map { it.name },
+                        )
+                        else -> RecommandationRecetteState.Success(
+                            payload.recettes.map { reco ->
+                                RecommandationRecetteUiModel(
+                                    recetteId = reco.recette.id,
+                                    recetteNom = reco.recette.nom,
+                                    tempsPreparationMin = reco.recette.tempsPreparationMin,
+                                    pourcentageCouvertureGlobal = reco.pourcentageCouvertureGlobal.toInt(),
+                                    nutrimentsCibles = reco.nutrimentsCibles.map { it.name },
+                                )
+                            },
+                        )
                     }
                 }
                 is AppResult.Error -> {
@@ -216,7 +221,13 @@ enum class RecommandationTab {
 sealed interface RecommandationRecetteState {
     data object Loading : RecommandationRecetteState
     data class Success(val recettes: List<RecommandationRecetteUiModel>) : RecommandationRecetteState
+
+    /** Aucun deficit : tous les quotas sont atteints. */
     data object NoDeficit : RecommandationRecetteState
+
+    /** Des deficits existent mais aucune recette du catalogue ne correspond. TACHE-512. */
+    data class NoMatch(val manques: List<String>) : RecommandationRecetteState
+
     data class Error(val message: String) : RecommandationRecetteState
 }
 

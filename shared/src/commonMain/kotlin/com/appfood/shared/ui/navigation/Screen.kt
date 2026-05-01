@@ -20,6 +20,7 @@ sealed class Screen {
     // Journal flow
     @Serializable data object AddEntry : Screen()
     @Serializable data object SearchAliment : Screen()
+    @Serializable data object SearchRecette : Screen()
     @Serializable data object PortionSelector : Screen()
 
     // Quota management (QUOTAS-02)
@@ -34,8 +35,12 @@ sealed class Screen {
     // Weekly dashboard (DASHBOARD-02)
     @Serializable data object WeeklyDashboard : Screen()
 
-    // Recette detail (RECETTES-02)
-    @Serializable data class RecetteDetail(val recetteId: String) : Screen()
+    // Recette detail (RECETTES-02). prefilledMealType permet de skip le dialog
+    // de selection repas quand on vient de AddEntry → SearchRecette (TACHE-510 v3).
+    @Serializable data class RecetteDetail(
+        val recetteId: String,
+        val prefilledMealType: String? = null,
+    ) : Screen()
 
     // Create recette — admin only (RECETTES-03)
     @Serializable data object CreateRecette : Screen()

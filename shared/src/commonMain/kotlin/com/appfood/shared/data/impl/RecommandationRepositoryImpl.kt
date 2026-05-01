@@ -11,6 +11,7 @@ import com.appfood.shared.model.NutrimentValues
 import com.appfood.shared.model.Recette
 import com.appfood.shared.model.RecommandationAliment
 import com.appfood.shared.model.RecommandationRecette
+import com.appfood.shared.model.RecommandationRecetteList
 import com.appfood.shared.model.RegimeAlimentaire
 import com.appfood.shared.model.SourceAliment
 import com.appfood.shared.model.SourceRecette
@@ -48,11 +49,19 @@ class RecommandationRepositoryImpl(
         userId: String,
         date: String?,
         limit: Int?,
-    ): AppResult<List<RecommandationRecette>> {
+    ): AppResult<RecommandationRecetteList> {
         return try {
             val response = recommandationApi.getRecetteRecommandations(date, limit)
             val recommandations = response.data.map { it.toDomain() }
-            AppResult.Success(recommandations)
+            val manques = response.manquesIdentifies.mapNotNull { name ->
+                runCatching { NutrimentType.valueOf(name) }.getOrNull()
+            }
+            AppResult.Success(
+                RecommandationRecetteList(
+                    manquesIdentifies = manques,
+                    recettes = recommandations,
+                ),
+            )
         } catch (e: Exception) {
             AppResult.Error(
                 code = "NETWORK_ERROR",

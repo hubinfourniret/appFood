@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -45,6 +47,11 @@ class HydratationViewModel(
 
     private val _showObjectifDialog = MutableStateFlow(false)
     val showObjectifDialog: StateFlow<Boolean> = _showObjectifDialog.asStateFlow()
+
+    // TACHE-514 fix : serialise les appels addWater pour eviter les races
+    // quand l'utilisateur spamme +verre/+bouteille (sinon plusieurs requetes
+    // concurrentes lisent le meme total cote serveur et se "ecrasent" mutuellement).
+    private val addWaterMutex = Mutex()
 
     fun init() {
         loadHydratation()
@@ -156,50 +163,98 @@ class HydratationViewModel(
         loadHydratation()
     }
 
-    private fun addWater(ml: Int) {
+    /**
+     * TACHE-514 : supprime une entree d'hydratation. Le serveur recalcule le total
+     * et nous renvoie le jour mis a jour.
+     */
+    fun deleteEntry(entryId: String) {
+        if (entryId.isBlank() || entryId.startsWith("local-")) return
         viewModelScope.launch {
-            val result = ajouterEauUseCase(USER_ID, ml)
-            when (result) {
-                is AppResult.Success -> {
-                    val data = result.data
-                    val current = _state.value
-                    val objectifMl = (current as? HydratationState.Success)?.objectifMl ?: data.objectifMl
-                    val pourcentage = if (objectifMl > 0) {
-                        (data.quantiteMl.toDouble() / objectifMl * 100).coerceIn(0.0, 200.0)
-                    } else 0.0
-                    _state.value = HydratationState.Success(
-                        quantiteMl = data.quantiteMl,
-                        objectifMl = objectifMl,
-                        pourcentage = pourcentage,
-                        estPersonnalise = data.estObjectifPersonnalise,
-                        entrees = data.entrees.map { entry ->
-                            HydratationEntree(
-                                heure = formatHeure(entry.heure),
-                                quantiteMl = entry.quantiteMl,
-                            )
-                        },
-                        weeklyData = (current as? HydratationState.Success)?.weeklyData
-                            ?: listOf(0, 0, 0, 0, 0, 0, 0),
-                    )
-                }
-                is AppResult.Error -> {
-                    // Optimistic local update on error (offline)
-                    val current = _state.value
-                    if (current is HydratationState.Success) {
-                        val newQuantite = current.quantiteMl + ml
-                        val pourcentage = if (current.objectifMl > 0) {
-                            (newQuantite.toDouble() / current.objectifMl * 100).coerceIn(0.0, 200.0)
+            addWaterMutex.withLock {
+                val result = hydratationRepository.deleteEntry(USER_ID, entryId)
+                when (result) {
+                    is AppResult.Success -> {
+                        val data = result.data
+                        val current = _state.value
+                        val pourcentage = if (data.objectifMl > 0) {
+                            (data.quantiteMl.toDouble() / data.objectifMl * 100).coerceIn(0.0, 200.0)
                         } else 0.0
-                        val newEntree = HydratationEntree(
-                            heure = "Maintenant",
-                            quantiteMl = ml,
-                        )
-                        _state.value = current.copy(
-                            quantiteMl = newQuantite,
+                        _state.value = HydratationState.Success(
+                            quantiteMl = data.quantiteMl,
+                            objectifMl = data.objectifMl,
                             pourcentage = pourcentage,
-                            entrees = current.entrees + newEntree,
+                            estPersonnalise = data.estObjectifPersonnalise,
+                            entrees = data.entrees.map { e ->
+                                HydratationEntree(
+                                    id = e.id,
+                                    heure = formatHeure(e.heure),
+                                    quantiteMl = e.quantiteMl,
+                                )
+                            },
+                            weeklyData = (current as? HydratationState.Success)?.weeklyData
+                                ?: listOf(0, 0, 0, 0, 0, 0, 0),
                         )
                     }
+                    is AppResult.Error -> {
+                        // Echec : on ne change rien localement (l'utilisateur verra un retry implicite au reload)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun addWater(ml: Int) {
+        viewModelScope.launch {
+            addWaterMutex.withLock {
+                addWaterInternal(ml)
+            }
+        }
+    }
+
+    private suspend fun addWaterInternal(ml: Int) {
+        val result = ajouterEauUseCase(USER_ID, ml)
+        when (result) {
+            is AppResult.Success -> {
+                val data = result.data
+                val current = _state.value
+                val objectifMl = (current as? HydratationState.Success)?.objectifMl ?: data.objectifMl
+                val pourcentage = if (objectifMl > 0) {
+                    (data.quantiteMl.toDouble() / objectifMl * 100).coerceIn(0.0, 200.0)
+                } else 0.0
+                _state.value = HydratationState.Success(
+                    quantiteMl = data.quantiteMl,
+                    objectifMl = objectifMl,
+                    pourcentage = pourcentage,
+                    estPersonnalise = data.estObjectifPersonnalise,
+                    entrees = data.entrees.map { entry ->
+                        HydratationEntree(
+                            id = entry.id,
+                            heure = formatHeure(entry.heure),
+                            quantiteMl = entry.quantiteMl,
+                        )
+                    },
+                    weeklyData = (current as? HydratationState.Success)?.weeklyData
+                        ?: listOf(0, 0, 0, 0, 0, 0, 0),
+                )
+            }
+            is AppResult.Error -> {
+                // Optimistic local update on error (offline)
+                val current = _state.value
+                if (current is HydratationState.Success) {
+                    val newQuantite = current.quantiteMl + ml
+                    val pourcentage = if (current.objectifMl > 0) {
+                        (newQuantite.toDouble() / current.objectifMl * 100).coerceIn(0.0, 200.0)
+                    } else 0.0
+                    val newEntree = HydratationEntree(
+                        id = "local-${kotlin.time.Clock.System.now().toEpochMilliseconds()}",
+                        heure = "Maintenant",
+                        quantiteMl = ml,
+                    )
+                    _state.value = current.copy(
+                        quantiteMl = newQuantite,
+                        pourcentage = pourcentage,
+                        entrees = current.entrees + newEntree,
+                    )
                 }
             }
         }
@@ -226,6 +281,7 @@ class HydratationViewModel(
                         estPersonnalise = data.estObjectifPersonnalise,
                         entrees = data.entrees.map { entry ->
                             HydratationEntree(
+                                id = entry.id,
                                 heure = formatHeure(entry.heure),
                                 quantiteMl = entry.quantiteMl,
                             )
@@ -294,6 +350,7 @@ sealed interface HydratationState {
 }
 
 data class HydratationEntree(
+    val id: String,
     val heure: String,
     val quantiteMl: Int,
 )
