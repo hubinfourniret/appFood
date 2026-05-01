@@ -36,6 +36,7 @@ class RecetteService(
         query: String?,
         page: Int,
         size: Int,
+        currentUserId: String? = null,
     ): Pair<List<RecetteWithIngredients>, Int> {
         // Validate enums if provided
         regime?.toEnumOrThrow<RegimeAlimentaire>("regime")
@@ -52,6 +53,7 @@ class RecetteService(
             sort = sort,
             limit = size,
             offset = offset,
+            currentUserId = currentUserId,
         )
         logger.info("listRecettes/query=${System.currentTimeMillis() - t0}ms total=$total returned=${rows.size}")
 
@@ -90,8 +92,12 @@ class RecetteService(
         userId: String,
         request: CreateRecetteRequest,
     ): RecetteWithIngredients {
-        checkAdmin(userId)
+        // TACHE-516 : tout utilisateur peut creer une recette personnelle.
+        // Seul un admin peut publier (publie=true visible par tous).
+        val isAdmin = isAdmin(userId)
         validateCreateRequest(request)
+        val effectivePublie = if (isAdmin) request.publie else false
+        val ownerUserId = if (isAdmin && request.publie) null else userId
 
         val now = Clock.System.now()
         val recetteId = UUID.randomUUID().toString()
@@ -152,7 +158,8 @@ class RecetteService(
                 omega3 = totalNutrients.omega3,
                 omega6 = totalNutrients.omega6,
                 imageUrl = request.imageUrl,
-                publie = request.publie,
+                publie = effectivePublie,
+                userId = ownerUserId,
                 createdAt = now,
                 updatedAt = now,
             )
@@ -169,11 +176,12 @@ class RecetteService(
         recetteId: String,
         request: UpdateRecetteRequest,
     ): RecetteWithIngredients {
-        checkAdmin(userId)
-
         val existing =
             recetteDao.findById(recetteId)
                 ?: throw NotFoundException("Recette non trouvee: $recetteId")
+
+        // TACHE-516 : owner ou admin peut modifier
+        checkCanEditRecette(userId, existing)
 
         // Validate enums if provided
         request.regimesCompatibles?.forEach { it.toEnumOrThrow<RegimeAlimentaire>("regimesCompatibles") }
@@ -270,15 +278,27 @@ class RecetteService(
         userId: String,
         recetteId: String,
     ) {
-        checkAdmin(userId)
-
         val existing =
             recetteDao.findById(recetteId)
                 ?: throw NotFoundException("Recette non trouvee: $recetteId")
 
+        checkCanEditRecette(userId, existing)
+
         recetteDao.deleteIngredientsByRecetteId(recetteId)
         recetteDao.delete(recetteId)
         logger.info("DeleteRecette: id=$recetteId, userId=$userId")
+    }
+
+    /**
+     * TACHE-516 : liste les recettes personnelles d'un utilisateur.
+     */
+    suspend fun listMyRecettes(userId: String): List<RecetteWithIngredients> {
+        val rows = recetteDao.findByUserId(userId)
+        if (rows.isEmpty()) return emptyList()
+        val ingredients = recetteDao.findIngredientsByRecetteIds(rows.map { it.id })
+        return rows.map { row ->
+            RecetteWithIngredients(row, ingredients[row.id].orEmpty())
+        }
     }
 
     private suspend fun checkAdmin(userId: String) {
@@ -288,6 +308,20 @@ class RecetteService(
         if (user.role != Role.ADMIN) {
             throw ForbiddenException("Acces reserve aux administrateurs")
         }
+    }
+
+    private suspend fun isAdmin(userId: String): Boolean {
+        val user = userDao.findById(userId) ?: return false
+        return user.role == Role.ADMIN
+    }
+
+    /**
+     * Verifie que l'utilisateur peut modifier/supprimer la recette : owner OU admin.
+     */
+    private suspend fun checkCanEditRecette(userId: String, recette: RecetteRow) {
+        if (recette.userId == userId) return
+        if (isAdmin(userId)) return
+        throw ForbiddenException("Acces refuse a cette recette")
     }
 
     private fun validateCreateRequest(request: CreateRecetteRequest) {

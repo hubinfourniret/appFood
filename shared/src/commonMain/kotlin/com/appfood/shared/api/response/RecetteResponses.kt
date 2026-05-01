@@ -21,6 +21,7 @@ data class RecetteSummaryResponse(
     val typeRepas: List<String>,
     val imageUrl: String?,
     val nutrimentsParPortion: NutrimentValuesResponse,
+    val estPersonnelle: Boolean = false,
 )
 
 @Serializable
@@ -39,6 +40,7 @@ data class RecetteDetailResponse(
     val nutrimentsParPortion: NutrimentValuesResponse,
     val source: String,
     val imageUrl: String?,
+    val estPersonnelle: Boolean = false,
     val createdAt: String,
     val updatedAt: String,
 )

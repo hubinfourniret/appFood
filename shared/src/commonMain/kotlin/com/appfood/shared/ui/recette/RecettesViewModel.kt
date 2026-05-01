@@ -11,6 +11,7 @@ import com.appfood.shared.api.request.AddJournalEntryRequest
 import com.appfood.shared.api.request.CreateRecetteRequest
 import com.appfood.shared.api.request.IngredientRequest
 import com.appfood.shared.api.request.UpdateJournalEntryRequest
+import com.appfood.shared.api.request.UpdateRecetteRequest
 import com.appfood.shared.data.repository.JournalRepository
 import com.appfood.shared.data.repository.RecetteRepository
 import com.appfood.shared.sync.SyncEnqueuer
@@ -103,6 +104,18 @@ class RecettesViewModel(
 
     private val _createRecetteForm = MutableStateFlow(CreateRecetteFormState())
     val createRecetteForm: StateFlow<CreateRecetteFormState> = _createRecetteForm.asStateFlow()
+
+    /** TACHE-516 : id de la recette en cours d'edition (null = creation). */
+    private val _editingRecetteId = MutableStateFlow<String?>(null)
+    val editingRecetteId: StateFlow<String?> = _editingRecetteId.asStateFlow()
+
+    // ==================== MES RECETTES STATE (TACHE-516) ====================
+
+    private val _myRecettesState = MutableStateFlow<MyRecettesState>(MyRecettesState.Loading)
+    val myRecettesState: StateFlow<MyRecettesState> = _myRecettesState.asStateFlow()
+
+    private val _deleteRecetteState = MutableStateFlow<DeleteRecetteState>(DeleteRecetteState.Idle)
+    val deleteRecetteState: StateFlow<DeleteRecetteState> = _deleteRecetteState.asStateFlow()
 
     // ==================== LIST ACTIONS ====================
 
@@ -236,6 +249,7 @@ class RecettesViewModel(
                         etapes = r.etapes,
                         nutrimentsTotaux = r.nutrimentsTotaux,
                         imageUrl = r.imageUrl,
+                        estPersonnelle = r.estPersonnelle,
                     )
                 }
                 is AppResult.Error -> {
@@ -482,36 +496,132 @@ class RecettesViewModel(
     fun onCreateRecetteSubmit() {
         val form = _createRecetteForm.value
         if (form.nom.isBlank()) return
+        val editId = _editingRecetteId.value
 
         _createRecetteState.value = CreateRecetteState.Saving
         viewModelScope.launch {
-            val request = CreateRecetteRequest(
-                nom = form.nom,
-                description = form.description,
-                tempsPreparationMin = form.tempsPrepMin.toIntOrNull() ?: 0,
-                tempsCuissonMin = form.tempsCuissonMin.toIntOrNull() ?: 0,
-                nbPortions = form.nbPortions.toIntOrNull() ?: 1,
-                regimesCompatibles = listOf(form.regime.name),
-                typeRepas = emptyList(),
-                ingredients = form.ingredients.mapNotNull { entry ->
-                    val qty = entry.quantiteGrammes.toDoubleOrNull() ?: return@mapNotNull null
-                    val id = entry.alimentId.ifBlank { return@mapNotNull null }
-                    IngredientRequest(alimentId = id, quantiteGrammes = qty)
-                },
-                etapes = form.etapes.filter { it.isNotBlank() },
-                imageUrl = form.imageUrl.ifBlank { null },
-                publie = true,
-            )
-            when (val result = recetteRepository.createRecette(request)) {
+            val ingredients = form.ingredients.mapNotNull { entry ->
+                val qty = entry.quantiteGrammes.toDoubleOrNull() ?: return@mapNotNull null
+                val id = entry.alimentId.ifBlank { return@mapNotNull null }
+                IngredientRequest(alimentId = id, quantiteGrammes = qty)
+            }
+            val result: AppResult<com.appfood.shared.model.Recette> = if (editId != null) {
+                // TACHE-516 : update recette personnelle
+                val updateRequest = UpdateRecetteRequest(
+                    nom = form.nom,
+                    description = form.description,
+                    tempsPreparationMin = form.tempsPrepMin.toIntOrNull() ?: 0,
+                    tempsCuissonMin = form.tempsCuissonMin.toIntOrNull() ?: 0,
+                    nbPortions = form.nbPortions.toIntOrNull() ?: 1,
+                    regimesCompatibles = listOf(form.regime.name),
+                    typeRepas = emptyList(),
+                    ingredients = ingredients,
+                    etapes = form.etapes.filter { it.isNotBlank() },
+                    imageUrl = form.imageUrl.ifBlank { null },
+                )
+                recetteRepository.updateRecette(editId, updateRequest)
+            } else {
+                val createRequest = CreateRecetteRequest(
+                    nom = form.nom,
+                    description = form.description,
+                    tempsPreparationMin = form.tempsPrepMin.toIntOrNull() ?: 0,
+                    tempsCuissonMin = form.tempsCuissonMin.toIntOrNull() ?: 0,
+                    nbPortions = form.nbPortions.toIntOrNull() ?: 1,
+                    regimesCompatibles = listOf(form.regime.name),
+                    typeRepas = emptyList(),
+                    ingredients = ingredients,
+                    etapes = form.etapes.filter { it.isNotBlank() },
+                    imageUrl = form.imageUrl.ifBlank { null },
+                    publie = false,
+                )
+                recetteRepository.createRecette(createRequest)
+            }
+            when (result) {
                 is AppResult.Success -> {
                     _createRecetteState.value = CreateRecetteState.Success
                     _createRecetteForm.value = CreateRecetteFormState()
+                    _editingRecetteId.value = null
                 }
                 is AppResult.Error -> {
                     _createRecetteState.value = CreateRecetteState.Error(result.message)
                 }
             }
         }
+    }
+
+    /** TACHE-516 : initialise le form pour creation (vide). */
+    fun startCreateRecette() {
+        _createRecetteForm.value = CreateRecetteFormState()
+        _createRecetteState.value = CreateRecetteState.Idle
+        _editingRecetteId.value = null
+    }
+
+    /** TACHE-516 : pre-remplit le form avec une recette existante pour edit. */
+    fun startEditRecette(recetteId: String) {
+        _editingRecetteId.value = recetteId
+        _createRecetteState.value = CreateRecetteState.Idle
+        viewModelScope.launch {
+            when (val result = recetteRepository.getRecette(recetteId)) {
+                is AppResult.Success -> {
+                    val r = result.data
+                    _createRecetteForm.value = CreateRecetteFormState(
+                        nom = r.nom,
+                        description = r.description,
+                        tempsPrepMin = r.tempsPreparationMin.toString(),
+                        tempsCuissonMin = r.tempsCuissonMin.toString(),
+                        nbPortions = r.nbPortions.toString(),
+                        regime = r.regimesCompatibles.firstOrNull() ?: RegimeAlimentaire.VEGETARIEN,
+                        ingredients = r.ingredients.map { ing ->
+                            IngredientFormEntry(
+                                alimentId = ing.alimentId,
+                                alimentNom = ing.alimentNom,
+                                quantiteGrammes = ing.quantiteGrammes.toString(),
+                            )
+                        },
+                        etapes = r.etapes.toList(),
+                        imageUrl = r.imageUrl ?: "",
+                    )
+                }
+                is AppResult.Error -> {
+                    _createRecetteState.value = CreateRecetteState.Error(result.message)
+                }
+            }
+        }
+    }
+
+    /** TACHE-516 : charge les recettes personnelles. */
+    fun loadMyRecettes() {
+        _myRecettesState.value = MyRecettesState.Loading
+        viewModelScope.launch {
+            when (val result = recetteRepository.listMyRecettes()) {
+                is AppResult.Success -> {
+                    _myRecettesState.value = MyRecettesState.Success(result.data)
+                }
+                is AppResult.Error -> {
+                    _myRecettesState.value = MyRecettesState.Error(result.message)
+                }
+            }
+        }
+    }
+
+    /** TACHE-516 : supprime une recette perso. */
+    fun deleteMyRecette(recetteId: String) {
+        _deleteRecetteState.value = DeleteRecetteState.Saving
+        viewModelScope.launch {
+            when (val result = recetteRepository.deleteRecette(recetteId)) {
+                is AppResult.Success -> {
+                    _deleteRecetteState.value = DeleteRecetteState.Success
+                    loadMyRecettes()
+                }
+                is AppResult.Error -> {
+                    _deleteRecetteState.value = DeleteRecetteState.Error(result.message)
+                }
+            }
+        }
+    }
+
+    fun resetDeleteRecetteState() {
+        _deleteRecetteState.value = DeleteRecetteState.Idle
     }
 
     companion object {
@@ -547,6 +657,7 @@ sealed interface RecetteDetailState {
         val etapes: List<String>,
         val nutrimentsTotaux: NutrimentValues,
         val imageUrl: String?,
+        val estPersonnelle: Boolean = false,
     ) : RecetteDetailState
     data class Error(val message: String) : RecetteDetailState
 }
@@ -585,4 +696,19 @@ sealed interface AddRecetteToJournalState {
     data object Saving : AddRecetteToJournalState
     data object Success : AddRecetteToJournalState
     data object SavedOffline : AddRecetteToJournalState
+}
+
+// ==================== MY RECETTES STATE (TACHE-516) ====================
+
+sealed interface MyRecettesState {
+    data object Loading : MyRecettesState
+    data class Success(val recettes: List<Recette>) : MyRecettesState
+    data class Error(val message: String) : MyRecettesState
+}
+
+sealed interface DeleteRecetteState {
+    data object Idle : DeleteRecetteState
+    data object Saving : DeleteRecetteState
+    data object Success : DeleteRecetteState
+    data class Error(val message: String) : DeleteRecetteState
 }

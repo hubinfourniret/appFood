@@ -309,6 +309,18 @@ const val JOURNAL_PORTION_GENERIC = "Portions generiques"
     const val DASHBOARD_TAB_QUOTAS = "Quotas"
     const val DASHBOARD_TAB_REPAS = "Repas"
     const val DASHBOARD_TAB_EAU = "Eau"
+    const val WEEKLY_REPAS_TITLE = "Repas de la semaine"
+    const val WEEKLY_REPAS_EMPTY_DAY = "Aucun repas saisi"
+
+    // TACHE-516 — Recettes personnelles
+    const val MY_RECETTES_TITLE = "Mes recettes"
+    const val MY_RECETTES_CREATE = "Nouvelle recette"
+    const val MY_RECETTES_EMPTY = "Aucune recette personnelle pour le moment. Cree-en une !"
+    const val RECETTE_PERSONAL_BUTTON = "Personnel"
+    const val RECETTE_EDIT_ACTION = "Modifier"
+    const val RECETTE_DELETE_ACTION = "Supprimer"
+    const val RECETTE_DELETE_CONFIRM_TITLE = "Supprimer cette recette ?"
+    const val RECETTE_DELETE_CONFIRM_MESSAGE = "Cette action est irreversible."
 
     // PROFIL-01 — Bandeau rappel profil incomplet
     const val DASHBOARD_INCOMPLETE_PROFILE_MESSAGE = "Complete ton profil pour des recommandations personnalisees"

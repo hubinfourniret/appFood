@@ -152,6 +152,7 @@ fun RecetteDetailScreen(
     editJournalEntryId: String? = null,
     prefilledPortions: Int? = null,
     prefilledOverrides: Map<String, Double>? = null,
+    onEditPersonalRecette: ((String) -> Unit)? = null,
 ) {
     val detailState by viewModel.detailState.collectAsState()
     val selectedPortions by viewModel.selectedPortions.collectAsState()

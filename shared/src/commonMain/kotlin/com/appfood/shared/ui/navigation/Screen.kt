@@ -35,6 +35,9 @@ sealed class Screen {
     // Weekly dashboard (DASHBOARD-02)
     @Serializable data object WeeklyDashboard : Screen()
 
+    // Weekly repas view (TACHE-515)
+    @Serializable data object WeeklyRepas : Screen()
+
     // Recette detail (RECETTES-02). prefilledMealType permet de skip le dialog
     // de selection repas quand on vient de AddEntry → SearchRecette (TACHE-510 v3).
     // editJournalEntryId : si fourni, le bouton "Ajouter au journal" devient
@@ -48,8 +51,12 @@ sealed class Screen {
         val prefilledOverridesJson: String? = null,
     ) : Screen()
 
-    // Create recette — admin only (RECETTES-03)
-    @Serializable data object CreateRecette : Screen()
+    // Create recette (RECETTES-03 + TACHE-516)
+    // editRecetteId : si fourni, mode edit (pre-rempli avec recette existante)
+    @Serializable data class CreateRecette(val editRecetteId: String? = null) : Screen()
+
+    // Mes recettes personnelles (TACHE-516)
+    @Serializable data object MyRecettes : Screen()
 
     // About (SUPPORT-01)
     @Serializable data object About : Screen()

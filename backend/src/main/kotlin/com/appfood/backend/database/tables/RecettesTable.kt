@@ -35,6 +35,8 @@ object RecettesTable : Table("recettes") {
     val omega6 = double("omega_6")
     val imageUrl = varchar("image_url", 500).nullable()
     val publie = bool("publie").default(false)
+    /** TACHE-516 : si non-null, recette personnelle de cet utilisateur (visible uniquement par lui). */
+    val userId = varchar("user_id", 36).references(UsersTable.id, onDelete = ReferenceOption.CASCADE).nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
     override val primaryKey = PrimaryKey(id)

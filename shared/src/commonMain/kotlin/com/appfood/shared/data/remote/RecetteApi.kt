@@ -1,6 +1,7 @@
 package com.appfood.shared.data.remote
 
 import com.appfood.shared.api.request.CreateRecetteRequest
+import com.appfood.shared.api.request.UpdateRecetteRequest
 import com.appfood.shared.api.response.RecetteDetailResponse
 import com.appfood.shared.api.response.RecetteListResponse
 import com.appfood.shared.api.response.RecetteSummaryResponse
@@ -35,5 +36,17 @@ class RecetteApi(private val apiClient: ApiClient) {
 
     suspend fun createRecette(request: CreateRecetteRequest): RecetteDetailResponse {
         return apiClient.postRequest("/api/v1/recettes", request).body()
+    }
+
+    suspend fun listMyRecettes(): RecetteListResponse {
+        return apiClient.getRequest("/api/v1/recettes/me").body()
+    }
+
+    suspend fun updateRecette(id: String, request: UpdateRecetteRequest): RecetteDetailResponse {
+        return apiClient.putRequest("/api/v1/recettes/$id", request).body()
+    }
+
+    suspend fun deleteRecette(id: String) {
+        apiClient.deleteRequest("/api/v1/recettes/$id")
     }
 }

@@ -27,6 +27,8 @@ import com.appfood.shared.ui.dashboard.DashboardScreen
 import com.appfood.shared.ui.dashboard.DashboardViewModel
 import com.appfood.shared.ui.dashboard.WeeklyDashboardScreen
 import com.appfood.shared.ui.dashboard.WeeklyDashboardViewModel
+import com.appfood.shared.ui.dashboard.WeeklyRepasScreen
+import com.appfood.shared.ui.dashboard.WeeklyRepasViewModel
 import com.appfood.shared.data.repository.HydratationRepository
 import com.appfood.shared.domain.hydratation.AjouterEauUseCase
 import com.appfood.shared.domain.hydratation.GetHydratationJourUseCase
@@ -62,6 +64,7 @@ import com.appfood.shared.ui.profil.ProfilViewModel
 import com.appfood.shared.ui.quota.QuotaManagementScreen
 import com.appfood.shared.ui.quota.QuotaViewModel
 import com.appfood.shared.ui.recette.CreateRecetteScreen
+import com.appfood.shared.ui.recette.MyRecettesScreen
 import com.appfood.shared.ui.recette.RecetteDetailScreen
 import com.appfood.shared.ui.recette.RecettesListScreen
 import com.appfood.shared.ui.recette.RecettesViewModel
@@ -167,6 +170,7 @@ fun AppNavigation(
         )
     }
     val weeklyDashboardViewModel = remember(dashboardRepository) { WeeklyDashboardViewModel(dashboardRepository = dashboardRepository) }
+    val weeklyRepasViewModel = remember(journalRepository) { WeeklyRepasViewModel(journalRepository = journalRepository) }
     val disclaimerViewModel = remember { DisclaimerViewModel() }
     val consentApi = koinInject<ConsentApi>()
     val consentViewModel = remember(consentApi) { ConsentViewModel(consentApi) }
@@ -374,6 +378,11 @@ fun AppNavigation(
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToWeeklyRepas = {
+                        navController.navigate(Screen.WeeklyRepas) {
+                            launchSingleTop = true
+                        }
+                    },
                     onNavigateToEditRecetteEntry = { recetteId, entryId, portions, overrides ->
                         val overridesJson = overrides?.takeIf { it.isNotEmpty() }?.let {
                             kotlinx.serialization.json.Json.encodeToString(it)
@@ -510,6 +519,11 @@ fun AppNavigation(
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToMyRecettes = {
+                        navController.navigate(Screen.MyRecettes) {
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
 
@@ -544,12 +558,37 @@ fun AppNavigation(
                 )
             }
 
-            // Create recette — admin (RECETTES-03)
-            composable<Screen.CreateRecette> {
+            // Create/Edit recette (RECETTES-03 + TACHE-516)
+            composable<Screen.CreateRecette> { backStackEntry ->
+                val screen = backStackEntry.toRoute<Screen.CreateRecette>()
                 CreateRecetteScreen(
                     viewModel = recettesViewModel,
+                    editRecetteId = screen.editRecetteId,
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                )
+            }
+
+            // Mes recettes personnelles (TACHE-516)
+            composable<Screen.MyRecettes> {
+                MyRecettesScreen(
+                    viewModel = recettesViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onRecetteClick = { recetteId ->
+                        navController.navigate(Screen.RecetteDetail(recetteId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onEditRecette = { recetteId ->
+                        navController.navigate(Screen.CreateRecette(editRecetteId = recetteId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onCreateClick = {
+                        navController.navigate(Screen.CreateRecette()) {
+                            launchSingleTop = true
+                        }
                     },
                 )
             }
@@ -578,6 +617,16 @@ fun AppNavigation(
             composable<Screen.WeeklyDashboard> {
                 WeeklyDashboardScreen(
                     viewModel = weeklyDashboardViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                )
+            }
+
+            // Weekly repas (TACHE-515)
+            composable<Screen.WeeklyRepas> {
+                WeeklyRepasScreen(
+                    viewModel = weeklyRepasViewModel,
                     onNavigateBack = {
                         navController.popBackStack()
                     },

@@ -15,6 +15,8 @@ interface JournalRepository {
 
     suspend fun getEntries(date: String? = null, mealType: String? = null): AppResult<JournalListResponse>
 
+    suspend fun getEntriesRange(dateFrom: String, dateTo: String): AppResult<JournalListResponse>
+
     suspend fun addEntry(request: AddJournalEntryRequest): AppResult<JournalEntryResponse>
 
     suspend fun updateEntry(id: String, request: UpdateJournalEntryRequest): AppResult<JournalEntryResponse>

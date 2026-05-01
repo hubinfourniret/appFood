@@ -29,6 +29,7 @@ fun Route.recetteRoutes() {
         route("/api/v1/recettes") {
             // GET /api/v1/recettes — liste avec filtres, pagination, search
             get {
+                val userId = call.userId()
                 val regime = call.request.queryParameters["regime"]
                 val typeRepas = call.request.queryParameters["typeRepas"]
                 val sort = call.request.queryParameters["sort"]
@@ -44,39 +45,54 @@ fun Route.recetteRoutes() {
                         query = query,
                         page = page,
                         size = size,
+                        currentUserId = userId,
                     )
 
                 call.respond(
                     HttpStatusCode.OK,
                     RecetteListResponse(
-                        data = recettes.map { it.toSummaryResponse() },
+                        data = recettes.map { it.toSummaryResponse(userId) },
                         total = total,
+                    ),
+                )
+            }
+
+            // GET /api/v1/recettes/me — recettes personnelles uniquement (TACHE-516)
+            get("/me") {
+                val userId = call.userId()
+                val recettes = recetteService.listMyRecettes(userId)
+                call.respond(
+                    HttpStatusCode.OK,
+                    RecetteListResponse(
+                        data = recettes.map { it.toSummaryResponse(userId) },
+                        total = recettes.size,
                     ),
                 )
             }
 
             // GET /api/v1/recettes/{id} — detail
             get("/{id}") {
+                val userId = call.userId()
                 val id = call.parameters["id"]!!
                 val detail = recetteService.getRecetteDetail(id)
-                call.respond(HttpStatusCode.OK, detail.toDetailResponse())
+                call.respond(HttpStatusCode.OK, detail.toDetailResponse(userId))
             }
 
-            // POST /api/v1/recettes — creation (ADMIN)
+            // POST /api/v1/recettes — creation (tout utilisateur depuis TACHE-516)
             post {
                 val userId = call.userId()
                 val request = call.receive<CreateRecetteRequest>()
                 val created = recetteService.createRecette(userId, request)
-                call.respond(HttpStatusCode.Created, created.toDetailResponse())
+                call.respond(HttpStatusCode.Created, created.toDetailResponse(userId))
             }
 
-            // PUT /api/v1/recettes/{id} — mise a jour (ADMIN)
+            // PUT /api/v1/recettes/{id} — mise a jour (owner ou admin)
             put("/{id}") {
                 val userId = call.userId()
                 val recetteId = call.parameters["id"]!!
                 val request = call.receive<UpdateRecetteRequest>()
                 val updated = recetteService.updateRecette(userId, recetteId, request)
-                call.respond(HttpStatusCode.OK, updated.toDetailResponse())
+                call.respond(HttpStatusCode.OK, updated.toDetailResponse(userId))
             }
 
             // DELETE /api/v1/recettes/{id} — suppression (ADMIN)
@@ -90,7 +106,7 @@ fun Route.recetteRoutes() {
     }
 }
 
-private fun RecetteWithIngredients.toSummaryResponse(): RecetteSummaryResponse {
+private fun RecetteWithIngredients.toSummaryResponse(currentUserId: String? = null): RecetteSummaryResponse {
     val portions = recette.nbPortions.coerceAtLeast(1)
     return RecetteSummaryResponse(
         id = recette.id,
@@ -104,10 +120,11 @@ private fun RecetteWithIngredients.toSummaryResponse(): RecetteSummaryResponse {
         typeRepas = recette.typeRepas.split(",").filter { it.isNotBlank() },
         imageUrl = recette.imageUrl,
         nutrimentsParPortion = nutrientsPerPortion(portions),
+        estPersonnelle = currentUserId != null && recette.userId == currentUserId,
     )
 }
 
-private fun RecetteWithIngredients.toDetailResponse(): RecetteDetailResponse {
+private fun RecetteWithIngredients.toDetailResponse(currentUserId: String? = null): RecetteDetailResponse {
     val portions = recette.nbPortions.coerceAtLeast(1)
     return RecetteDetailResponse(
         id = recette.id,
@@ -171,6 +188,7 @@ private fun RecetteWithIngredients.toDetailResponse(): RecetteDetailResponse {
         nutrimentsParPortion = nutrientsPerPortion(portions),
         source = recette.source.name,
         imageUrl = recette.imageUrl,
+        estPersonnelle = currentUserId != null && recette.userId == currentUserId,
         createdAt = recette.createdAt.toString(),
         updatedAt = recette.updatedAt.toString(),
     )

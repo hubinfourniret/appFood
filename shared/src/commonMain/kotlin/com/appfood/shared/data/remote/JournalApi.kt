@@ -27,6 +27,10 @@ class JournalApi(private val apiClient: ApiClient) {
         return apiClient.getRequest(params).body()
     }
 
+    suspend fun getEntriesRange(dateFrom: String, dateTo: String): JournalListResponse {
+        return apiClient.getRequest("/api/v1/journal?dateFrom=$dateFrom&dateTo=$dateTo").body()
+    }
+
     suspend fun addEntry(request: AddJournalEntryRequest): JournalEntryResponse {
         return apiClient.postRequest("/api/v1/journal", request).body()
     }

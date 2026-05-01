@@ -29,8 +29,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +70,7 @@ fun DashboardScreen(
     onNavigateToRecommandations: () -> Unit,
     onNavigateToHydratation: () -> Unit,
     onNavigateToWeeklyDashboard: () -> Unit,
+    onNavigateToWeeklyRepas: () -> Unit,
     onNavigateToEditRecetteEntry: (recetteId: String, journalEntryId: String, portions: Int, overrides: Map<String, Double>?) -> Unit,
     onNavigateToOnboarding: () -> Unit = {},
 ) {
@@ -102,6 +105,7 @@ fun DashboardScreen(
         onManageQuotas = onNavigateToQuotaManagement,
         onSeeRecommandations = onNavigateToRecommandations,
         onNavigateToWeeklyDashboard = onNavigateToWeeklyDashboard,
+        onNavigateToWeeklyRepas = onNavigateToWeeklyRepas,
         onNavigateToHydratationDetail = onNavigateToHydratation,
         onNavigateToOnboarding = onNavigateToOnboarding,
         onRequestDeleteEntry = journalViewModel::onRequestDelete,
@@ -164,12 +168,17 @@ private fun DashboardContent(
     onManageQuotas: () -> Unit,
     onSeeRecommandations: () -> Unit,
     onNavigateToWeeklyDashboard: () -> Unit,
+    onNavigateToWeeklyRepas: () -> Unit,
     onNavigateToHydratationDetail: () -> Unit,
     onNavigateToOnboarding: () -> Unit,
     onRequestDeleteEntry: (String) -> Unit,
     onEditEntry: (JournalEntryUiModel) -> Unit,
 ) {
-    var selectedTab by remember { mutableStateOf(DashboardTab.QUOTAS) }
+    // rememberSaveable pour conserver l'onglet selectionne en cas de navigation
+    // (ex: edit recette → retour dashboard reste sur Repas).
+    var selectedTabOrdinal by rememberSaveable { mutableIntStateOf(DashboardTab.QUOTAS.ordinal) }
+    val selectedTab = DashboardTab.entries[selectedTabOrdinal]
+    val setSelectedTab: (DashboardTab) -> Unit = { selectedTabOrdinal = it.ordinal }
 
     Scaffold(
         topBar = {
@@ -181,7 +190,7 @@ private fun DashboardContent(
                     DashboardTab.entries.forEach { tab ->
                         Tab(
                             selected = selectedTab == tab,
-                            onClick = { selectedTab = tab },
+                            onClick = { setSelectedTab(tab) },
                             text = { Text(tab.label) },
                         )
                     }
@@ -219,7 +228,7 @@ private fun DashboardContent(
                         DashboardTab.REPAS -> RepasTabContent(
                             state = state,
                             onSeeRecommandations = onSeeRecommandations,
-                            onNavigateToWeeklyDashboard = onNavigateToWeeklyDashboard,
+                            onNavigateToWeeklyRepas = onNavigateToWeeklyRepas,
                             onRequestDeleteEntry = onRequestDeleteEntry,
                             onEditEntry = onEditEntry,
                             modifier = Modifier.padding(innerPadding),
@@ -304,7 +313,7 @@ private fun QuotasTabContent(
 private fun RepasTabContent(
     state: DashboardState.Success,
     onSeeRecommandations: () -> Unit,
-    onNavigateToWeeklyDashboard: () -> Unit,
+    onNavigateToWeeklyRepas: () -> Unit,
     onRequestDeleteEntry: (String) -> Unit,
     onEditEntry: (JournalEntryUiModel) -> Unit,
     modifier: Modifier = Modifier,
@@ -337,7 +346,7 @@ private fun RepasTabContent(
         TextButton(onClick = onSeeRecommandations, modifier = Modifier.fillMaxWidth()) {
             Text(Strings.DASHBOARD_SEE_RECOMMENDATIONS)
         }
-        TextButton(onClick = onNavigateToWeeklyDashboard, modifier = Modifier.fillMaxWidth()) {
+        TextButton(onClick = onNavigateToWeeklyRepas, modifier = Modifier.fillMaxWidth()) {
             Text(Strings.DASHBOARD_SEE_WEEKLY)
         }
 

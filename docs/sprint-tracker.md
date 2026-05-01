@@ -328,10 +328,10 @@ Tous les ViewModels ont ete cables aux repositories/use cases. Aucun stub TODO r
 | 2 | TACHE-511 | Bouton retour AddEntry demande 3-4 clicks | Critique | Done | Valide utilisateur 2026-05-01 |
 | 3 | TACHE-512 | Suggestions recettes : "tous quotas atteints" a tort | Haute | Done | Valide utilisateur 2026-05-01 |
 | 4 | TACHE-513 | Retour a la recherche d'aliments apres ajout (meme repas) | Haute | Done | Valide utilisateur 2026-05-01 |
-| 5 | TACHE-514 | Dashboard 3 onglets (Quotas / Repas / Eau) | Haute | A valider | Dashboard a 3 onglets en haut. Eau accessible directement. Onglet Repas liste les aliments/recettes par repas avec quantite et calories. "Voir suggestions" sur Quotas+Repas. "Voir la semaine" sur les 3. Bouton "Ajouter un repas" supprime (FAB suffit). |
-| 6 | TACHE-515 | Vue hebdo des repas saisis | Moyenne | Todo | Dashboard hebdo affiche un recap des repas, pas seulement les quotas |
-| 7 | TACHE-516 | Repas types personnels (templates) | Moyenne | Todo | "Sauvegarder ce repas comme template" → reutilisable depuis AddEntry |
-| 8 | JOURNAL-BUG-01 | Coherence Meilisearch/PostgreSQL | Critique | Todo | Recherche aliment → ajout sans erreur "non trouve" |
+| 5 | TACHE-514 | Dashboard 3 onglets (Quotas / Repas / Eau) + edit entries | Haute | Done | Valide utilisateur 2026-05-02. Inclut : 3 onglets, suppression entries journal, suppression entries eau, fix race spam eau, edit aliment via dialog, edit recette via vue detail avec ajustement ingredients + live preview + restauration overrides, retour sur tab Repas. |
+| 6 | TACHE-515 | Vue hebdo des repas saisis | Moyenne | A valider | Onglet Repas → "Voir la semaine" → ecran 7 jours avec ventilation par repas |
+| 7 | TACHE-516 | Recettes personnelles (creation, edition, suppression) | Moyenne | A valider | Onglet Recettes → bouton "Personnel" → liste recettes perso + bouton "Nouvelle recette" + edit/delete par recette. Recettes perso visibles dans la recherche au moment d'ajouter au repas. |
+| 8 | JOURNAL-BUG-01 | Coherence Meilisearch/PostgreSQL | Critique | Done | Non reproductible 2026-05-02 — re-import des donnees a resolu l'incoherence. 123 tests backend passent dont E2E search→addEntry. A surveiller : si reapparait, ajouter endpoint /api/v1/admin/data-consistency. |
 | 9 | RECO-PERF-01 | Optimiser RecommandationService | Moyenne | Todo | Cold start dashboard < 5s |
 
 ### Reporte (decision superviseur 2026-05-01)

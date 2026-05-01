@@ -49,6 +49,7 @@ import com.appfood.shared.ui.common.LoadingSkeleton
 fun RecettesListScreen(
     viewModel: RecettesViewModel,
     onRecetteClick: (String) -> Unit = {},
+    onNavigateToMyRecettes: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -76,6 +77,7 @@ fun RecettesListScreen(
         onLoadMore = viewModel::loadMore,
         onRetry = viewModel::retry,
         onRecetteClick = onRecetteClick,
+        onNavigateToMyRecettes = onNavigateToMyRecettes,
     )
 }
 
@@ -96,11 +98,17 @@ private fun RecettesListContent(
     onLoadMore: () -> Unit,
     onRetry: () -> Unit,
     onRecetteClick: (String) -> Unit,
+    onNavigateToMyRecettes: () -> Unit,
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(Strings.SCREEN_RECETTES) },
+                actions = {
+                    TextButton(onClick = onNavigateToMyRecettes) {
+                        Text(Strings.RECETTE_PERSONAL_BUTTON)
+                    }
+                },
             )
         },
     ) { innerPadding ->

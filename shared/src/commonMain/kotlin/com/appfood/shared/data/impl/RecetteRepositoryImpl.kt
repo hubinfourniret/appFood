@@ -1,6 +1,7 @@
 package com.appfood.shared.data.impl
 
 import com.appfood.shared.api.request.CreateRecetteRequest
+import com.appfood.shared.api.request.UpdateRecetteRequest
 import com.appfood.shared.api.response.NutrimentValuesResponse
 import com.appfood.shared.api.response.RecetteDetailResponse
 import com.appfood.shared.api.response.RecetteSummaryResponse
@@ -80,6 +81,92 @@ class RecetteRepositoryImpl(
         }
     }
 
+    override suspend fun listMyRecettes(): AppResult<List<Recette>> {
+        return try {
+            val response = recetteApi.listMyRecettes()
+            // RecetteSummaryResponse → on a juste le summary, mais ca suffit pour la liste
+            val recettes = response.data.map { summaryToDomain(it) }
+            response.data.forEach { cacheRecette(it) }
+            AppResult.Success(recettes)
+        } catch (e: Exception) {
+            AppResult.Error(
+                code = "NETWORK_ERROR",
+                message = e.message ?: "Failed to fetch personal recipes",
+                cause = e,
+            )
+        }
+    }
+
+    override suspend fun updateRecette(id: String, request: UpdateRecetteRequest): AppResult<Recette> {
+        return try {
+            val response = recetteApi.updateRecette(id, request)
+            cacheRecette(response)
+            AppResult.Success(response.toDomain())
+        } catch (e: Exception) {
+            AppResult.Error(
+                code = "NETWORK_ERROR",
+                message = e.message ?: "Failed to update recipe",
+                cause = e,
+            )
+        }
+    }
+
+    override suspend fun deleteRecette(id: String): AppResult<Unit> {
+        return try {
+            recetteApi.deleteRecette(id)
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(
+                code = "NETWORK_ERROR",
+                message = e.message ?: "Failed to delete recipe",
+                cause = e,
+            )
+        }
+    }
+
+    private fun summaryToDomain(summary: RecetteSummaryResponse): Recette = Recette(
+        id = summary.id,
+        nom = summary.nom,
+        description = summary.description,
+        tempsPreparationMin = summary.tempsPreparationMin,
+        tempsCuissonMin = summary.tempsCuissonMin,
+        nbPortions = summary.nbPortions,
+        regimesCompatibles = summary.regimesCompatibles.mapNotNull {
+            runCatching { RegimeAlimentaire.valueOf(it) }.getOrNull()
+        },
+        source = runCatching { SourceRecette.valueOf(summary.source) }.getOrDefault(SourceRecette.MANUELLE),
+        typeRepas = summary.typeRepas.mapNotNull {
+            runCatching { MealType.valueOf(it) }.getOrNull()
+        },
+        ingredients = emptyList(),
+        etapes = emptyList(),
+        nutrimentsTotaux = summary.nutrimentsParPortion.toDomain().scale(summary.nbPortions.toDouble()),
+        imageUrl = summary.imageUrl,
+        publie = true,
+        estPersonnelle = summary.estPersonnelle,
+        createdAt = Clock.System.now(),
+        updatedAt = Clock.System.now(),
+    )
+
+    private fun NutrimentValues.scale(factor: Double): NutrimentValues = NutrimentValues(
+        calories = calories * factor,
+        proteines = proteines * factor,
+        glucides = glucides * factor,
+        lipides = lipides * factor,
+        fibres = fibres * factor,
+        sel = sel * factor,
+        sucres = sucres * factor,
+        fer = fer * factor,
+        calcium = calcium * factor,
+        zinc = zinc * factor,
+        magnesium = magnesium * factor,
+        vitamineB12 = vitamineB12 * factor,
+        vitamineD = vitamineD * factor,
+        vitamineC = vitamineC * factor,
+        omega3 = omega3 * factor,
+        omega6 = omega6 * factor,
+    )
+
     private fun cacheRecette(response: RecetteSummaryResponse) {
         val now = Clock.System.now().toEpochMilliseconds()
         val local = Local_recette(
@@ -158,6 +245,7 @@ class RecetteRepositoryImpl(
             nutrimentsTotaux = nutrimentsTotaux.toDomain(),
             imageUrl = imageUrl,
             publie = true,
+            estPersonnelle = estPersonnelle,
             createdAt = Clock.System.now(),
             updatedAt = Clock.System.now(),
         )

@@ -20,6 +20,7 @@ data class Recette(
     val nutrimentsTotaux: NutrimentValues,
     val imageUrl: String?,
     val publie: Boolean,
+    val estPersonnelle: Boolean = false,
     @Contextual val createdAt: Instant,
     @Contextual val updatedAt: Instant,
 )

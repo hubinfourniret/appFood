@@ -61,6 +61,8 @@ data class RecetteSummaryResponse(
     val typeRepas: List<String>,
     val imageUrl: String?,
     val nutrimentsParPortion: NutrimentValuesResponse,
+    /** TACHE-516 : true si la recette appartient a l'utilisateur courant. */
+    val estPersonnelle: Boolean = false,
 )
 
 @Serializable
@@ -79,6 +81,7 @@ data class RecetteDetailResponse(
     val nutrimentsParPortion: NutrimentValuesResponse,
     val source: String,
     val imageUrl: String?,
+    val estPersonnelle: Boolean = false,
     val createdAt: String,
     val updatedAt: String,
 )

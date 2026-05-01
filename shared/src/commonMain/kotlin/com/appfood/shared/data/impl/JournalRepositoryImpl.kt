@@ -30,6 +30,19 @@ class JournalRepositoryImpl(
         }
     }
 
+    override suspend fun getEntriesRange(dateFrom: String, dateTo: String): AppResult<JournalListResponse> {
+        return try {
+            val response = journalApi.getEntriesRange(dateFrom, dateTo)
+            AppResult.Success(response)
+        } catch (e: Exception) {
+            AppResult.Error(
+                code = "NETWORK_ERROR",
+                message = e.message ?: "Failed to fetch journal entries range",
+                cause = e,
+            )
+        }
+    }
+
     override suspend fun addEntry(request: AddJournalEntryRequest): AppResult<JournalEntryResponse> {
         return try {
             val response = journalApi.addEntry(request)

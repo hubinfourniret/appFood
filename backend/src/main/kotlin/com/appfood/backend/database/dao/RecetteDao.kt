@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.andWhere
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -48,6 +49,7 @@ data class RecetteRow(
     val omega6: Double,
     val imageUrl: String?,
     val publie: Boolean,
+    val userId: String? = null,
     val createdAt: kotlinx.datetime.Instant,
     val updatedAt: kotlinx.datetime.Instant,
 )
@@ -101,10 +103,18 @@ class RecetteDao {
         sort: String?,
         limit: Int,
         offset: Long,
+        currentUserId: String? = null,
     ): Pair<List<RecetteRow>, Long> =
         dbQuery {
+            // TACHE-516 : on inclut aussi les recettes personnelles de l'utilisateur courant
             val baseQuery = RecettesTable.selectAll()
-                .where { RecettesTable.publie eq true }
+                .where {
+                    if (currentUserId != null) {
+                        (RecettesTable.publie eq true) or (RecettesTable.userId eq currentUserId)
+                    } else {
+                        RecettesTable.publie eq true
+                    }
+                }
 
             if (regime != null) {
                 val pattern = LikePattern("%${escapeLike(regime)}%", '\\')
@@ -132,6 +142,14 @@ class RecetteDao {
                 .map { it.toRow() }
 
             rows to total
+        }
+
+    suspend fun findByUserId(userId: String): List<RecetteRow> =
+        dbQuery {
+            RecettesTable.selectAll()
+                .where { RecettesTable.userId eq userId }
+                .orderBy(RecettesTable.createdAt to SortOrder.DESC)
+                .map { it.toRow() }
         }
 
     private fun escapeLike(value: String): String =
@@ -171,6 +189,7 @@ class RecetteDao {
                 it[omega6] = row.omega6
                 it[imageUrl] = row.imageUrl
                 it[publie] = row.publie
+                it[userId] = row.userId
                 it[createdAt] = row.createdAt
                 it[updatedAt] = row.updatedAt
             }
@@ -281,6 +300,7 @@ class RecetteDao {
             omega6 = this[RecettesTable.omega6],
             imageUrl = this[RecettesTable.imageUrl],
             publie = this[RecettesTable.publie],
+            userId = this[RecettesTable.userId],
             createdAt = this[RecettesTable.createdAt],
             updatedAt = this[RecettesTable.updatedAt],
         )

@@ -96,9 +96,18 @@ private val DeleteIcon: ImageVector by lazy {
 fun CreateRecetteScreen(
     viewModel: RecettesViewModel,
     onNavigateBack: () -> Unit,
+    editRecetteId: String? = null,
 ) {
     val createState by viewModel.createRecetteState.collectAsState()
     val formState by viewModel.createRecetteForm.collectAsState()
+
+    LaunchedEffect(editRecetteId) {
+        if (editRecetteId != null) {
+            viewModel.startEditRecette(editRecetteId)
+        } else {
+            viewModel.startCreateRecette()
+        }
+    }
 
     CreateRecetteContent(
         state = createState,
