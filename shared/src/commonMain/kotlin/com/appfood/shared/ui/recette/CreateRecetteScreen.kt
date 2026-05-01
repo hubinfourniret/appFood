@@ -1,5 +1,6 @@
 package com.appfood.shared.ui.recette
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,11 +8,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -100,6 +105,10 @@ fun CreateRecetteScreen(
 ) {
     val createState by viewModel.createRecetteState.collectAsState()
     val formState by viewModel.createRecetteForm.collectAsState()
+    val alimentPickerForIndex by viewModel.alimentPickerForIndex.collectAsState()
+    val alimentPickerQuery by viewModel.alimentPickerQuery.collectAsState()
+    val alimentPickerResults by viewModel.alimentPickerResults.collectAsState()
+    val alimentPickerLoading by viewModel.alimentPickerLoading.collectAsState()
 
     LaunchedEffect(editRecetteId) {
         if (editRecetteId != null) {
@@ -121,7 +130,7 @@ fun CreateRecetteScreen(
         onRegimeChanged = viewModel::onCreateRegimeChanged,
         onAddIngredient = viewModel::onCreateAddIngredient,
         onRemoveIngredient = viewModel::onCreateRemoveIngredient,
-        onIngredientNameChanged = viewModel::onCreateIngredientNameChanged,
+        onPickAliment = viewModel::openAlimentPicker,
         onIngredientQuantityChanged = viewModel::onCreateIngredientQuantityChanged,
         onAddEtape = viewModel::onCreateAddEtape,
         onRemoveEtape = viewModel::onCreateRemoveEtape,
@@ -131,6 +140,17 @@ fun CreateRecetteScreen(
         onSubmit = viewModel::onCreateRecetteSubmit,
         onNavigateBack = onNavigateBack,
     )
+
+    if (alimentPickerForIndex != null) {
+        AlimentPickerDialog(
+            query = alimentPickerQuery,
+            results = alimentPickerResults,
+            loading = alimentPickerLoading,
+            onQueryChanged = viewModel::onAlimentPickerQueryChanged,
+            onAlimentSelected = viewModel::onAlimentPickerSelected,
+            onDismiss = viewModel::closeAlimentPicker,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,7 +167,7 @@ private fun CreateRecetteContent(
     onRegimeChanged: (RegimeAlimentaire) -> Unit,
     onAddIngredient: () -> Unit,
     onRemoveIngredient: (Int) -> Unit,
-    onIngredientNameChanged: (Int, String) -> Unit,
+    onPickAliment: (Int) -> Unit,
     onIngredientQuantityChanged: (Int, String) -> Unit,
     onAddEtape: () -> Unit,
     onRemoveEtape: (Int) -> Unit,
@@ -264,7 +284,7 @@ private fun CreateRecetteContent(
                 ingredients = form.ingredients,
                 onAddIngredient = onAddIngredient,
                 onRemoveIngredient = onRemoveIngredient,
-                onIngredientNameChanged = onIngredientNameChanged,
+                onPickAliment = onPickAliment,
                 onIngredientQuantityChanged = onIngredientQuantityChanged,
             )
 
@@ -344,7 +364,7 @@ private fun IngredientsFormSection(
     ingredients: List<IngredientFormEntry>,
     onAddIngredient: () -> Unit,
     onRemoveIngredient: (Int) -> Unit,
-    onIngredientNameChanged: (Int, String) -> Unit,
+    onPickAliment: (Int) -> Unit,
     onIngredientQuantityChanged: (Int, String) -> Unit,
 ) {
     Column(
@@ -368,13 +388,16 @@ private fun IngredientsFormSection(
                     modifier = Modifier.padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    OutlinedTextField(
-                        value = ingredient.alimentNom,
-                        onValueChange = { onIngredientNameChanged(index, it) },
-                        label = { Text(Strings.RECETTE_CREATE_INGREDIENT_SEARCH) },
-                        singleLine = true,
+                    // TACHE-516 : bouton qui ouvre le picker aliments (pas de saisie libre)
+                    val hasAliment = ingredient.alimentId.isNotBlank()
+                    OutlinedButton(
+                        onClick = { onPickAliment(index) },
                         modifier = Modifier.fillMaxWidth(),
-                    )
+                    ) {
+                        Text(
+                            text = if (hasAliment) ingredient.alimentNom else Strings.RECETTE_CREATE_INGREDIENT_PICK,
+                        )
+                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -403,6 +426,74 @@ private fun IngredientsFormSection(
             Text(Strings.RECETTE_CREATE_ADD_INGREDIENT)
         }
     }
+}
+
+@Composable
+private fun AlimentPickerDialog(
+    query: String,
+    results: List<AlimentPickerItem>,
+    loading: Boolean,
+    onQueryChanged: (String) -> Unit,
+    onAlimentSelected: (AlimentPickerItem) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(Strings.RECETTE_CREATE_INGREDIENT_PICK) },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = onQueryChanged,
+                    placeholder = { Text(Strings.JOURNAL_SEARCH_PLACEHOLDER) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (loading && results.isEmpty()) {
+                    Text(
+                        text = Strings.LOADING,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 320.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    items(items = results, key = { it.id }) { aliment ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onAlimentSelected(aliment) },
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            ),
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = aliment.nom,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    text = "${aliment.categorie} · ${aliment.caloriesPour100g.toInt()} kcal/100g",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(Strings.JOURNAL_DELETE_CANCEL) }
+        },
+    )
 }
 
 @Composable

@@ -321,6 +321,7 @@ const val JOURNAL_PORTION_GENERIC = "Portions generiques"
     const val RECETTE_DELETE_ACTION = "Supprimer"
     const val RECETTE_DELETE_CONFIRM_TITLE = "Supprimer cette recette ?"
     const val RECETTE_DELETE_CONFIRM_MESSAGE = "Cette action est irreversible."
+    const val RECETTE_CREATE_INGREDIENT_PICK = "Choisir un aliment"
 
     // PROFIL-01 — Bandeau rappel profil incomplet
     const val DASHBOARD_INCOMPLETE_PROFILE_MESSAGE = "Complete ton profil pour des recommandations personnalisees"

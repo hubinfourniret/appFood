@@ -174,8 +174,8 @@ fun AppNavigation(
     val disclaimerViewModel = remember { DisclaimerViewModel() }
     val consentApi = koinInject<ConsentApi>()
     val consentViewModel = remember(consentApi) { ConsentViewModel(consentApi) }
-    val recettesViewModel = remember(recetteRepository, journalRepository, syncManager) {
-        RecettesViewModel(recetteRepository, journalRepository, syncManager).also { it.init() }
+    val recettesViewModel = remember(recetteRepository, journalRepository, syncManager, alimentRepository) {
+        RecettesViewModel(recetteRepository, journalRepository, syncManager, alimentRepository).also { it.init() }
     }
     val supportApi = koinInject<SupportApi>()
     val faqViewModel = remember(supportApi) { FaqViewModel(supportApi).also { it.init() } }

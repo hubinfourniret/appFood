@@ -12,6 +12,8 @@ import com.appfood.shared.api.request.CreateRecetteRequest
 import com.appfood.shared.api.request.IngredientRequest
 import com.appfood.shared.api.request.UpdateJournalEntryRequest
 import com.appfood.shared.api.request.UpdateRecetteRequest
+import com.appfood.shared.api.response.SearchAlimentResponse
+import com.appfood.shared.data.repository.AlimentRepository
 import com.appfood.shared.data.repository.JournalRepository
 import com.appfood.shared.data.repository.RecetteRepository
 import com.appfood.shared.sync.SyncEnqueuer
@@ -41,6 +43,7 @@ class RecettesViewModel(
     private val recetteRepository: RecetteRepository,
     private val journalRepository: JournalRepository,
     private val syncEnqueuer: SyncEnqueuer,
+    private val alimentRepository: AlimentRepository? = null,
 ) : ViewModel() {
 
     // ==================== LIST STATE (RECETTES-01) ====================
@@ -116,6 +119,21 @@ class RecettesViewModel(
 
     private val _deleteRecetteState = MutableStateFlow<DeleteRecetteState>(DeleteRecetteState.Idle)
     val deleteRecetteState: StateFlow<DeleteRecetteState> = _deleteRecetteState.asStateFlow()
+
+    // ==================== ALIMENT PICKER (TACHE-516) ====================
+
+    /** Index de l'ingredient pour lequel on choisit un aliment, null = picker ferme. */
+    private val _alimentPickerForIndex = MutableStateFlow<Int?>(null)
+    val alimentPickerForIndex: StateFlow<Int?> = _alimentPickerForIndex.asStateFlow()
+
+    private val _alimentPickerQuery = MutableStateFlow("")
+    val alimentPickerQuery: StateFlow<String> = _alimentPickerQuery.asStateFlow()
+
+    private val _alimentPickerResults = MutableStateFlow<List<AlimentPickerItem>>(emptyList())
+    val alimentPickerResults: StateFlow<List<AlimentPickerItem>> = _alimentPickerResults.asStateFlow()
+
+    private val _alimentPickerLoading = MutableStateFlow(false)
+    val alimentPickerLoading: StateFlow<Boolean> = _alimentPickerLoading.asStateFlow()
 
     // ==================== LIST ACTIONS ====================
 
@@ -624,6 +642,58 @@ class RecettesViewModel(
         _deleteRecetteState.value = DeleteRecetteState.Idle
     }
 
+    // ---------- Aliment picker (TACHE-516) ----------
+
+    fun openAlimentPicker(ingredientIndex: Int) {
+        _alimentPickerForIndex.value = ingredientIndex
+        _alimentPickerQuery.value = ""
+        _alimentPickerResults.value = emptyList()
+    }
+
+    fun closeAlimentPicker() {
+        _alimentPickerForIndex.value = null
+    }
+
+    fun onAlimentPickerQueryChanged(query: String) {
+        _alimentPickerQuery.value = query
+        if (query.length < 2) {
+            _alimentPickerResults.value = emptyList()
+            return
+        }
+        val repo = alimentRepository ?: return
+        viewModelScope.launch {
+            _alimentPickerLoading.value = true
+            when (val result = repo.search(query)) {
+                is AppResult.Success -> {
+                    _alimentPickerResults.value = result.data.data.map { aliment ->
+                        AlimentPickerItem(
+                            id = aliment.id,
+                            nom = aliment.nom,
+                            categorie = aliment.categorie,
+                            caloriesPour100g = aliment.nutrimentsPour100g.calories,
+                        )
+                    }
+                }
+                is AppResult.Error -> {
+                    _alimentPickerResults.value = emptyList()
+                }
+            }
+            _alimentPickerLoading.value = false
+        }
+    }
+
+    fun onAlimentPickerSelected(aliment: AlimentPickerItem) {
+        val index = _alimentPickerForIndex.value ?: return
+        _createRecetteForm.update { form ->
+            val list = form.ingredients.toMutableList()
+            if (index !in list.indices) return@update form
+            val current = list[index]
+            list[index] = current.copy(alimentId = aliment.id, alimentNom = aliment.nom)
+            form.copy(ingredients = list)
+        }
+        _alimentPickerForIndex.value = null
+    }
+
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 300L
         private const val PAGE_SIZE = 20
@@ -687,6 +757,14 @@ data class IngredientFormEntry(
     val alimentId: String = "",
     val alimentNom: String = "",
     val quantiteGrammes: String = "",
+)
+
+/** TACHE-516 : item du picker aliments lors de la creation/edition d'une recette. */
+data class AlimentPickerItem(
+    val id: String,
+    val nom: String,
+    val categorie: String,
+    val caloriesPour100g: Double,
 )
 
 // ==================== ADD RECETTE TO JOURNAL STATE ====================
