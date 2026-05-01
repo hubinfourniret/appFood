@@ -392,6 +392,7 @@ const val JOURNAL_PORTION_GENERIC = "Portions generiques"
     // Recette detail (RECETTES-02)
     const val RECETTE_DETAIL_TITLE = "Detail recette"
     const val RECETTE_INGREDIENTS_TITLE = "Ingredients"
+    const val RECETTE_RESET_INGREDIENTS = "Reinitialiser"
     const val RECETTE_ETAPES_TITLE = "Preparation"
     const val RECETTE_NUTRITION_TITLE = "Valeurs nutritionnelles (par portion)"
     const val RECETTE_PORTIONS_LABEL = "Portions"

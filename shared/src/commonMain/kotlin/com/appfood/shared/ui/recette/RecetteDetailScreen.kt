@@ -155,6 +155,7 @@ fun RecetteDetailScreen(
     val isFavorite by viewModel.isDetailFavorite.collectAsState()
     val showMealDialog by viewModel.showMealSelectionDialog.collectAsState()
     val addToJournalState by viewModel.addToJournalState.collectAsState()
+    val ingredientOverrides by viewModel.ingredientOverrides.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(recetteId) {
@@ -197,8 +198,11 @@ fun RecetteDetailScreen(
         state = detailState,
         selectedPortions = selectedPortions,
         isFavorite = isFavorite,
+        ingredientOverrides = ingredientOverrides,
         onPortionsChanged = viewModel::onDetailPortionsChanged,
         onToggleFavorite = viewModel::onToggleDetailFavorite,
+        onIngredientQuantityChanged = viewModel::onIngredientQuantityChanged,
+        onResetIngredientOverrides = viewModel::resetIngredientOverrides,
         onAddToJournal = {
             if (prefilledMealType != null) {
                 // Skip le dialog : ajout direct avec le mealType deja choisi en amont
@@ -274,8 +278,11 @@ private fun RecetteDetailContent(
     state: RecetteDetailState,
     selectedPortions: Int,
     isFavorite: Boolean,
+    ingredientOverrides: Map<String, Double>,
     onPortionsChanged: (Int) -> Unit,
     onToggleFavorite: () -> Unit,
+    onIngredientQuantityChanged: (String, Double) -> Unit,
+    onResetIngredientOverrides: () -> Unit,
     onAddToJournal: () -> Unit,
     onRetry: () -> Unit,
     onNavigateBack: () -> Unit,
@@ -332,7 +339,10 @@ private fun RecetteDetailContent(
                 RecetteDetailBody(
                     recette = state,
                     selectedPortions = selectedPortions,
+                    ingredientOverrides = ingredientOverrides,
                     onPortionsChanged = onPortionsChanged,
+                    onIngredientQuantityChanged = onIngredientQuantityChanged,
+                    onResetIngredientOverrides = onResetIngredientOverrides,
                     onAddToJournal = onAddToJournal,
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -345,7 +355,10 @@ private fun RecetteDetailContent(
 private fun RecetteDetailBody(
     recette: RecetteDetailState.Success,
     selectedPortions: Int,
+    ingredientOverrides: Map<String, Double>,
     onPortionsChanged: (Int) -> Unit,
+    onIngredientQuantityChanged: (String, Double) -> Unit,
+    onResetIngredientOverrides: () -> Unit,
     onAddToJournal: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -394,10 +407,13 @@ private fun RecetteDetailBody(
 
         Divider()
 
-        // Ingredients
+        // Ingredients (avec ajustement par ingredient — TACHE-518)
         IngredientsSection(
             ingredients = recette.ingredients,
             portionFactor = selectedPortions.toDouble() / recette.nbPortions.toDouble(),
+            overrides = ingredientOverrides,
+            onIngredientQuantityChanged = onIngredientQuantityChanged,
+            onResetOverrides = onResetIngredientOverrides,
         )
 
         Divider()
@@ -501,27 +517,104 @@ private fun PortionSelectorRow(
 private fun IngredientsSection(
     ingredients: List<IngredientRecette>,
     portionFactor: Double,
+    overrides: Map<String, Double>,
+    onIngredientQuantityChanged: (String, Double) -> Unit,
+    onResetOverrides: () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
-            text = Strings.RECETTE_INGREDIENTS_TITLE,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        ingredients.forEach { ingredient ->
-            val adjustedQuantity = ingredient.quantiteGrammes * portionFactor
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                text = Strings.recetteIngredientQuantity(
-                    ingredient.alimentNom,
-                    adjustedQuantity,
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                text = Strings.RECETTE_INGREDIENTS_TITLE,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            if (overrides.isNotEmpty()) {
+                TextButton(onClick = onResetOverrides) {
+                    Text(Strings.RECETTE_RESET_INGREDIENTS)
+                }
+            }
+        }
+        ingredients.forEach { ingredient ->
+            val defaultQuantity = ingredient.quantiteGrammes * portionFactor
+            val effectiveQuantity = overrides[ingredient.id] ?: defaultQuantity
+            val isAdjusted = ingredient.id in overrides
+            IngredientEditableRow(
+                nom = ingredient.alimentNom,
+                effectiveGrammes = effectiveQuantity,
+                isAdjusted = isAdjusted,
+                onIncrement = {
+                    onIngredientQuantityChanged(ingredient.id, effectiveQuantity + INGREDIENT_STEP_G)
+                },
+                onDecrement = {
+                    val nv = (effectiveQuantity - INGREDIENT_STEP_G).coerceAtLeast(0.0)
+                    onIngredientQuantityChanged(ingredient.id, nv)
+                },
             )
         }
+    }
+}
+
+private const val INGREDIENT_STEP_G = 10.0
+
+@Composable
+private fun IngredientEditableRow(
+    nom: String,
+    effectiveGrammes: Double,
+    isAdjusted: Boolean,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = nom,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                onClick = onDecrement,
+                enabled = effectiveGrammes > 0.0,
+            ) {
+                Icon(
+                    imageVector = RemoveIcon,
+                    contentDescription = "-",
+                )
+            }
+            Text(
+                text = "${formatGrammes(effectiveGrammes)} g",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isAdjusted) FontWeight.Bold else FontWeight.Normal,
+                color = if (isAdjusted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            )
+            IconButton(onClick = onIncrement) {
+                Icon(
+                    imageVector = AddIcon,
+                    contentDescription = "+",
+                )
+            }
+        }
+    }
+}
+
+private fun formatGrammes(value: Double): String {
+    return if (value == value.toLong().toDouble()) {
+        value.toLong().toString()
+    } else {
+        kotlin.math.round(value).toLong().toString()
     }
 }
 

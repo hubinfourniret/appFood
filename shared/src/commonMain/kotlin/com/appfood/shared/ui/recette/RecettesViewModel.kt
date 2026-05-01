@@ -80,6 +80,14 @@ class RecettesViewModel(
     private val _isDetailFavorite = MutableStateFlow(false)
     val isDetailFavorite: StateFlow<Boolean> = _isDetailFavorite.asStateFlow()
 
+    /**
+     * Overrides en grammes par ingredient (key = ingredient.id) pour la recette
+     * actuellement affichee. Permet d'ajuster la quantite reelle utilisee dans
+     * cette saisie sans modifier la recette de reference. Reset a chaque load.
+     */
+    private val _ingredientOverrides = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val ingredientOverrides: StateFlow<Map<String, Double>> = _ingredientOverrides.asStateFlow()
+
     // --- Meal selection dialog for adding recipe to journal ---
     private val _showMealSelectionDialog = MutableStateFlow(false)
     val showMealSelectionDialog: StateFlow<Boolean> = _showMealSelectionDialog.asStateFlow()
@@ -210,6 +218,7 @@ class RecettesViewModel(
 
     fun loadRecetteDetail(id: String) {
         _detailState.value = RecetteDetailState.Loading
+        _ingredientOverrides.value = emptyMap()
         viewModelScope.launch {
             when (val result = recetteRepository.getRecette(id)) {
                 is AppResult.Success -> {
@@ -238,7 +247,25 @@ class RecettesViewModel(
     fun onDetailPortionsChanged(portions: Int) {
         if (portions >= 1) {
             _selectedPortions.value = portions
+            // Changer le nombre de portions reset les overrides : sinon les valeurs
+            // ajustees ne refletent plus correctement l'intention de l'utilisateur.
+            _ingredientOverrides.value = emptyMap()
         }
+    }
+
+    /**
+     * Ajuste la quantite reelle d'un ingredient pour cette saisie (TACHE-518).
+     * grammes <= 0 retire l'override (revient a la quantite par defaut * portion).
+     */
+    fun onIngredientQuantityChanged(ingredientId: String, grammes: Double) {
+        _ingredientOverrides.update { current ->
+            if (grammes <= 0.0) current - ingredientId
+            else current + (ingredientId to grammes)
+        }
+    }
+
+    fun resetIngredientOverrides() {
+        _ingredientOverrides.value = emptyMap()
     }
 
     fun onToggleDetailFavorite() {
@@ -258,6 +285,7 @@ class RecettesViewModel(
         _showMealSelectionDialog.value = false
         val detail = _detailState.value as? RecetteDetailState.Success ?: return
         val portions = _selectedPortions.value
+        val overrides = _ingredientOverrides.value.takeIf { it.isNotEmpty() }
 
         _addToJournalState.value = AddRecetteToJournalState.Saving
         val today = kotlin.time.Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -267,6 +295,7 @@ class RecettesViewModel(
             recetteId = detail.id,
             nom = detail.nom,
             nbPortions = portions.toDouble(),
+            ingredientOverrides = overrides,
         )
 
         viewModelScope.launch {

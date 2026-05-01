@@ -59,6 +59,7 @@ class JournalService(
         recetteId: String?,
         quantiteGrammes: Double?,
         nbPortions: Double?,
+        ingredientOverrides: Map<String, Double>? = null,
     ): JournalEntryRow {
         // Validate alimentId XOR recetteId
         if (alimentId == null && recetteId == null) {
@@ -124,7 +125,12 @@ class JournalService(
                 recetteDao.findById(recetteId!!)
                     ?: throw NotFoundException("Recette non trouvee: $recetteId")
 
-            val nutrients = calculateNutrientsFromRecette(recette, nbPortions)
+            val nutrients =
+                if (!ingredientOverrides.isNullOrEmpty()) {
+                    calculateNutrientsFromRecetteWithOverrides(recette, nbPortions, ingredientOverrides)
+                } else {
+                    calculateNutrientsFromRecette(recette, nbPortions)
+                }
             val quantiteGrammesCalc =
                 if (recette.nbPortions > 0) {
                     nbPortions / recette.nbPortions * 100.0
@@ -360,6 +366,46 @@ class JournalService(
             omega3 = aliment.omega3 * factor,
             omega6 = aliment.omega6 * factor,
         )
+    }
+
+    /**
+     * Calcule les nutriments d'une recette en remplaçant la quantité de certains
+     * ingrédients par les valeurs d'override fournies par l'utilisateur.
+     * key = ingredient.id, valeur = grammes réels pour cette saisie.
+     */
+    private suspend fun calculateNutrientsFromRecetteWithOverrides(
+        recette: RecetteRow,
+        nbPortions: Double,
+        overrides: Map<String, Double>,
+    ): NutrientSums {
+        val factor = if (recette.nbPortions > 0) nbPortions / recette.nbPortions else 1.0
+        val ingredients = recetteDao.findIngredientsByRecetteId(recette.id)
+        var sums = NutrientSums()
+        for (ing in ingredients) {
+            val grams = overrides[ing.id] ?: (ing.quantiteGrammes * factor)
+            if (grams <= 0.0) continue
+            val aliment = alimentDao.findById(ing.alimentId) ?: continue
+            val n = calculateNutrientsFromAliment(aliment, grams)
+            sums = NutrientSums(
+                calories = sums.calories + n.calories,
+                proteines = sums.proteines + n.proteines,
+                glucides = sums.glucides + n.glucides,
+                lipides = sums.lipides + n.lipides,
+                fibres = sums.fibres + n.fibres,
+                sel = sums.sel + n.sel,
+                sucres = sums.sucres + n.sucres,
+                fer = sums.fer + n.fer,
+                calcium = sums.calcium + n.calcium,
+                zinc = sums.zinc + n.zinc,
+                magnesium = sums.magnesium + n.magnesium,
+                vitamineB12 = sums.vitamineB12 + n.vitamineB12,
+                vitamineD = sums.vitamineD + n.vitamineD,
+                vitamineC = sums.vitamineC + n.vitamineC,
+                omega3 = sums.omega3 + n.omega3,
+                omega6 = sums.omega6 + n.omega6,
+            )
+        }
+        return sums
     }
 
     private fun calculateNutrientsFromRecette(

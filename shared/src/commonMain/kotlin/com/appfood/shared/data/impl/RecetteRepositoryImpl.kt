@@ -147,6 +147,7 @@ class RecetteRepositoryImpl(
             },
             ingredients = ingredients.map {
                 com.appfood.shared.model.IngredientRecette(
+                    id = it.id,
                     alimentId = it.alimentId,
                     alimentNom = it.alimentNom,
                     quantiteGrammes = it.quantiteGrammes,

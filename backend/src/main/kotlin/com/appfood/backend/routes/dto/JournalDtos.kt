@@ -14,6 +14,12 @@ data class AddJournalEntryRequest(
     val nom: String? = null,
     val quantiteGrammes: Double? = null,
     val nbPortions: Double? = null,
+    /**
+     * Overrides en grammes par ingredient (key = ingredient.id). Permet d'ajuster
+     * la quantite reelle d'un ou plusieurs ingredients pour cette saisie de recette.
+     * Les ingredients sans override gardent leur quantite par defaut * portion factor.
+     */
+    val ingredientOverrides: Map<String, Double>? = null,
 )
 
 @Serializable

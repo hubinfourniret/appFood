@@ -12,6 +12,8 @@ data class AddJournalEntryRequest(
     val nom: String? = null,
     val quantiteGrammes: Double? = null,
     val nbPortions: Double? = null,
+    /** Overrides en grammes par ingredient (key = ingredient.id) pour une recette. */
+    val ingredientOverrides: Map<String, Double>? = null,
 )
 
 @Serializable

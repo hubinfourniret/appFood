@@ -26,6 +26,7 @@ data class Recette(
 
 @Serializable
 data class IngredientRecette(
+    val id: String,
     val alimentId: String,
     val alimentNom: String,
     val quantiteGrammes: Double,

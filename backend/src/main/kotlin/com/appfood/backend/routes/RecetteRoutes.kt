@@ -121,6 +121,7 @@ private fun RecetteWithIngredients.toDetailResponse(): RecetteDetailResponse {
         ingredients =
             ingredients.map {
                 IngredientResponse(
+                    id = it.id,
                     alimentId = it.alimentId,
                     alimentNom = it.alimentNom,
                     quantiteGrammes = it.quantiteGrammes,

@@ -85,6 +85,7 @@ data class RecetteDetailResponse(
 
 @Serializable
 data class IngredientResponse(
+    val id: String,
     val alimentId: String,
     val alimentNom: String,
     val quantiteGrammes: Double,

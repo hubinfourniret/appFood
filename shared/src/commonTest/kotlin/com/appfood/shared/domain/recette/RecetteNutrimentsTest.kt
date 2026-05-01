@@ -34,6 +34,7 @@ class RecetteNutrimentsTest {
         alimentId: String,
         quantiteGrammes: Double,
     ): IngredientRecette = IngredientRecette(
+        id = "ing-$alimentId",
         alimentId = alimentId,
         alimentNom = "Ingredient $alimentId",
         quantiteGrammes = quantiteGrammes,

@@ -211,6 +211,7 @@ fun Route.journalRoutes() {
                         recetteId = request.recetteId,
                         quantiteGrammes = request.quantiteGrammes,
                         nbPortions = request.nbPortions,
+                        ingredientOverrides = request.ingredientOverrides,
                     )
                 call.respond(HttpStatusCode.Created, entry.toResponse())
             }

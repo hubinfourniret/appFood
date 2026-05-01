@@ -56,7 +56,7 @@ class RecommandationRecetteUseCaseTest {
         source = SourceRecette.MANUELLE,
         typeRepas = listOf(MealType.DEJEUNER),
         ingredients = listOf(
-            IngredientRecette("aliment-1", "Lentilles corail", 200.0),
+            IngredientRecette("ing-1", "aliment-1", "Lentilles corail", 200.0),
         ),
         etapes = listOf("Step 1"),
         nutrimentsTotaux = nutrimentsTotaux,
