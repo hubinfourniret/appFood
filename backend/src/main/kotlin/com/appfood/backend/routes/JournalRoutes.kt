@@ -279,6 +279,11 @@ internal fun JournalEntryRow.toResponse() =
                 omega3 = omega3,
                 omega6 = omega6,
             ),
+        ingredientOverrides = ingredientOverridesJson?.let {
+            runCatching {
+                kotlinx.serialization.json.Json.decodeFromString<Map<String, Double>>(it)
+            }.getOrNull()
+        },
         createdAt = createdAt.toString(),
         updatedAt = updatedAt.toString(),
     )

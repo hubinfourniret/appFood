@@ -151,6 +151,7 @@ fun RecetteDetailScreen(
     onAddedFromAddEntry: () -> Unit = onNavigateBack,
     editJournalEntryId: String? = null,
     prefilledPortions: Int? = null,
+    prefilledOverrides: Map<String, Double>? = null,
 ) {
     val detailState by viewModel.detailState.collectAsState()
     val selectedPortions by viewModel.selectedPortions.collectAsState()
@@ -160,10 +161,14 @@ fun RecetteDetailScreen(
     val ingredientOverrides by viewModel.ingredientOverrides.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(recetteId, prefilledPortions) {
+    LaunchedEffect(recetteId, prefilledPortions, prefilledOverrides) {
         viewModel.loadRecetteDetail(recetteId)
         if (prefilledPortions != null) {
             viewModel.setSelectedPortionsDirect(prefilledPortions)
+        }
+        if (!prefilledOverrides.isNullOrEmpty()) {
+            // Apres le load (qui reset les overrides), on restaure les ajustements existants
+            viewModel.setIngredientOverridesDirect(prefilledOverrides)
         }
     }
 

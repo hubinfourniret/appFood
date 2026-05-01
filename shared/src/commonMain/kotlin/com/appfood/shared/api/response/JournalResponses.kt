@@ -33,6 +33,7 @@ data class JournalEntryResponse(
     val quantiteGrammes: Double,
     val nbPortions: Double?,
     val nutrimentsCalcules: NutrimentValuesResponse,
+    val ingredientOverrides: Map<String, Double>? = null,
     val createdAt: String,
     val updatedAt: String,
 )

@@ -374,12 +374,16 @@ fun AppNavigation(
                             launchSingleTop = true
                         }
                     },
-                    onNavigateToEditRecetteEntry = { recetteId, entryId, portions ->
+                    onNavigateToEditRecetteEntry = { recetteId, entryId, portions, overrides ->
+                        val overridesJson = overrides?.takeIf { it.isNotEmpty() }?.let {
+                            kotlinx.serialization.json.Json.encodeToString(it)
+                        }
                         navController.navigate(
                             Screen.RecetteDetail(
                                 recetteId = recetteId,
                                 editJournalEntryId = entryId,
                                 prefilledPortions = portions,
+                                prefilledOverridesJson = overridesJson,
                             ),
                         ) {
                             launchSingleTop = true
@@ -509,17 +513,21 @@ fun AppNavigation(
                 )
             }
 
-            // Recette detail (RECETTES-02 + TACHE-510 v3)
+            // Recette detail (RECETTES-02 + TACHE-510 v3 + TACHE-518)
             composable<Screen.RecetteDetail> { backStackEntry ->
                 val screen = backStackEntry.toRoute<Screen.RecetteDetail>()
                 val prefilledMeal = screen.prefilledMealType?.let {
                     runCatching { MealType.valueOf(it) }.getOrNull()
                 }
+                val prefilledOverrides = screen.prefilledOverridesJson?.let { json ->
+                    runCatching {
+                        kotlinx.serialization.json.Json.decodeFromString<Map<String, Double>>(json)
+                    }.getOrNull()
+                }
                 RecetteDetailScreen(
                     recetteId = screen.recetteId,
                     viewModel = recettesViewModel,
                     onNavigateBack = {
-                        // En mode edit, on rafraichit le dashboard au retour
                         if (screen.editJournalEntryId != null) {
                             dashboardViewModel.loadDashboard()
                         }
@@ -527,13 +535,12 @@ fun AppNavigation(
                     },
                     prefilledMealType = prefilledMeal,
                     onAddedFromAddEntry = {
-                        // TACHE-510 v4 : pop jusqu'a AddEntry (= au-dessus de SearchRecette)
-                        // pour revenir directement a la selection du repas.
                         navController.popBackStack(Screen.AddEntry, inclusive = false)
                         dashboardViewModel.loadDashboard()
                     },
                     editJournalEntryId = screen.editJournalEntryId,
                     prefilledPortions = screen.prefilledPortions,
+                    prefilledOverrides = prefilledOverrides,
                 )
             }
 

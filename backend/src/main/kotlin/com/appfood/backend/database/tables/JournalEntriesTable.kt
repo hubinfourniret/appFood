@@ -32,6 +32,11 @@ object JournalEntriesTable : Table("journal_entries") {
     val vitamineC = double("vitamine_c")
     val omega3 = double("omega_3")
     val omega6 = double("omega_6")
+    /**
+     * JSON Map<ingredientId, grammes> — null si recette ajoutee sans ajustements
+     * ou si entree de type aliment. Permet la restauration des ajustements en edit.
+     */
+    val ingredientOverridesJson = text("ingredient_overrides_json").nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
     override val primaryKey = PrimaryKey(id)

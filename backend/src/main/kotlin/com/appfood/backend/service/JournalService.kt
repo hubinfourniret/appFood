@@ -12,6 +12,7 @@ import com.appfood.backend.plugins.ValidationException
 import com.appfood.backend.security.toEnumOrThrow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
@@ -165,6 +166,9 @@ class JournalService(
                     vitamineC = nutrients.vitamineC,
                     omega3 = nutrients.omega3,
                     omega6 = nutrients.omega6,
+                    ingredientOverridesJson = ingredientOverrides
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { Json.encodeToString(it) },
                     createdAt = now,
                     updatedAt = now,
                 )
@@ -265,6 +269,9 @@ class JournalService(
                         vitamineC = nutrients.vitamineC,
                         omega3 = nutrients.omega3,
                         omega6 = nutrients.omega6,
+                        ingredientOverridesJson = ingredientOverrides
+                            ?.takeIf { it.isNotEmpty() }
+                            ?.let { Json.encodeToString(it) },
                     )
                 } else {
                     existing.copy(mealType = newMealType)

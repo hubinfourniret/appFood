@@ -41,6 +41,8 @@ data class JournalEntryRow(
     val vitamineC: Double,
     val omega3: Double,
     val omega6: Double,
+    /** JSON encode des overrides {ingredientId: grammes}, null si pas d'ajustement. */
+    val ingredientOverridesJson: String? = null,
     val createdAt: kotlinx.datetime.Instant,
     val updatedAt: kotlinx.datetime.Instant,
 )
@@ -110,6 +112,7 @@ class JournalEntryDao {
                 it[vitamineC] = row.vitamineC
                 it[omega3] = row.omega3
                 it[omega6] = row.omega6
+                it[ingredientOverridesJson] = row.ingredientOverridesJson
                 it[createdAt] = row.createdAt
                 it[updatedAt] = row.updatedAt
             }
@@ -143,6 +146,7 @@ class JournalEntryDao {
                 it[vitamineC] = row.vitamineC
                 it[omega3] = row.omega3
                 it[omega6] = row.omega6
+                it[ingredientOverridesJson] = row.ingredientOverridesJson
                 it[updatedAt] = Clock.System.now()
             } > 0
         }
@@ -242,6 +246,7 @@ class JournalEntryDao {
             vitamineC = this[JournalEntriesTable.vitamineC],
             omega3 = this[JournalEntriesTable.omega3],
             omega6 = this[JournalEntriesTable.omega6],
+            ingredientOverridesJson = this[JournalEntriesTable.ingredientOverridesJson],
             createdAt = this[JournalEntriesTable.createdAt],
             updatedAt = this[JournalEntriesTable.updatedAt],
         )

@@ -68,7 +68,7 @@ fun DashboardScreen(
     onNavigateToRecommandations: () -> Unit,
     onNavigateToHydratation: () -> Unit,
     onNavigateToWeeklyDashboard: () -> Unit,
-    onNavigateToEditRecetteEntry: (recetteId: String, journalEntryId: String, portions: Int) -> Unit,
+    onNavigateToEditRecetteEntry: (recetteId: String, journalEntryId: String, portions: Int, overrides: Map<String, Double>?) -> Unit,
     onNavigateToOnboarding: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
@@ -106,12 +106,13 @@ fun DashboardScreen(
         onNavigateToOnboarding = onNavigateToOnboarding,
         onRequestDeleteEntry = journalViewModel::onRequestDelete,
         onEditEntry = { entry ->
-            // TACHE-518 : aliment → dialog, recette → ecran detail (vue complete)
+            // TACHE-518 : aliment → dialog, recette → ecran detail (vue complete) avec overrides restaures
             if (entry.isRecette && entry.recetteId != null) {
                 onNavigateToEditRecetteEntry(
                     entry.recetteId,
                     entry.id,
                     (entry.nbPortions ?: 1.0).toInt().coerceAtLeast(1),
+                    entry.ingredientOverrides,
                 )
             } else {
                 entryToEdit = entry

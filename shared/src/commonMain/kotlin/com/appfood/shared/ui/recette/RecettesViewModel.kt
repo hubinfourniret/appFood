@@ -350,6 +350,11 @@ class RecettesViewModel(
         if (portions >= 1) _selectedPortions.value = portions
     }
 
+    /** Restaure des overrides existants (mode edit recette TACHE-518). */
+    fun setIngredientOverridesDirect(overrides: Map<String, Double>) {
+        _ingredientOverrides.value = overrides
+    }
+
     // ==================== CREATE ACTIONS (RECETTES-03) ====================
 
     fun onCreateNomChanged(value: String) {

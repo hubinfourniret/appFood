@@ -86,6 +86,7 @@ class DashboardViewModel(
                     calories = entry.nutrimentsCalcules.calories,
                     isRecette = entry.recetteId != null,
                     recetteId = entry.recetteId,
+                    ingredientOverrides = entry.ingredientOverrides,
                 ),
             )
         }
@@ -151,6 +152,7 @@ data class JournalEntryUiModel(
     val calories: Double,
     val isRecette: Boolean,
     val recetteId: String? = null,
+    val ingredientOverrides: Map<String, Double>? = null,
 )
 
 data class QuotaStatusUiModel(

@@ -44,6 +44,8 @@ sealed class Screen {
         val prefilledMealType: String? = null,
         val editJournalEntryId: String? = null,
         val prefilledPortions: Int? = null,
+        /** JSON encode du Map<ingredientId, grammes> pour restaurer les ajustements en mode edit. */
+        val prefilledOverridesJson: String? = null,
     ) : Screen()
 
     // Create recette — admin only (RECETTES-03)
