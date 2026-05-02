@@ -1,6 +1,7 @@
 package com.appfood.backend.database.tables
 
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.kotlin.datetime.date
 import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 
 object UsersTable : Table("users") {
@@ -11,7 +12,18 @@ object UsersTable : Table("users") {
     val role = enumerationByName<Role>("role", 10).default(Role.USER)
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
+    // TACHE-600 : profil social
+    val handle = varchar("handle", 30).nullable()
+    val bio = varchar("bio", 280).nullable()
+    val dateNaissance = date("date_naissance").nullable()
+    val socialVisibility = enumerationByName<SocialVisibility>("social_visibility", 10).default(SocialVisibility.PRIVATE)
     override val primaryKey = PrimaryKey(id)
+}
+
+enum class SocialVisibility {
+    PRIVATE,
+    FRIENDS,
+    PUBLIC,
 }
 
 object UserProfilesTable : Table("user_profiles") {

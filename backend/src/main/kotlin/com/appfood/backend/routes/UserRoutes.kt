@@ -5,6 +5,7 @@ import com.appfood.backend.database.dao.UserProfileRow
 import com.appfood.backend.plugins.userId
 import com.appfood.backend.routes.dto.ConsentExportResponse
 import com.appfood.backend.routes.dto.CreateProfileRequest
+import com.appfood.backend.routes.dto.HandleAvailabilityResponse
 import com.appfood.backend.routes.dto.HydratationExportResponse
 import com.appfood.backend.routes.dto.JournalEntryExportResponse
 import com.appfood.backend.routes.dto.NutrimentValuesResponse
@@ -14,10 +15,12 @@ import com.appfood.backend.routes.dto.ProfileResponse
 import com.appfood.backend.routes.dto.QuotaExportResponse
 import com.appfood.backend.routes.dto.UpdatePreferencesRequest
 import com.appfood.backend.routes.dto.UpdateProfileRequest
+import com.appfood.backend.routes.dto.UpdateSocialProfileRequest
 import com.appfood.backend.routes.dto.UserExportResponse
 import com.appfood.backend.routes.dto.UserProfileResponse
 import com.appfood.backend.service.ProfileService
 import com.appfood.backend.service.QuotaService
+import com.appfood.backend.service.SocialProfileService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -33,6 +36,7 @@ import org.koin.ktor.ext.inject
 fun Route.userRoutes() {
     val profileService by inject<ProfileService>()
     val quotaService by inject<QuotaService>()
+    val socialProfileService by inject<SocialProfileService>()
 
     authenticate("auth-jwt") {
         route("/api/v1/users") {
@@ -95,6 +99,46 @@ fun Route.userRoutes() {
                 call.respond(
                     HttpStatusCode.OK,
                     profile.toProfileResponse(),
+                )
+            }
+
+            // TACHE-600 : verifier disponibilite d'un handle
+            get("/handle-available") {
+                val userId = call.userId()
+                val handle = call.request.queryParameters["handle"]
+                    ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "handle requis"))
+                val available =
+                    try {
+                        socialProfileService.isHandleAvailable(handle, currentUserId = userId)
+                    } catch (e: Exception) {
+                        // ValidationException -> handle invalide -> renvoyer available=false
+                        false
+                    }
+                call.respond(HttpStatusCode.OK, HandleAvailabilityResponse(handle = handle, available = available))
+            }
+
+            // TACHE-600 : update profil social
+            put("/me/social") {
+                val userId = call.userId()
+                val request = call.receive<UpdateSocialProfileRequest>()
+                socialProfileService.updateSocial(
+                    userId = userId,
+                    handle = request.handle,
+                    bio = request.bio,
+                    dateNaissanceIso = request.dateNaissance,
+                    socialVisibilityStr = request.socialVisibility,
+                )
+                // Re-render le UserProfileResponse complet pour synchroniser le client
+                val data = profileService.getUserProfile(userId)
+                call.respond(
+                    HttpStatusCode.OK,
+                    UserProfileResponse(
+                        user = data.user.toUserResponse(
+                            onboardingComplete = data.profile?.onboardingComplete ?: false,
+                        ),
+                        profile = data.profile?.toProfileResponse(),
+                        preferences = data.preferences?.toPreferencesResponse(),
+                    ),
                 )
             }
 

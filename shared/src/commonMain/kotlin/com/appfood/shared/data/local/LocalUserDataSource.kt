@@ -24,6 +24,32 @@ class LocalUserDataSource(private val database: AppDatabase) {
             role = user.role,
             created_at = user.created_at,
             updated_at = user.updated_at,
+            handle = user.handle,
+            bio = user.bio,
+            date_naissance = user.date_naissance,
+            social_visibility = user.social_visibility,
+        )
+    }
+
+    /**
+     * TACHE-600 : etat social du user en cache (pour decider de la redirection onboarding social).
+     */
+    data class CachedSocialState(
+        val userId: String,
+        val handle: String?,
+        val bio: String?,
+        val dateNaissance: String?,
+        val socialVisibility: String,
+    )
+
+    fun findSocialState(): CachedSocialState? {
+        val row = queries.findSocialState().executeAsOneOrNull() ?: return null
+        return CachedSocialState(
+            userId = row.id,
+            handle = row.handle,
+            bio = row.bio,
+            dateNaissance = row.date_naissance,
+            socialVisibility = row.social_visibility,
         )
     }
 

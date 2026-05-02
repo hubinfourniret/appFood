@@ -354,4 +354,80 @@ Tous les ViewModels ont ete cables aux repositories/use cases. Aucun stub TODO r
 - FIREBASE_MOCK=false en prod, le vrai Firebase Admin SDK est utilise
 - Compilation : `:shared` OK | `:backend` OK
 
+---
+
+## Etat au 2026-05-02 (reprise demain)
+
+### Code livre (compile, non teste sur device)
+
+**TACHE-515 — Vue hebdo des repas** (A valider)
+- `WeeklyRepasViewModel`, `WeeklyRepasScreen`, route `Screen.WeeklyRepas`
+- API `JournalApi.getEntriesRange(dateFrom, dateTo)` ajoutee
+- Tab Repas → bouton "Voir la semaine" navigue vers cet ecran (7 jours, ventilation par repas)
+
+**TACHE-516 — Recettes personnelles** (A valider)
+- Backend : migration V10 (colonne `user_id` sur `recettes`), DAO + Service, endpoints `/me` GET, PUT/DELETE owner OR admin
+- Search `/api/v1/recettes` inclut auto les recettes perso de l'user → apparaissent dans AddEntry/Recette
+- Shared : `RecetteRepository.listMyRecettes/updateRecette/deleteRecette`, `Recette.estPersonnelle`
+- UI : bouton "Personnel" en haut de RecettesListScreen → `MyRecettesScreen` (liste + FAB "Nouvelle recette" + Modifier/Supprimer par card)
+- `CreateRecetteScreen` : nouveau parametre `editRecetteId` (mode edit pre-rempli) + **picker aliments** (recherche dans la BDD au lieu de saisie libre du nom) → calcul nutrients precis cote backend
+
+### A FAIRE EN PRIORITE DEMAIN
+
+1. **Redeployer le backend sur Railway** :
+   - Migration V9 (`ingredient_overrides_json` sur `journal_entries`) — TACHE-514
+   - Migration V10 (`user_id` sur `recettes`) — TACHE-516
+   - Nouvelles routes : DELETE /api/v1/hydratation/entries/{id}, GET /api/v1/recettes/me, expose `nutrimentsPour100g` par ingredient sur le detail recette
+   - Sans redeploiement, plusieurs features backend ne fonctionneront pas (delete entry eau, restauration overrides, recettes perso)
+
+2. **Tester sur emulator les features livrees mais non validees** :
+   - TACHE-515 : aller sur tab Repas → "Voir la semaine" → verifier 7 jours avec items
+   - TACHE-516 : tab Recettes → "Personnel" → creer une recette avec picker aliments → verifier calcul nutrients → editer → supprimer → verifier qu'elle apparait bien dans AddEntry/Recette
+
+3. **Tracker les bugs eventuels** dans le doc et les corriger
+
+### Backlog restant apres validation
+
+| # | ID | Titre | Priorite | Note |
+|---|-----|-------|----------|------|
+| 1 | RECO-PERF-01 | Optimiser RecommandationService | Moyenne | Cold start dashboard < 5s. **Le superviseur veut creuser ensemble** : "il y a pas mal de truc qui sont lent. on verra ca ensemble apres" |
+| 2 | TACHE-517 | Planification hebdo / repas recurrents | Basse | A reevaluer apres avoir utilise TACHE-516 |
+
+---
+
+## Epic Communaute (V1) — DEMARRE 2026-05-02
+
+Ref complete : `docs/epic-communaute.md`
+
+Pivot strategique : appFood ajoute un onglet "Social" pour partager des recettes (Strava-like, follow asymetrique, like emoji, pas de DM, pas de defi). Le tracker reste le coeur de l'app. Age minimum 16 ans pour la partie sociale.
+
+### Backlog V1 — a faire dans l'ordre
+
+| # | ID | Titre | Priorite | Statut | Critique | Depend de |
+|---|-----|-------|----------|--------|----------|-----------|
+| 1 | TACHE-600 | Profil social : handle + date naissance + visibilite + age gate 16+ | Haute | Review | ⚠️ RGPD (REVIEW pending) | - |
+| 2 | TACHE-601 | Onglet Social + recherche utilisateurs + fiche profil public | Haute | Todo | - | TACHE-600 |
+| 3 | TACHE-602 | Follow asymetrique (suivre/ne plus suivre, listes) | Haute | Todo | - | TACHE-601 |
+| 4 | TACHE-603 | Publier une recette perso (PRIVATE/FRIENDS/PUBLIC) | Haute | Todo | - | TACHE-600 |
+| 5 | TACHE-604 | Feed des recettes publiees (users suivis) | Haute | Todo | - | TACHE-602, TACHE-603 |
+| 6 | TACHE-605 | Like emoji sur recettes publiees | Moyenne | Todo | - | TACHE-604 |
+| 7 | TACHE-606 | Forker une recette d'un autre user (avec attribution) | Haute | Todo | - | TACHE-604 |
+| 8 | TACHE-607 | Signalement + mini dashboard admin | Haute | Todo | ⚠️ Moderation (REVIEW) | TACHE-604 |
+
+### V2 et V3 — voir docs/epic-communaute.md
+
+V2 : photos (R2 + Rekognition), video, posts journee/semaine, streaks partages, auto-save, notifications push, co-auteurs + remix, blocage user.
+V3 : decouverte par regime/tags, export PNG story Insta, reco users a suivre.
+
+### Plus aucune tache critique ou haute restante
+
+Tout le backlog actif post-Sprint 5 est livre (code) ou rapporte (TACHE-517).
+
+### Pieges connus a ne pas oublier
+
+- TACHE-510..514 sont **valides utilisateur** → ne pas y retoucher sauf bug remonte
+- TACHE-514 inclut beaucoup de choses (3 onglets, edit recette avec live preview ingredients, restauration overrides au reload) — voir Validation pour la liste complete
+- Le picker aliments dans CreateRecetteScreen necessite que `AlimentRepository` soit injecte dans le VM (deja fait dans AppNavigation)
+- Format taches : on est en flux continu, pas en sprints (voir docs/workflow-claude-code.md)
+
 Statuts : Todo | In Progress | Review | Waiting User | Done | Blocked

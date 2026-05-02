@@ -13,6 +13,13 @@ data class User(
     val role: Role = Role.USER,
     @Contextual val createdAt: Instant,
     @Contextual val updatedAt: Instant,
+    // TACHE-600 : profil social (nullable tant que l'utilisateur n'a pas complete l'onboarding social)
+    val handle: String? = null,
+    val bio: String? = null,
+    val dateNaissance: String? = null, // ISO YYYY-MM-DD
+    val socialVisibility: SocialVisibility = SocialVisibility.PRIVATE,
+    val socialEnabled: Boolean = false,
+    val socialOnboardingComplete: Boolean = false,
 )
 
 @Serializable

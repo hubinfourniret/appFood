@@ -72,6 +72,10 @@ import com.appfood.shared.ui.recommandation.RecommandationsScreen
 import com.appfood.shared.ui.recommandation.RecommandationViewModel
 import com.appfood.shared.ui.settings.AboutScreen
 import com.appfood.shared.ui.settings.SettingsScreen
+import com.appfood.shared.ui.social.SocialProfileMode
+import com.appfood.shared.ui.social.SocialProfileScreen
+import com.appfood.shared.ui.social.SocialProfileViewModel
+import com.appfood.shared.model.SocialVisibility
 import com.appfood.shared.data.local.LocalUserDataSource
 import com.appfood.shared.data.repository.AlimentRepository
 import com.appfood.shared.data.repository.DashboardRepository
@@ -180,11 +184,21 @@ fun AppNavigation(
     val supportApi = koinInject<SupportApi>()
     val faqViewModel = remember(supportApi) { FaqViewModel(supportApi).also { it.init() } }
 
+    // TACHE-600 : decide la cible apres auth (Dashboard ou SocialOnboarding si incomplet)
+    fun homeOrSocialOnboarding(): Screen {
+        val s = localUserDataSource.findSocialState()
+        return if (s == null || s.handle.isNullOrBlank() || s.dateNaissance.isNullOrBlank()) {
+            Screen.SocialOnboarding
+        } else {
+            Screen.Dashboard
+        }
+    }
+
     // Restaurer la session si un token est persiste
     LaunchedEffect(Unit) {
         val savedToken = localUserDataSource.getAuthToken()
         if (savedToken != null) {
-            navController.navigate(Screen.Dashboard) {
+            navController.navigate(homeOrSocialOnboarding()) {
                 popUpTo<Screen.Login> { inclusive = true }
             }
         }
@@ -250,7 +264,7 @@ fun AppNavigation(
                                 popUpTo<Screen.Login> { inclusive = true }
                             }
                         } else {
-                            navController.navigate(Screen.Dashboard) {
+                            navController.navigate(homeOrSocialOnboarding()) {
                                 popUpTo<Screen.Login> { inclusive = true }
                             }
                         }
@@ -279,7 +293,7 @@ fun AppNavigation(
                                 popUpTo<Screen.Auth> { inclusive = true }
                             }
                         } else {
-                            navController.navigate(Screen.Dashboard) {
+                            navController.navigate(homeOrSocialOnboarding()) {
                                 popUpTo<Screen.Auth> { inclusive = true }
                             }
                         }
@@ -340,7 +354,8 @@ fun AppNavigation(
                 DisclaimerScreen(
                     viewModel = disclaimerViewModel,
                     onDisclaimerAccepted = {
-                        navController.navigate(Screen.Dashboard) {
+                        // TACHE-600 : si profil social pas complet, on bascule sur l'onboarding social
+                        navController.navigate(homeOrSocialOnboarding()) {
                             popUpTo<Screen.Disclaimer> { inclusive = true }
                         }
                     },
@@ -567,6 +582,11 @@ fun AppNavigation(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
+                    onSaved = {
+                        // TACHE-516 : apres creation/edition, retour sur la liste perso rafraichie
+                        recettesViewModel.loadMyRecettes()
+                        navController.popBackStack(Screen.MyRecettes, inclusive = false)
+                    },
                 )
             }
 
@@ -735,6 +755,51 @@ fun AppNavigation(
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToSocialSettings = {
+                        navController.navigate(Screen.SocialSettings) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+
+            // TACHE-600 : Onboarding social (oblige a la 1re connexion ou si profil social incomplet)
+            composable<Screen.SocialOnboarding> {
+                val socialVm = remember(userRepository) { SocialProfileViewModel(userRepository) }
+                SocialProfileScreen(
+                    viewModel = socialVm,
+                    mode = SocialProfileMode.Onboarding,
+                    onSaved = {
+                        navController.navigate(Screen.Dashboard) {
+                            popUpTo<Screen.SocialOnboarding> { inclusive = true }
+                        }
+                    },
+                    onNavigateBack = null,
+                )
+            }
+
+            // TACHE-600 : Modification du profil social depuis Settings
+            composable<Screen.SocialSettings> {
+                val socialVm = remember(userRepository) { SocialProfileViewModel(userRepository) }
+                LaunchedEffect(Unit) {
+                    val cached = localUserDataSource.findSocialState()
+                    if (cached != null) {
+                        val visibility = runCatching { SocialVisibility.valueOf(cached.socialVisibility) }
+                            .getOrDefault(SocialVisibility.PRIVATE)
+                        socialVm.prefillFromUser(
+                            handle = cached.handle,
+                            bio = cached.bio,
+                            dateNaissanceIso = cached.dateNaissance,
+                            visibility = visibility,
+                            dateLocked = !cached.dateNaissance.isNullOrBlank(),
+                        )
+                    }
+                }
+                SocialProfileScreen(
+                    viewModel = socialVm,
+                    mode = SocialProfileMode.Settings,
+                    onSaved = { navController.popBackStack() },
+                    onNavigateBack = { navController.popBackStack() },
                 )
             }
 

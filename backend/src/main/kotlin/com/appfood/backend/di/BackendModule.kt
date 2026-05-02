@@ -34,6 +34,7 @@ import com.appfood.backend.service.ProfileService
 import com.appfood.backend.service.QuotaService
 import com.appfood.backend.service.RecetteService
 import com.appfood.backend.service.RecommandationService
+import com.appfood.backend.service.SocialProfileService
 import com.appfood.backend.service.SupportService
 import com.appfood.backend.service.SyncService
 import io.ktor.client.HttpClient
@@ -96,6 +97,7 @@ fun backendModule(
         )
     }
     single { ProfileService(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { SocialProfileService(get()) }
     single { AlimentService(get(), get(), get(), get()) }
     single { JournalService(get(), get(), get()) }
     single { QuotaService(get(), get(), get()) }

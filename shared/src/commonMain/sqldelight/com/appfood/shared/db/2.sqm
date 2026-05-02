@@ -1,0 +1,5 @@
+-- TACHE-600 : ajout des colonnes profil social sur local_user
+ALTER TABLE local_user ADD COLUMN handle TEXT;
+ALTER TABLE local_user ADD COLUMN bio TEXT;
+ALTER TABLE local_user ADD COLUMN date_naissance TEXT;
+ALTER TABLE local_user ADD COLUMN social_visibility TEXT NOT NULL DEFAULT 'PRIVATE';

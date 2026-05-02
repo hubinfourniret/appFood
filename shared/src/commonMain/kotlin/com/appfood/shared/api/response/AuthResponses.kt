@@ -16,4 +16,11 @@ data class UserResponse(
     val prenom: String?,
     val onboardingComplete: Boolean,
     val createdAt: String,
+    // TACHE-600 : profil social
+    val handle: String? = null,
+    val bio: String? = null,
+    val dateNaissance: String? = null,
+    val socialVisibility: String = "PRIVATE",
+    val socialEnabled: Boolean = false,
+    val socialOnboardingComplete: Boolean = false,
 )

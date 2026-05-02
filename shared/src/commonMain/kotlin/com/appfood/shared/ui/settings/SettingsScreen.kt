@@ -35,6 +35,7 @@ fun SettingsScreen(
     onNavigateToHydratation: () -> Unit,
     onNavigateToQuotaManagement: () -> Unit,
     onNavigateToFaq: () -> Unit,
+    onNavigateToSocialSettings: () -> Unit,
 ) {
     SettingsContent(
         onNavigateBack = onNavigateBack,
@@ -46,6 +47,7 @@ fun SettingsScreen(
         onNavigateToHydratation = onNavigateToHydratation,
         onNavigateToQuotaManagement = onNavigateToQuotaManagement,
         onNavigateToFaq = onNavigateToFaq,
+        onNavigateToSocialSettings = onNavigateToSocialSettings,
     )
 }
 
@@ -61,6 +63,7 @@ private fun SettingsContent(
     onNavigateToHydratation: () -> Unit,
     onNavigateToQuotaManagement: () -> Unit,
     onNavigateToFaq: () -> Unit,
+    onNavigateToSocialSettings: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -84,6 +87,8 @@ private fun SettingsContent(
             // General section
             SettingsSectionTitle(text = Strings.SETTINGS_SECTION_GENERAL)
             Spacer(modifier = Modifier.height(8.dp))
+            SettingsLinkItem(label = Strings.SETTINGS_SOCIAL_PROFILE, onClick = onNavigateToSocialSettings)
+            HorizontalDivider()
             SettingsLinkItem(label = Strings.SETTINGS_ABOUT, onClick = onNavigateToAbout)
             HorizontalDivider()
             SettingsLinkItem(label = Strings.SETTINGS_FAQ, onClick = onNavigateToFaq)

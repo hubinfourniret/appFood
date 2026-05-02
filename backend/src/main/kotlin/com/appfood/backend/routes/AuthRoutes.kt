@@ -6,6 +6,7 @@ import com.appfood.backend.routes.dto.LoginRequest
 import com.appfood.backend.routes.dto.RegisterRequest
 import com.appfood.backend.routes.dto.UserResponse
 import com.appfood.backend.service.AuthService
+import com.appfood.backend.service.SocialProfileService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -63,12 +64,21 @@ fun Route.authRoutes() {
     }
 }
 
-internal fun com.appfood.backend.database.dao.UserRow.toUserResponse(onboardingComplete: Boolean) =
-    UserResponse(
+internal fun com.appfood.backend.database.dao.UserRow.toUserResponse(onboardingComplete: Boolean): UserResponse {
+    val socialEligible = SocialProfileService.isSocialEligible(dateNaissance)
+    val socialOnboardingDone = handle != null && dateNaissance != null
+    return UserResponse(
         id = id,
         email = email,
         nom = nom,
         prenom = prenom,
         onboardingComplete = onboardingComplete,
         createdAt = createdAt.toString(),
+        handle = handle,
+        bio = bio,
+        dateNaissance = dateNaissance?.toString(),
+        socialVisibility = socialVisibility.name,
+        socialEnabled = socialEligible && socialOnboardingDone,
+        socialOnboardingComplete = socialOnboardingDone,
     )
+}

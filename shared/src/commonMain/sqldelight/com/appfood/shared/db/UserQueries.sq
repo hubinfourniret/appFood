@@ -4,8 +4,12 @@ findById:
 SELECT * FROM local_user WHERE id = ?;
 
 insertOrReplace:
-INSERT OR REPLACE INTO local_user(id, email, nom, prenom, role, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO local_user(id, email, nom, prenom, role, created_at, updated_at, handle, bio, date_naissance, social_visibility)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- TACHE-600 : recuperer les champs sociaux pour decider de la redirection / prefill
+findSocialState:
+SELECT id, handle, bio, date_naissance, social_visibility FROM local_user LIMIT 1;
 
 deleteById:
 DELETE FROM local_user WHERE id = ?;

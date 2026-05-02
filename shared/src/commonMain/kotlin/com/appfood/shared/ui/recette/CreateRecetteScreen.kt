@@ -102,6 +102,7 @@ fun CreateRecetteScreen(
     viewModel: RecettesViewModel,
     onNavigateBack: () -> Unit,
     editRecetteId: String? = null,
+    onSaved: () -> Unit = onNavigateBack,
 ) {
     val createState by viewModel.createRecetteState.collectAsState()
     val formState by viewModel.createRecetteForm.collectAsState()
@@ -139,6 +140,7 @@ fun CreateRecetteScreen(
         onMoveEtapeDown = viewModel::onCreateMoveEtapeDown,
         onSubmit = viewModel::onCreateRecetteSubmit,
         onNavigateBack = onNavigateBack,
+        onSaved = onSaved,
     )
 
     if (alimentPickerForIndex != null) {
@@ -176,13 +178,14 @@ private fun CreateRecetteContent(
     onMoveEtapeDown: (Int) -> Unit,
     onSubmit: () -> Unit,
     onNavigateBack: () -> Unit,
+    onSaved: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state) {
         if (state is CreateRecetteState.Success) {
             snackbarHostState.showSnackbar(Strings.RECETTE_CREATE_SUCCESS)
-            onNavigateBack()
+            onSaved()
         }
         if (state is CreateRecetteState.Error) {
             snackbarHostState.showSnackbar(state.message)

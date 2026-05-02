@@ -5,6 +5,7 @@ import com.appfood.shared.api.request.LoginRequest
 import com.appfood.shared.api.request.RegisterRequest
 import com.appfood.shared.api.request.UpdatePreferencesRequest
 import com.appfood.shared.api.request.UpdateProfileRequest
+import com.appfood.shared.api.request.UpdateSocialProfileRequest
 import com.appfood.shared.api.response.AuthResponse
 import com.appfood.shared.api.response.PreferencesResponse
 import com.appfood.shared.api.response.ProfileResponse
@@ -131,6 +132,26 @@ class UserRepositoryImpl(
         }
     }
 
+    // TACHE-600 : profil social
+    override suspend fun checkHandleAvailable(handle: String): AppResult<Boolean> {
+        return try {
+            val response = userApi.checkHandleAvailable(handle)
+            AppResult.Success(response.available)
+        } catch (e: Exception) {
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Handle check failed", cause = e)
+        }
+    }
+
+    override suspend fun updateSocialProfile(request: UpdateSocialProfileRequest): AppResult<UserProfileResponse> {
+        return try {
+            val response = userApi.updateSocialProfile(request)
+            cacheFullProfile(response)
+            AppResult.Success(response)
+        } catch (e: Exception) {
+            AppResult.Error(code = "NETWORK_ERROR", message = e.message ?: "Update social profile failed", cause = e)
+        }
+    }
+
     /**
      * Parse une date ISO-8601 en epoch millisecondes.
      * Retourne 0L si le parsing echoue.
@@ -154,6 +175,10 @@ class UserRepositoryImpl(
                 role = "USER",
                 created_at = parseIsoDate(user.createdAt),
                 updated_at = parseIsoDate(user.createdAt),
+                handle = user.handle,
+                bio = user.bio,
+                date_naissance = user.dateNaissance,
+                social_visibility = user.socialVisibility,
             )
         )
     }
@@ -193,6 +218,10 @@ class UserRepositoryImpl(
                 role = "USER",
                 created_at = parseIsoDate(user.createdAt),
                 updated_at = parseIsoDate(user.createdAt),
+                handle = user.handle,
+                bio = user.bio,
+                date_naissance = user.dateNaissance,
+                social_visibility = user.socialVisibility,
             )
         )
 

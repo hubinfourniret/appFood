@@ -58,6 +58,10 @@ sealed class Screen {
     // Mes recettes personnelles (TACHE-516)
     @Serializable data object MyRecettes : Screen()
 
+    // TACHE-600 : profil social
+    @Serializable data object SocialOnboarding : Screen()
+    @Serializable data object SocialSettings : Screen()
+
     // About (SUPPORT-01)
     @Serializable data object About : Screen()
 
